@@ -84,10 +84,10 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
-  transition: border-color .2s ease, border-radius .1s ease-out, background .2s ease;
+  transition: border-color .2s ease, border-radius .1s ease-out;
 }
 .step-card:hover { border-color: var(--lime); }
-.step-card.open { border-radius: 28px; background: var(--surface); cursor: default; }
+.step-card.open { border-radius: 28px; cursor: default; }
 
 .step-head {
   display: flex; align-items: center; gap: 12px;
@@ -117,7 +117,7 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 }
 .step-card.open .step-body { grid-template-rows: 1fr; }
 .step-inner { min-height: 0; overflow: hidden; padding: 0 18px; }
-.step-card.open .step-inner { padding: 4px 18px 18px; }
+.step-card.open .step-inner { padding: 6px 22px 24px; }
 
 /* ---------- video ---------- */
 .video-frame { aspect-ratio: 16/9; width: 100%; border: 0; border-radius: 18px; background: #000; display: block; }
