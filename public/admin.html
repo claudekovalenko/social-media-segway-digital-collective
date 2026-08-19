@@ -25,6 +25,19 @@
     </header>
 
     <section class="step-card open static" id="login">
+      <form id="passwordForm" hidden>
+        <label>Email
+          <input name="email" type="email" required placeholder="you@example.com" autocomplete="username">
+        </label>
+        <label>Password
+          <input name="password" type="password" required autocomplete="current-password">
+        </label>
+        <button type="submit">Sign in</button>
+        <div class="error"></div>
+      </form>
+
+      <p class="or-divider" id="orRow" hidden><span>or</span></p>
+
       <div id="realAuth" hidden>
         <div id="providerButtons"></div>
 
@@ -115,9 +128,12 @@
       } catch { /* fall back to the key form */ }
       // Real login when a provider is configured; the shared key only exists as
       // a way in where it isn't (local development).
+      document.getElementById('passwordForm').hidden = !auth.password_login;
       document.getElementById('realAuth').hidden = !auth.magic_link;
+      document.getElementById('orRow').hidden = !(auth.password_login && auth.magic_link);
       renderProviders();
-      document.getElementById('keyForm').hidden = auth.magic_link;
+      // The shared key is only a way in where no login is configured at all.
+      document.getElementById('keyForm').hidden = auth.password_login || auth.magic_link;
 
       // Coming back from Google or the emailed link: the token arrives in the hash.
       const hash = new URLSearchParams(location.hash.slice(1));
@@ -130,7 +146,9 @@
       if (saved) {
         const problem = await openDb({ Authorization: 'Bearer ' + saved });
         if (problem) {
-          const box = document.querySelector('#emailForm .error');
+          const box = auth.password_login
+            ? document.querySelector('#passwordForm .error')
+            : document.querySelector('#emailForm .error');
           box.textContent = problem;
           box.style.display = 'block';
         }
@@ -235,6 +253,39 @@
       e.preventDefault();
       sessionStorage.removeItem('dc_admin_token');
       location.href = location.pathname;
+    });
+
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const data = new FormData(f);
+      const error = f.querySelector('.error');
+      error.style.display = 'none';
+      let res;
+      try {
+        res = await fetch(API_BASE + '/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.get('email').trim(),
+            password: data.get('password'),
+          }),
+        });
+      } catch {
+        error.textContent = 'Could not reach the server — try again.';
+        error.style.display = 'block';
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        error.textContent = body.error || 'Email or password is incorrect.';
+        error.style.display = 'block';
+        return;
+      }
+      const { token } = await res.json();
+      sessionStorage.setItem('dc_admin_token', token);
+      const problem = await openDb({ Authorization: 'Bearer ' + token });
+      if (problem) { error.textContent = problem; error.style.display = 'block'; }
     });
 
     const form = document.getElementById('keyForm');

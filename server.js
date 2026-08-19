@@ -133,7 +133,53 @@ function newAccessKey() {
   return 'dc_' + crypto.randomBytes(18).toString('hex');
 }
 
+// Email + password logins, as "email:password,email:password".
+const SESSION_HOURS = 12;
+
+function adminLogins() {
+  const out = new Map();
+  for (const pair of String(process.env.ADMIN_LOGINS || '').split(',')) {
+    const i = pair.indexOf(':');
+    if (i < 1) continue;
+    out.set(pair.slice(0, i).trim().toLowerCase(), pair.slice(i + 1).trim());
+  }
+  return out;
+}
+
+function sameString(a, b) {
+  return typeof a === 'string' && typeof b === 'string' && a.length === b.length &&
+    crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+const sessionSecret = () =>
+  process.env.SESSION_SECRET || process.env.ADMIN_LOGINS || ADMIN_KEY;
+
+function signSession(payload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', sessionSecret()).update(body).digest('base64url');
+  return `dcs.${body}.${sig}`;
+}
+
+function readSession(token) {
+  if (!token.startsWith('dcs.')) return null;
+  const [, body] = token.split('.');
+  if (!body) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString());
+    if (!sameString(signSession(payload), token)) return null;
+    if (!payload.exp || payload.exp < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 function isAdmin(req, url) {
+  const bearer = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (bearer.startsWith('dcs.')) {
+    const session = readSession(bearer);
+    return Boolean(session && adminLogins().has(session.email));
+  }
   const key = req.headers['x-admin-key'] || url.searchParams.get('key');
   return key && ADMIN_KEY &&
     key.length === ADMIN_KEY.length &&
@@ -202,8 +248,27 @@ const server = http.createServer(async (req, res) => {
       return json(res, 201, { ok: true, slug, link: `/c/${slug}`, access_key: accessKey });
     }
 
+    if (p === '/api/admin/login' && req.method === 'POST') {
+      const b = await readBody(req);
+      const email = String(b.email || '').trim().toLowerCase();
+      const expected = adminLogins().get(email);
+      if (!expected || !sameString(String(b.password || ''), expected)) {
+        return json(res, 401, { error: 'Email or password is incorrect.' });
+      }
+      return json(res, 200, {
+        token: signSession({ email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 }),
+        email,
+      });
+    }
+
     if (p === '/api/auth/config' && req.method === 'GET') {
-      return json(res, 200, { magic_link: false, providers: [], url: null, anon_key: null });
+      return json(res, 200, {
+        magic_link: false,
+        password_login: adminLogins().size > 0,
+        providers: [],
+        url: null,
+        anon_key: null,
+      });
     }
 
     if (p === '/api/directory' && req.method === 'GET') {

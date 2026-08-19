@@ -146,12 +146,27 @@ https://<your-site>/dashboard.html
 https://<your-site>/admin.html
 ```
 
+### Email + password login (no third party)
+
+Set `ADMIN_LOGINS` to `email:password` pairs, comma-separated, and the database
+page shows a plain email + password form — no Google, no Supabase, nothing else
+to configure:
+
+```bash
+npx wrangler secret put ADMIN_LOGINS   # you@example.com:your-password
+npx wrangler deploy
+```
+
+A correct sign-in gets a signed token that expires after 12 hours; the Worker
+re-checks its signature on every request, and removing someone from
+`ADMIN_LOGINS` ends their session immediately. Pick a long password — it's the
+whole gate. This works alongside Google and magic links; when both are
+configured, both appear.
+
 ### The admin key
 
-`ADMIN_KEY` is now only a fallback for where no login provider is configured —
-running locally, or before Supabase is set up. As soon as Supabase is
-configured, the pages show the Google and email login instead, and the key form
-disappears. The key still works over the API, so keep it secret.
+`ADMIN_KEY` remains as a fallback, shown only where no login at all is
+configured. It still works over the API, so keep it secret.
 
 ## Adding the default videos
 

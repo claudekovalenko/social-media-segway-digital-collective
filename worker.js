@@ -88,9 +88,74 @@ function adminKeyMatches(req, url, env) {
   return diff === 0;
 }
 
+// ---- password login -------------------------------------------------------
+// Email + password, checked against ADMIN_LOGINS ("email:password,email:password").
+// A successful login gets a signed, expiring token; nothing but the token is
+// kept in the browser, and the Worker re-verifies its signature every request.
+const SESSION_HOURS = 12;
+
+function adminLogins(env) {
+  const out = new Map();
+  for (const pair of String(env.ADMIN_LOGINS || '').split(',')) {
+    const i = pair.indexOf(':');
+    if (i < 1) continue;
+    out.set(pair.slice(0, i).trim().toLowerCase(), pair.slice(i + 1).trim());
+  }
+  return out;
+}
+
+function sameString(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+// The signing secret is whatever secret the deployment already has, so there's
+// nothing extra to configure. Tokens die if those secrets are rotated.
+function sessionSecret(env) {
+  return String(env.SESSION_SECRET || env.ADMIN_LOGINS || env.ADMIN_KEY || '');
+}
+
+async function signSession(env, payload) {
+  const secret = sessionSecret(env);
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const body = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body));
+  return `dcs.${body}.${b64url(new Uint8Array(sig))}`;
+}
+
+async function readSession(env, token) {
+  if (!token.startsWith('dcs.') || !sessionSecret(env)) return null;
+  const [, body, sig] = token.split('.');
+  if (!body || !sig) return null;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(Uint8Array.from(
+      atob(body.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)
+    )));
+    // Re-sign the payload and compare: a tampered token can't match.
+    if (!sameString(await signSession(env, payload), token)) return null;
+    if (!payload.exp || payload.exp < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 // Returns { ok, email } so the page can greet whoever signed in.
 async function isAdmin(req, url, env) {
   const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (bearer.startsWith('dcs.')) {
+    const session = await readSession(env, bearer);
+    // Re-check the account still exists, so removing a login ends its sessions.
+    if (session && adminLogins(env).has(session.email)) return { ok: true, email: session.email };
+    return { ok: false };
+  }
   if (bearer) {
     const email = await emailFromToken(env, bearer);
     if (email && adminEmails(env).has(email.toLowerCase())) return { ok: true, email };
@@ -143,6 +208,22 @@ export default {
       }
 
       // What the dashboard needs to start a magic-link sign-in, if configured.
+      if (p === '/api/admin/login' && req.method === 'POST') {
+        const b = await req.json().catch(() => ({}));
+        const email = String(b.email || '').trim().toLowerCase();
+        const password = String(b.password || '');
+        const expected = adminLogins(env).get(email);
+        // Compare even on an unknown email so a wrong address and a wrong
+        // password take the same path.
+        if (!expected || !sameString(password, expected)) {
+          return json({ error: 'Email or password is incorrect.' }, 401);
+        }
+        const token = await signSession(env, {
+          email, exp: Date.now() + SESSION_HOURS * 3600 * 1000,
+        });
+        return json({ token, email });
+      }
+
       if (p === '/api/auth/config' && req.method === 'GET') {
         // AUTH_PROVIDERS lists the social logins actually enabled in Supabase,
         // so a page never shows a button that would fail. Defaults to Google.
@@ -150,6 +231,7 @@ export default {
           .split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
         return json({
           magic_link: Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY),
+          password_login: adminLogins(env).size > 0,
           providers,
           url: env.SUPABASE_URL || null,
           anon_key: env.SUPABASE_ANON_KEY || null,
