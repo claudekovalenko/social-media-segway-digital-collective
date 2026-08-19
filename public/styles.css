@@ -87,7 +87,12 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   transition: border-color .2s ease, border-radius .3s ease, background .2s ease;
 }
 .step-card:hover { border-color: var(--lime); }
-.step-card.open { border-radius: 28px; background: var(--surface); cursor: default; }
+/* Press feedback squishes the row's contents, not the row itself, so the
+   pill never encroaches on the rows above or below it. */
+.step-head { transition: transform .12s ease; }
+.step-card:active .step-head { transform: scale(0.97); }
+.step-card.open:active .step-head { transform: none; }
+.step-card.open { border-radius: 20px; background: var(--surface); cursor: default; }
 
 .step-head {
   display: flex; align-items: center; gap: 12px;
@@ -198,7 +203,10 @@ th { color: var(--text-dim); font-weight: 600; }
 h3.section { margin: 28px 0 6px; font-weight: 600; font-size: 1rem; }
 
 /* pages that keep the simple always-open card (creator/admin) */
-.step-card.open.static, body.wide .step-card.open { padding: 24px; }
+.step-card.open.static, body.wide .step-card.open { padding: 22px 20px; }
+.step-card.static form { gap: 14px; }
+.step-card.static label { display: grid; gap: 6px; line-height: 1.35; }
+.custom-fields { display: grid; gap: 14px; margin-top: 2px; }
 body.wide .step-card .step-body, .step-card.static .step-body { display: block; }
 
 /* Right-to-left languages: mirror the few directional bits. */
