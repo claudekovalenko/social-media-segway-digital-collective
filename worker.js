@@ -3,6 +3,35 @@
 // Bindings: DB (D1 database), ADMIN_KEY (secret).
 
 const VALID_STEPS = new Set(['know_god', 'grow_with_god', 'find_church']);
+const VALID_PATHS = new Set(['join_church', 'start_gathering', 'both', 'not_sure']);
+
+// Preselected online small-group times. Each has a fixed capacity; the API
+// reports how many spots are left so the funnel can show "3 spots left".
+// know_god  -> for people just starting out
+// grow_with_god -> for people going through discipleship
+const GROUP_CAPACITY = 10;
+const SLOTS = [
+  { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM ET' },
+  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM ET' },
+  { id: 'kg-sun-18', step: 'know_god', label: 'Sundays · 6:00 PM ET' },
+  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM ET' },
+  { id: 'gw-wed-19', step: 'grow_with_god', label: 'Wednesdays · 7:00 PM ET' },
+  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM ET' },
+];
+const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
+
+// Slots with live remaining counts, newest counts straight from the database.
+async function slotsWithAvailability(db) {
+  const taken = await db.prepare(
+    `SELECT slot, COUNT(*) AS n FROM group_signups WHERE slot IS NOT NULL GROUP BY slot`
+  ).all();
+  const counts = Object.fromEntries((taken.results || []).map((r) => [r.slot, r.n]));
+  return SLOTS.map((s) => ({
+    ...s,
+    capacity: GROUP_CAPACITY,
+    remaining: Math.max(0, GROUP_CAPACITY - (counts[s.id] || 0)),
+  }));
+}
 
 // Allow the GitHub Pages copy of the front-end to call this API.
 const CORS = {
@@ -66,6 +95,10 @@ export default {
         return json(row);
       }
 
+      if (p === '/api/slots' && req.method === 'GET') {
+        return json({ slots: await slotsWithAvailability(env.DB) });
+      }
+
       if (p === '/api/leads' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
         const step = String(b.step || '');
@@ -75,18 +108,30 @@ export default {
         if (!name || !/.+@.+\..+/.test(email)) return json({ error: 'name and a valid email are required' }, 400);
         const interested = b.interested_in_group ? 1 : 0;
         const creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
+        const slot = SLOT_IDS.has(b.group_slot) ? b.group_slot : null;
+        const path = VALID_PATHS.has(b.path) ? b.path : null;
+
+        // Don't oversubscribe a group: re-check the slot right before writing.
+        if (interested && slot) {
+          const live = await slotsWithAvailability(env.DB);
+          const chosen = live.find((s) => s.id === slot);
+          if (!chosen || chosen.remaining <= 0) {
+            return json({ error: 'That group just filled up — please pick another time.' }, 409);
+          }
+        }
+
         const result = await env.DB.prepare(
-          `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, creator_slug)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, path, creator_slug)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(step, name, email,
           String(b.phone || '').slice(0, 40) || null,
           String(b.city || '').slice(0, 100) || null,
           String(b.message || '').slice(0, 2000) || null,
           String(b.decision || '').slice(0, 40) || null,
-          interested, creatorSlug).run();
+          interested, slot, path, creatorSlug).run();
         if (interested) {
-          await env.DB.prepare(`INSERT INTO group_signups (lead_id, creator_slug) VALUES (?, ?)`)
-            .bind(result.meta.last_row_id, creatorSlug).run();
+          await env.DB.prepare(`INSERT INTO group_signups (lead_id, creator_slug, slot) VALUES (?, ?, ?)`)
+            .bind(result.meta.last_row_id, creatorSlug, slot).run();
         }
         return json({ ok: true }, 201);
       }
@@ -97,13 +142,14 @@ export default {
           env.DB.prepare(`SELECT * FROM leads ORDER BY created_at DESC LIMIT 500`).all(),
           env.DB.prepare(`SELECT * FROM creators ORDER BY created_at DESC`).all(),
           env.DB.prepare(
-            `SELECT g.*, l.name, l.email, l.city FROM group_signups g JOIN leads l ON l.id = g.lead_id
+            `SELECT g.*, l.name, l.email, l.city, l.step FROM group_signups g JOIN leads l ON l.id = g.lead_id
              ORDER BY g.created_at DESC`).all(),
           env.DB.prepare(`SELECT step, COUNT(*) AS n FROM leads GROUP BY step`).all(),
         ]);
         return json({
           leads: leads.results, creators: creators.results,
           group_signups: groups.results, counts: counts.results,
+          slots: await slotsWithAvailability(env.DB),
         });
       }
 

@@ -64,6 +64,62 @@ async function loadCreator() {
 }
 loadCreator();
 
+// ---- online small-group times -------------------------------------------
+// Times are defined server-side with a fixed capacity; the API reports how
+// many spots are left, so people can see a group filling up.
+async function loadSlots() {
+  const selects = document.querySelectorAll('select[data-slots]');
+  if (!selects.length) return;
+  let slots = [];
+  try {
+    const res = await fetch(API_BASE + '/api/slots');
+    if (res.ok) slots = (await res.json()).slots || [];
+  } catch { /* offline — handled below */ }
+
+  for (const select of selects) {
+    const picker = select.closest('.slot-picker');
+    const mine = slots.filter((s) => s.step === select.dataset.slots);
+    if (!mine.length) {
+      // Couldn't reach the API: keep the checkbox, skip the dead dropdown.
+      picker.dataset.unavailable = 'true';
+      picker.hidden = true;
+      select.required = false;
+      continue;
+    }
+    delete picker.dataset.unavailable;
+    const previous = select.value;
+    select.replaceChildren();
+    const prompt = document.createElement('option');
+    prompt.value = '';
+    prompt.disabled = true;
+    prompt.selected = true;
+    prompt.textContent = 'Choose a meeting time';
+    select.appendChild(prompt);
+    for (const slot of mine) {
+      const opt = document.createElement('option');
+      opt.value = slot.id;
+      opt.disabled = slot.remaining <= 0;
+      opt.textContent = slot.remaining > 0
+        ? `${slot.label} — ${slot.remaining} of ${slot.capacity} spots left`
+        : `${slot.label} — full`;
+      select.appendChild(opt);
+    }
+    if (previous) select.value = previous;
+  }
+}
+loadSlots();
+
+// Checking the small-group box reveals that group's time picker.
+document.querySelectorAll('input[data-reveal]').forEach((box) => {
+  const picker = document.getElementById(box.dataset.reveal);
+  if (!picker) return;
+  box.addEventListener('change', () => {
+    const show = box.checked && picker.dataset.unavailable !== 'true';
+    picker.hidden = !show;
+    picker.querySelector('select').required = show;
+  });
+});
+
 // Toggle a step open/closed when its header area is clicked.
 // Clicks inside the expanded body (video, form fields) never collapse it.
 document.querySelectorAll('.step-card').forEach((card) => {
@@ -81,6 +137,7 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     data.step = form.dataset.step;
     data.creator_slug = creatorSlug;
     data.interested_in_group = form.querySelector('[name=interested_in_group]')?.checked || false;
+    if (!data.interested_in_group) delete data.group_slot;
     const success = form.querySelector('.success');
     const error = form.querySelector('.error');
     success.style.display = error.style.display = 'none';
@@ -94,6 +151,7 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
       if (!res.ok) throw new Error(body.error || 'Something went wrong');
       success.style.display = 'block';
       form.querySelector('button').disabled = true;
+      loadSlots(); // spots just changed
     } catch (err) {
       error.textContent = err.message;
       error.style.display = 'block';

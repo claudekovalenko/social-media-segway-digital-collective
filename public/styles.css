@@ -121,6 +121,19 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--l
 }
 .check input { width: auto; margin-top: 3px; accent-color: var(--lime); }
 
+/* revealed online-group time picker */
+.slot-picker {
+  display: grid; gap: 8px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--edge-lit); border-radius: 18px;
+  background: var(--surface-2);
+}
+.slot-label {
+  font-size: 0.78rem; color: var(--lime);
+  text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
+}
+.check strong { color: var(--text); font-weight: 600; }
+
 button {
   padding: 15px 24px; border: 0; border-radius: 999px;
   background: var(--lime); color: var(--lime-ink);

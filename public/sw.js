@@ -1,6 +1,6 @@
 // Service worker: cache-first for the app shell, network-only for the API.
 // Bump CACHE_VERSION whenever static files change.
-const CACHE_VERSION = 'v12';
+const CACHE_VERSION = 'v13';
 const CACHE_NAME = `faith-journey-${CACHE_VERSION}`;
 const SHELL = [
   './',

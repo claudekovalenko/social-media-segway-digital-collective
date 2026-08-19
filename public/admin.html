@@ -33,13 +33,19 @@
 
       <h3 class="section">Leads</h3>
       <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Group?</th><th>Creator</th><th>Message</th></tr></thead>
+        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Path</th><th>Group?</th><th>Group time</th><th>Creator</th><th>Message</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
-      <h3 class="section">Small-group signups (phase 2 waitlist)</h3>
+      <h3 class="section">Online group times</h3>
+      <div class="table-scroll"><table id="slotsTable">
+        <thead><tr><th>Group</th><th>Time</th><th>Filled</th><th>Availability</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+
+      <h3 class="section">Small-group signups</h3>
       <div class="table-scroll"><table id="groupsTable">
-        <thead><tr><th>When</th><th>Name</th><th>Email</th><th>City</th><th>Creator</th><th>Status</th></tr></thead>
+        <thead><tr><th>When</th><th>Name</th><th>Email</th><th>City</th><th>Group time</th><th>Creator</th><th>Status</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
@@ -57,7 +63,12 @@
       ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
       : '';
 
-    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Find a Church' };
+    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Gather & Multiply' };
+    const PATH_NAMES = {
+      join_church: 'Join a local church', start_gathering: 'Start a gathering',
+      both: 'Both', not_sure: 'Not sure yet',
+    };
+    let SLOT_NAMES = {};
     const form = document.getElementById('keyForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -72,9 +83,23 @@
       render(data);
     });
 
+    function renderSlots(slots) {
+      const tb = document.querySelector('#slotsTable tbody');
+      if (!tb) return;
+      tb.replaceChildren();
+      for (const s of slots) {
+        const tr = document.createElement('tr');
+        [STEP_NAMES[s.step] || s.step, s.label, `${s.capacity - s.remaining} / ${s.capacity}`,
+         s.remaining > 0 ? `${s.remaining} left` : 'Full'].forEach(v => tr.appendChild(cell(v)));
+        tb.appendChild(tr);
+      }
+    }
+
     function cell(text) { const td = document.createElement('td'); td.textContent = text ?? ''; return td; }
 
     function render(data) {
+      SLOT_NAMES = Object.fromEntries((data.slots || []).map(s => [s.id, s.label]));
+      renderSlots(data.slots || []);
       const stats = document.getElementById('stats');
       stats.replaceChildren();
       const total = document.createElement('div');
@@ -93,7 +118,8 @@
       for (const l of data.leads) {
         const tr = document.createElement('tr');
         [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
-         l.decision, l.interested_in_group ? 'Yes' : '', l.creator_slug, l.message]
+         l.decision, PATH_NAMES[l.path] || l.path, l.interested_in_group ? 'Yes' : '',
+         SLOT_NAMES[l.group_slot] || l.group_slot, l.creator_slug, l.message]
           .forEach(v => tr.appendChild(cell(v)));
         lt.appendChild(tr);
       }
@@ -101,7 +127,8 @@
       const gt = document.querySelector('#groupsTable tbody');
       for (const g of data.group_signups) {
         const tr = document.createElement('tr');
-        [g.created_at, g.name, g.email, g.city, g.creator_slug, g.status].forEach(v => tr.appendChild(cell(v)));
+        [g.created_at, g.name, g.email, g.city, SLOT_NAMES[g.slot] || g.slot, g.creator_slug, g.status]
+          .forEach(v => tr.appendChild(cell(v)));
         gt.appendChild(tr);
       }
 

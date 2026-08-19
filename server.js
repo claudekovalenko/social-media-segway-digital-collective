@@ -42,7 +42,9 @@ db.exec(`
     city TEXT,
     message TEXT,
     decision TEXT,               -- e.g. 'first_time','recommitment','questions' (know_god step)
-    interested_in_group INTEGER NOT NULL DEFAULT 0,  -- phase 2: small-group matching
+    interested_in_group INTEGER NOT NULL DEFAULT 0,  -- wants an online small group
+    group_slot TEXT,             -- chosen online meeting time (see SLOTS)
+    path TEXT,                   -- step 3: join a church, start a gathering, or both
     creator_slug TEXT,           -- which creator's link they came through
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -52,10 +54,23 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     lead_id INTEGER NOT NULL REFERENCES leads(id),
     creator_slug TEXT,
+    slot TEXT,                   -- which online group time they took
     status TEXT NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting','matched')),
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Add columns to databases created before these fields existed.
+for (const [table, column, type] of [
+  ['leads', 'group_slot', 'TEXT'],
+  ['leads', 'path', 'TEXT'],
+  ['group_signups', 'slot', 'TEXT'],
+]) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
+}
 
 // Seed the default creator so the funnel works with no setup.
 db.prepare(
@@ -100,6 +115,31 @@ function isAdmin(req, url) {
 }
 
 const VALID_STEPS = new Set(['know_god', 'grow_with_god', 'find_church']);
+const VALID_PATHS = new Set(['join_church', 'start_gathering', 'both', 'not_sure']);
+
+// Preselected online small-group times, mirrored in worker.js.
+const GROUP_CAPACITY = 10;
+const SLOTS = [
+  { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM ET' },
+  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM ET' },
+  { id: 'kg-sun-18', step: 'know_god', label: 'Sundays · 6:00 PM ET' },
+  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM ET' },
+  { id: 'gw-wed-19', step: 'grow_with_god', label: 'Wednesdays · 7:00 PM ET' },
+  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM ET' },
+];
+const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
+
+function slotsWithAvailability() {
+  const taken = db.prepare(
+    `SELECT slot, COUNT(*) AS n FROM group_signups WHERE slot IS NOT NULL GROUP BY slot`
+  ).all();
+  const counts = Object.fromEntries(taken.map((r) => [r.slot, r.n]));
+  return SLOTS.map((s) => ({
+    ...s,
+    capacity: GROUP_CAPACITY,
+    remaining: Math.max(0, GROUP_CAPACITY - (counts[s.id] || 0)),
+  }));
+}
 
 // ---------------------------------------------------------------- server
 const server = http.createServer(async (req, res) => {
@@ -136,6 +176,10 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, row);
     }
 
+    if (p === '/api/slots' && req.method === 'GET') {
+      return json(res, 200, { slots: slotsWithAvailability() });
+    }
+
     if (p === '/api/leads' && req.method === 'POST') {
       const b = await readBody(req);
       const step = String(b.step || '');
@@ -144,19 +188,29 @@ const server = http.createServer(async (req, res) => {
       if (!VALID_STEPS.has(step)) return json(res, 400, { error: 'invalid step' });
       if (!name || !/.+@.+\..+/.test(email)) return json(res, 400, { error: 'name and a valid email are required' });
       const interested = b.interested_in_group ? 1 : 0;
+      const creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
+      const slot = SLOT_IDS.has(b.group_slot) ? b.group_slot : null;
+      const path = VALID_PATHS.has(b.path) ? b.path : null;
+
+      if (interested && slot) {
+        const chosen = slotsWithAvailability().find((s) => s.id === slot);
+        if (!chosen || chosen.remaining <= 0) {
+          return json(res, 409, { error: 'That group just filled up — please pick another time.' });
+        }
+      }
+
       const result = db.prepare(
-        `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, creator_slug)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, path, creator_slug)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(step, name, email,
         String(b.phone || '').slice(0, 40) || null,
         String(b.city || '').slice(0, 100) || null,
         String(b.message || '').slice(0, 2000) || null,
         String(b.decision || '').slice(0, 40) || null,
-        interested,
-        String(b.creator_slug || 'default').slice(0, 40));
+        interested, slot, path, creatorSlug);
       if (interested) {
-        db.prepare(`INSERT INTO group_signups (lead_id, creator_slug) VALUES (?, ?)`)
-          .run(result.lastInsertRowid, String(b.creator_slug || 'default').slice(0, 40));
+        db.prepare(`INSERT INTO group_signups (lead_id, creator_slug, slot) VALUES (?, ?, ?)`)
+          .run(result.lastInsertRowid, creatorSlug, slot);
       }
       return json(res, 201, { ok: true });
     }
@@ -166,13 +220,13 @@ const server = http.createServer(async (req, res) => {
       const leads = db.prepare(`SELECT * FROM leads ORDER BY created_at DESC LIMIT 500`).all();
       const creators = db.prepare(`SELECT * FROM creators ORDER BY created_at DESC`).all();
       const groups = db.prepare(
-        `SELECT g.*, l.name, l.email, l.city FROM group_signups g JOIN leads l ON l.id = g.lead_id
+        `SELECT g.*, l.name, l.email, l.city, l.step FROM group_signups g JOIN leads l ON l.id = g.lead_id
          ORDER BY g.created_at DESC`
       ).all();
       const counts = db.prepare(
         `SELECT step, COUNT(*) AS n FROM leads GROUP BY step`
       ).all();
-      return json(res, 200, { leads, creators, group_signups: groups, counts });
+      return json(res, 200, { leads, creators, group_signups: groups, counts, slots: slotsWithAvailability() });
     }
 
     // ---- creator share links: /c/<slug> loads the funnel tagged to that creator ----
