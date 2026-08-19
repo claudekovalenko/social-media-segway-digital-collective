@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creator Signup — Your Funnel Link</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>Get Your Funnel Link</h1>
+      <p>Share one link with your audience. Every person who responds is tracked to you, and in phase 2 they can be matched into small groups with others from your community.</p>
+    </header>
+
+    <section class="step-card open">
+      <form id="creatorForm">
+        <label>Your name or channel name *<input name="name" required maxlength="100"></label>
+        <label>Choose your link name * (letters, numbers, dashes)
+          <input name="slug" required maxlength="40" pattern="[a-zA-Z0-9-]+" placeholder="e.g. faith-with-sarah">
+        </label>
+        <label>Content mode
+          <select name="mode" id="modeSelect">
+            <option value="default">Use the default videos & gospel series (recommended)</option>
+            <option value="custom">I'll use my own videos</option>
+          </select>
+        </label>
+        <div id="customFields" style="display:none;">
+          <label>"Know God" video embed URL<input name="know_god_video_url" type="url" maxlength="500" placeholder="https://www.youtube.com/embed/..."></label>
+          <label>"Grow with God" course/video URL<input name="grow_course_url" type="url" maxlength="500"></label>
+          <label>"Find a Church" training video URL<input name="find_church_video_url" type="url" maxlength="500"></label>
+        </div>
+        <button type="submit">Create my link</button>
+        <div class="success" id="result"></div>
+        <div class="error"></div>
+      </form>
+    </section>
+
+    <footer><p><a href="/">← Back to the funnel</a></p></footer>
+  </div>
+
+  <script>
+    const modeSelect = document.getElementById('modeSelect');
+    const customFields = document.getElementById('customFields');
+    modeSelect.addEventListener('change', () => {
+      customFields.style.display = modeSelect.value === 'custom' ? 'block' : 'none';
+    });
+
+    const form = document.getElementById('creatorForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      const result = document.getElementById('result');
+      const error = form.querySelector('.error');
+      result.style.display = error.style.display = 'none';
+      try {
+        const res = await fetch('/api/creators/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || 'Something went wrong');
+        const link = location.origin + body.link;
+        result.innerHTML = `Your link is ready: <a href="${link}">${link}</a> — put it in your bio!`;
+        result.style.display = 'block';
+      } catch (err) {
+        error.textContent = err.message;
+        error.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

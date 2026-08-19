@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funnel Admin</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>Funnel Dashboard</h1>
+      <p>All leads collected across every creator's funnel.</p>
+    </header>
+
+    <section class="step-card open" id="login">
+      <form id="keyForm">
+        <label>Admin key<input name="key" type="password" required></label>
+        <button type="submit">View dashboard</button>
+        <div class="error"></div>
+      </form>
+    </section>
+
+    <div id="dash" hidden>
+      <div class="stat-row" id="stats"></div>
+
+      <h3 class="section">Leads</h3>
+      <div class="table-scroll"><table id="leadsTable">
+        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Group?</th><th>Creator</th><th>Message</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+
+      <h3 class="section">Small-group signups (phase 2 waitlist)</h3>
+      <div class="table-scroll"><table id="groupsTable">
+        <thead><tr><th>When</th><th>Name</th><th>Email</th><th>City</th><th>Creator</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+
+      <h3 class="section">Creators</h3>
+      <div class="table-scroll"><table id="creatorsTable">
+        <thead><tr><th>Name</th><th>Link</th><th>Mode</th><th>Created</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <script>
+    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Find a Church' };
+    const form = document.getElementById('keyForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = new FormData(form).get('key');
+      const error = form.querySelector('.error');
+      error.style.display = 'none';
+      const res = await fetch('/api/admin/leads', { headers: { 'x-admin-key': key } });
+      if (!res.ok) { error.textContent = 'Wrong key'; error.style.display = 'block'; return; }
+      const data = await res.json();
+      document.getElementById('login').hidden = true;
+      document.getElementById('dash').hidden = false;
+      render(data);
+    });
+
+    function cell(text) { const td = document.createElement('td'); td.textContent = text ?? ''; return td; }
+
+    function render(data) {
+      const stats = document.getElementById('stats');
+      stats.replaceChildren();
+      const total = document.createElement('div');
+      total.className = 'stat';
+      total.innerHTML = `<b>${data.leads.length}</b>Total leads`;
+      stats.appendChild(total);
+      for (const c of data.counts) {
+        const el = document.createElement('div');
+        el.className = 'stat';
+        el.innerHTML = `<b>${c.n}</b>`;
+        el.appendChild(document.createTextNode(STEP_NAMES[c.step] || c.step));
+        stats.appendChild(el);
+      }
+
+      const lt = document.querySelector('#leadsTable tbody');
+      for (const l of data.leads) {
+        const tr = document.createElement('tr');
+        [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
+         l.decision, l.interested_in_group ? 'Yes' : '', l.creator_slug, l.message]
+          .forEach(v => tr.appendChild(cell(v)));
+        lt.appendChild(tr);
+      }
+
+      const gt = document.querySelector('#groupsTable tbody');
+      for (const g of data.group_signups) {
+        const tr = document.createElement('tr');
+        [g.created_at, g.name, g.email, g.city, g.creator_slug, g.status].forEach(v => tr.appendChild(cell(v)));
+        gt.appendChild(tr);
+      }
+
+      const ct = document.querySelector('#creatorsTable tbody');
+      for (const c of data.creators) {
+        const tr = document.createElement('tr');
+        [c.name, `/c/${c.slug}`, c.mode, c.created_at].forEach(v => tr.appendChild(cell(v)));
+        ct.appendChild(tr);
+      }
+    }
+  </script>
+</body>
+</html>

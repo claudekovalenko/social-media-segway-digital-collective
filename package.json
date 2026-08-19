@@ -1,0 +1,11 @@
+{
+  "name": "faith-journey-funnel",
+  "version": "0.1.0",
+  "description": "Simple faith-journey funnel for social media creators: Know God, Grow with God, Find a Faith Family — with lead capture and per-creator links.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=22.5" },
+  "license": "MIT"
+}
