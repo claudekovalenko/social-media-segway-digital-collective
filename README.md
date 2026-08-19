@@ -83,24 +83,45 @@ Data is stored in `data/funnel.db` (SQLite). Set `PORT`, `DB_PATH`, and `ADMIN_K
 
 `/admin.html` — linked from the Digital Collective home page as **Database** —
 shows everything: every lead, the online group times and how full they are, the
-small-group waitlist, and all creators. Two ways to sign in:
+small-group waitlist, and all creators.
 
-- **Login (preferred).** Set `ADMIN_EMAILS` to a comma-separated allow-list of
-  email addresses. Those people enter their email, click the link Supabase
-  sends, and the Worker verifies the token before returning any data. Requires
-  Supabase (see above), and the admin page address must be in the Supabase
-  redirect allow-list too.
+Signing in is a real login, either way you choose:
 
-  ```bash
-  npx wrangler secret put ADMIN_EMAILS   # e.g. you@example.com,leader@example.com
-  ```
+- **Continue with Google** — Google account sign-in through Supabase.
+- **Email me a sign-in link** — a magic link, no password.
 
-- **Admin key.** `ADMIN_KEY` still works, with or without Supabase, and is the
-  only option locally. It's a shared secret, so prefer the email login for
-  anyone but yourself.
+Either way Supabase hands the browser a token, the Worker verifies that token
+with Supabase, and only then checks the email against `ADMIN_EMAILS`, a
+comma-separated allow-list:
+
+```bash
+npx wrangler secret put ADMIN_EMAILS   # e.g. you@example.com,leader@example.com
+```
 
 An email that signs in successfully but isn't on the allow-list gets a clear
 "no database access" message rather than a silent failure.
+
+The creator dashboard (`/dashboard.html`) offers the same two ways in, and
+matches the signed-in email against the creator record so a creator only sees
+their own leads.
+
+### Turning on Google sign-in
+
+1. In Google Cloud → **APIs & Services → Credentials**, create an OAuth 2.0
+   Client ID (type: Web application). For the authorized redirect URI use
+   `https://<your-project>.supabase.co/auth/v1/callback`.
+2. In Supabase → **Authentication → Providers → Google**, enable it and paste
+   the client ID and secret.
+3. In Supabase → **Authentication → URL Configuration**, add both pages to the
+   redirect allow-list: `https://<your-site>/dashboard.html` and
+   `https://<your-site>/admin.html`.
+
+### The admin key
+
+`ADMIN_KEY` is now only a fallback for where no login provider is configured —
+running locally, or before Supabase is set up. As soon as Supabase is
+configured, the pages show the Google and email login instead, and the key form
+disappears. The key still works over the API, so keep it secret.
 
 ## Adding the default videos
 

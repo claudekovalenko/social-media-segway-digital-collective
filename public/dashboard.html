@@ -22,21 +22,35 @@
     </header>
 
     <section class="step-card open static" id="login">
-      <form id="emailForm" hidden>
-        <label>Your email
-          <input name="email" type="email" required placeholder="you@example.com" autocomplete="email">
-        </label>
-        <button type="submit">Email me a sign-in link</button>
-        <p class="aside-link">We'll send a link that signs you in &mdash; no password to remember.</p>
-        <div class="success" id="sent">Check your email for the sign-in link.</div>
-        <div class="error"></div>
-      </form>
+      <div id="realAuth" hidden>
+        <button type="button" class="btn-google" id="googleBtn">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z"/>
+            <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/>
+            <path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.5C3 17.1 2.1 20.4 2.1 24s.9 6.9 2.4 9.9l7.3-5.7z"/>
+            <path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/>
+          </svg>
+          Continue with Google
+        </button>
 
-      <p class="aside-link" id="toggleRow" hidden>
-        <a href="#" id="useKey">Use an access key instead</a>
-      </p>
+        <p class="or-divider"><span>or</span></p>
 
-      <form id="keyForm">
+        <form id="emailForm">
+          <label>Your email
+            <input name="email" type="email" required placeholder="you@example.com" autocomplete="email">
+          </label>
+          <button type="submit">Email me a sign-in link</button>
+          <p class="aside-link">Use the email you signed up with &mdash; no password to remember.</p>
+          <div class="success" id="sent">Check your email for the sign-in link.</div>
+          <div class="error"></div>
+        </form>
+
+        <p class="aside-link" id="toggleRow">
+          <a href="#" id="useKey">Use an access key instead</a>
+        </p>
+      </div>
+
+      <form id="keyForm" hidden>
         <label>Your access key
           <input name="key" type="password" required placeholder="dc_&hellip;" autocomplete="current-password">
         </label>
@@ -93,12 +107,11 @@
         const res = await fetch(API_BASE + '/api/auth/config');
         if (res.ok) auth = await res.json();
       } catch { /* fall back to the key form */ }
-      if (auth.magic_link) {
-        document.getElementById('emailForm').hidden = false;
-        document.getElementById('toggleRow').hidden = false;
-        document.getElementById('keyForm').hidden = true;
-      }
-      // Coming back from the emailed link: the token arrives in the URL hash.
+      // Real login where a provider is configured; otherwise the access key.
+      document.getElementById('realAuth').hidden = !auth.magic_link;
+      document.getElementById('keyForm').hidden = auth.magic_link;
+
+      // Coming back from Google or the emailed link: the token is in the hash.
       const hash = new URLSearchParams(location.hash.slice(1));
       const token = hash.get('access_token');
       if (token) {
@@ -109,11 +122,16 @@
       if (saved) open({ Authorization: 'Bearer ' + saved });
     }
 
+    document.getElementById('googleBtn').addEventListener('click', () => {
+      const back = encodeURIComponent(location.origin + location.pathname);
+      location.href = auth.url.replace(/\/+$/, '') +
+        '/auth/v1/authorize?provider=google&redirect_to=' + back;
+    });
+
     document.getElementById('useKey').addEventListener('click', (e) => {
       e.preventDefault();
-      document.getElementById('emailForm').hidden = true;
+      document.getElementById('realAuth').hidden = true;
       document.getElementById('keyForm').hidden = false;
-      document.getElementById('toggleRow').hidden = true;
     });
 
     document.getElementById('emailForm').addEventListener('submit', async (e) => {
