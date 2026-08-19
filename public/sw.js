@@ -1,7 +1,9 @@
-// Service worker: cache-first for the app shell, network-only for the API.
-// Bump CACHE_VERSION whenever static files change.
-const CACHE_VERSION = 'v24';
+// Service worker: network-first, so a fresh deploy shows up on the very next
+// open instead of one load later. The cache is a fallback for slow or absent
+// connections, not the default source.
+const CACHE_VERSION = 'v25';
 const CACHE_NAME = `faith-journey-${CACHE_VERSION}`;
+const NETWORK_TIMEOUT = 2500;
 const SHELL = [
   './',
   'index.html',
@@ -26,25 +28,34 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+// Race the network against a short timer: whatever answers first wins, and a
+// successful response always refreshes the cache.
+function fromNetwork(request) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT);
+    fetch(request)
+      .then((res) => {
+        clearTimeout(timer);
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(request, copy));
+        }
+        resolve(res);
+      })
+      .catch((err) => { clearTimeout(timer); reject(err); });
+  });
+}
+
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET') return;               // form posts always hit the network
-  if (url.pathname.startsWith('/api/')) return;         // live data, never cached
-  if (url.pathname.startsWith('/c/')) return;           // creator redirects need the server
+  if (e.request.method !== 'GET') return;          // form posts always hit the network
+  if (url.pathname.startsWith('/api/')) return;    // live data, never cached
+  if (url.pathname.startsWith('/c/')) return;      // creator redirects need the server
+  if (url.origin !== location.origin) return;      // fonts etc. use their own rules
 
-  // Stale-while-revalidate for everything else.
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const fetched = fetch(e.request)
-        .then((res) => {
-          if (res.ok && url.origin === location.origin) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(e.request, copy));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || fetched;
-    })
+    fromNetwork(e.request).catch(() =>
+      caches.match(e.request).then((cached) => cached || caches.match('index.html'))
+    )
   );
 });

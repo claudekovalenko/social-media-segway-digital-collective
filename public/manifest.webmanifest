@@ -1,7 +1,7 @@
 {
-  "name": "Faith Journey",
-  "short_name": "Faith Journey",
-  "description": "Take your next step: Know God, Grow with God, Find a Faith Family.",
+  "name": "Next Step",
+  "short_name": "Next Step",
+  "description": "Know God, Grow with God, Gather Locally — take your next step.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
