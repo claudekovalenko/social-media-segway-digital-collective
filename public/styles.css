@@ -5,7 +5,7 @@
   --edge: #262626;
   --text: #fafafa;
   --text-dim: #9a9a9a;
-  --acid: #d8f34a;
+  --acid: #c8e63d;
   --acid-ink: #101400;
   --field-bg: #1c1c1c;
   --field-border: #303030;
@@ -28,7 +28,7 @@ body {
 header.hero { padding: 52px 2px 34px; text-align: left; }
 header.hero .avatar { display: none; }
 header.hero h1 {
-  font-size: clamp(2.5rem, 12vw, 3.5rem);
+  font-size: clamp(2.2rem, 10vw, 3rem);
   font-weight: 700;
   line-height: 1.0;
   letter-spacing: -0.03em;
@@ -45,20 +45,20 @@ header.hero p { color: var(--text-dim); margin-top: 14px; font-size: 0.95rem; }
 .step-card {
   background: var(--surface);
   border: 1px solid var(--edge);
-  border-radius: 24px;
+  border-radius: 18px;
   padding: 22px 24px;
   cursor: pointer;
   transition: border-color .18s ease, transform .1s ease;
 }
-.step-card:hover { border-color: #3f3f3f; }
+.step-card:hover { border-color: #3f3f3f; transform: translateY(-1px); }
 .step-card:active { transform: scale(0.99); }
 .step-card .num {
-  display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center;
+  display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center;
   border-radius: 50%; background: var(--acid); color: var(--acid-ink);
-  font-weight: 700; font-size: 0.9rem; margin-right: 12px;
+  font-weight: 700; font-size: 0.82rem; margin-right: 12px;
 }
 .step-card h2 {
-  display: inline; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em;
+  display: inline; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.04em;
   text-transform: uppercase; vertical-align: middle;
 }
 .step-card > p { color: var(--text-dim); margin-top: 8px; font-size: 0.92rem; }
@@ -88,10 +88,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .check input { width: auto; margin-top: 3px; accent-color: var(--acid); }
 
 button {
-  padding: 16px 24px; border: 0; border-radius: var(--pill);
+  padding: 15px 24px; border: 0; border-radius: var(--pill);
   background: var(--acid); color: var(--acid-ink);
-  font-weight: 700; font-size: 0.95rem; font-family: inherit;
-  text-transform: uppercase; letter-spacing: 0.04em;
+  font-weight: 700; font-size: 0.88rem; font-family: inherit;
+  text-transform: uppercase; letter-spacing: 0.06em;
   cursor: pointer;
   transition: filter .15s ease, transform .1s ease;
 }
@@ -101,9 +101,9 @@ button.secondary { background: transparent; color: var(--text); border: 1px soli
 
 .success { color: var(--ok); font-weight: 500; margin-top: 12px; display: none; }
 .error { color: #e39a9a; margin-top: 12px; display: none; }
-a { color: var(--text); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--acid); }
-a:hover { color: var(--acid); }
-footer { text-align: center; color: var(--text-dim); font-size: 0.82rem; margin-top: 44px; }
+a { color: var(--text-dim); font-weight: 500; text-decoration: none; }
+a:hover { color: var(--text); }
+footer { text-align: center; color: var(--text-dim); font-size: 0.72rem; margin-top: 48px; text-transform: uppercase; letter-spacing: 0.16em; }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 12px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--edge); }
