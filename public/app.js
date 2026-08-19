@@ -20,11 +20,15 @@ const DEFAULT_CONTENT = {
   find_church_video_url: '',// "how to find a church" training video
 };
 
-const PLACEHOLDERS = {
-  know_god: 'Gospel video goes here — a short message about knowing God personally.',
-  grow_with_god: 'Discipleship course intro video goes here.',
-  find_church: 'Training video: joining a healthy local church — or starting a local gathering of your own.',
-};
+const PLACEHOLDER_KEYS = { know_god: 'vid1', grow_with_god: 'vid2', find_church: 'vid3' };
+
+// Re-label any placeholder that is still showing, after a language change.
+function refreshVideoPlaceholders() {
+  for (const [step, key] of Object.entries(PLACEHOLDER_KEYS)) {
+    const el = document.querySelector(`#video-${step} .video-placeholder`);
+    if (el) el.textContent = '▶ ' + t(key);
+  }
+}
 
 function embed(containerId, url, placeholderText) {
   const el = document.getElementById(containerId);
@@ -52,15 +56,15 @@ async function loadCreator() {
 
   if (creator.name && creator.slug !== 'default') {
     const badge = document.getElementById('creatorBadge');
-    badge.textContent = `Shared with you by ${creator.name}`;
+    badge.textContent = t('shared_by', { name: creator.name });
     badge.hidden = false;
   }
 
   // Custom mode uses the creator's own videos; default mode uses platform content.
   const src = creator.mode === 'custom' ? creator : DEFAULT_CONTENT;
-  embed('video-know_god', src.know_god_video_url || DEFAULT_CONTENT.know_god_video_url, PLACEHOLDERS.know_god);
-  embed('video-grow_with_god', src.grow_course_url || DEFAULT_CONTENT.grow_course_url, PLACEHOLDERS.grow_with_god);
-  embed('video-find_church', src.find_church_video_url || DEFAULT_CONTENT.find_church_video_url, PLACEHOLDERS.find_church);
+  embed('video-know_god', src.know_god_video_url || DEFAULT_CONTENT.know_god_video_url, t('vid1'));
+  embed('video-grow_with_god', src.grow_course_url || DEFAULT_CONTENT.grow_course_url, t('vid2'));
+  embed('video-find_church', src.find_church_video_url || DEFAULT_CONTENT.find_church_video_url, t('vid3'));
 }
 loadCreator();
 
@@ -84,6 +88,52 @@ const LANGUAGES = [
   ['ko', '한국어'], ['ja', '日本語'], ['zh', '中文'], ['other', 'Another language'],
 ];
 
+// ---- translation ---------------------------------------------------------
+// t() looks up the active language, falling back to English per key so a
+// partial translation never leaves a blank on the page.
+function t(key, vars) {
+  const dict = (typeof I18N !== 'undefined' && I18N[locale.language]) || {};
+  const base = (typeof I18N !== 'undefined' && I18N.en) || {};
+  let text = dict[key] ?? base[key] ?? '';
+  if (vars) for (const [k, v] of Object.entries(vars)) text = text.replaceAll(`{${k}}`, v);
+  return text;
+}
+
+// Renders "**bold**" markers as <strong> without ever parsing HTML.
+function setRich(el, text) {
+  el.replaceChildren();
+  text.split('**').forEach((chunk, i) => {
+    if (!chunk) return;
+    if (i % 2) {
+      const strong = document.createElement('strong');
+      strong.textContent = chunk;
+      el.appendChild(strong);
+    } else {
+      el.appendChild(document.createTextNode(chunk));
+    }
+  });
+}
+
+function applyLanguage() {
+  const code = locale.language || 'en';
+  document.documentElement.lang = code;
+  document.documentElement.dir =
+    (typeof RTL !== 'undefined' && RTL.has(code)) ? 'rtl' : 'ltr';
+
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const text = t(el.dataset.i18n);
+    if (!text) return;
+    if (text.includes('**')) setRich(el, text);
+    else el.textContent = text;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const text = t(el.dataset.i18nPlaceholder);
+    if (text) el.placeholder = text;
+  });
+  loadSlots();      // meeting times carry translated day names
+  refreshVideoPlaceholders();
+}
+
 const locale = {
   country: localStorage.getItem('country') || '',
   language: localStorage.getItem('language') || '',
@@ -103,11 +153,11 @@ function setupLocale() {
     return o;
   };
 
-  countrySelect.append(option('', 'Choose your country', !locale.country));
+  countrySelect.append(option('', t('country_prompt'), !locale.country));
   for (const [code, emoji, name] of COUNTRIES) {
     countrySelect.append(option(code, `${emoji}  ${name}`, locale.country === code));
   }
-  languageSelect.append(option('', 'Choose your language', !locale.language));
+  languageSelect.append(option('', t('language_prompt'), !locale.language));
   for (const [code, name] of LANGUAGES) {
     languageSelect.append(option(code, name, locale.language === code));
   }
@@ -157,20 +207,22 @@ function setupLocale() {
   languageSelect.addEventListener('change', () => {
     locale.language = languageSelect.value;
     localStorage.setItem('language', locale.language);
+    applyLanguage();
   });
 }
 setupLocale();
+applyLanguage();
 
 // ---- online small-group times -------------------------------------------
 // Mirrors the server's list so the picker still works if the API is
 // unreachable; live counts from /api/slots replace these when available.
 const FALLBACK_SLOTS = [
-  { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM PT', capacity: 10, remaining: 6 },
-  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM CT', capacity: 10, remaining: 4 },
-  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM CT', capacity: 10, remaining: 9 },
-  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM CT', capacity: 10, remaining: 5 },
-  { id: 'gw-wed-18', step: 'grow_with_god', label: 'Wednesdays · 6:30 PM PT', capacity: 10, remaining: 3 },
-  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM CT', capacity: 10, remaining: 8 },
+  { id: 'kg-tue-19', step: 'know_god', day: 'tue', time: '7:00 PM', tz: 'PT', capacity: 10, remaining: 6 },
+  { id: 'kg-thu-12', step: 'know_god', day: 'thu', time: '12:00 PM', tz: 'CT', capacity: 10, remaining: 4 },
+  { id: 'kg-sun-17', step: 'know_god', day: 'sun', time: '5:00 PM', tz: 'CT', capacity: 10, remaining: 9 },
+  { id: 'gw-mon-20', step: 'grow_with_god', day: 'mon', time: '8:00 PM', tz: 'CT', capacity: 10, remaining: 5 },
+  { id: 'gw-wed-18', step: 'grow_with_god', day: 'wed', time: '6:30 PM', tz: 'PT', capacity: 10, remaining: 3 },
+  { id: 'gw-sat-10', step: 'grow_with_god', day: 'sat', time: '10:00 AM', tz: 'CT', capacity: 10, remaining: 8 },
 ];
 
 // Times are defined server-side with a fixed capacity; the API reports how
@@ -197,20 +249,21 @@ async function loadSlots() {
     prompt.value = '';
     prompt.disabled = true;
     prompt.selected = true;
-    prompt.textContent = 'Choose a meeting time';
+    prompt.textContent = t('choose_time');
     select.appendChild(prompt);
     for (const slot of mine) {
       const opt = document.createElement('option');
       opt.value = slot.id;
       opt.disabled = slot.remaining <= 0;
+      const when = slot.label || `${t(slot.day)} · ${slot.time} ${slot.tz}`;
       opt.textContent = slot.remaining > 0
-        ? `${slot.label} — ${slot.remaining} of ${slot.capacity} spots left`
-        : `${slot.label} — full`;
+        ? `${when} — ${t('spots', { n: slot.remaining, total: slot.capacity })}`
+        : `${when} — ${t('full')}`;
       select.appendChild(opt);
     }
     const propose = document.createElement('option');
     propose.value = 'propose';
-    propose.textContent = 'None of these — propose a time';
+    propose.textContent = t('propose');
     select.appendChild(propose);
     if (previous) select.value = previous;
   }
@@ -291,7 +344,7 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
         body: JSON.stringify(data),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Something went wrong');
+      if (!res.ok) throw new Error(body.error || t('err'));
       success.style.display = 'block';
       form.querySelector('button').disabled = true;
       remember(data);  // save typing on the next step

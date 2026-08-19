@@ -28,21 +28,21 @@
         </span>
       </button>
       <div class="locale-panel" id="localePanel" hidden>
-        <p class="locale-note">Optional &mdash; helps us match you with a group near you.</p>
+        <p class="locale-note" data-i18n="locale_note">Optional &mdash; helps us match you with a group near you.</p>
         <label class="locale-field">
-          <span>Country</span>
+          <span data-i18n="locale_country">Country</span>
           <select id="countrySelect" aria-label="Country"></select>
         </label>
         <label class="locale-field">
-          <span>Language</span>
+          <span data-i18n="locale_language">Language</span>
           <select id="languageSelect" aria-label="Language"></select>
         </label>
       </div>
     </div>
 
     <header class="hero">
-      <h1>Take your<br><em>next step</em></h1>
-      <p class="hero-sub">Wherever you are in your journey &mdash; start here.</p>
+      <h1><span data-i18n="hero_1">Take your</span><br><em data-i18n="hero_2">next step</em></h1>
+      <p class="hero-sub" data-i18n="hero_sub">Wherever you are in your journey &mdash; start here.</p>
       <span class="creator-badge" id="creatorBadge" hidden></span>
     </header>
 
@@ -51,7 +51,7 @@
       <section class="step-card" id="card-know_god">
         <div class="step-head">
           <span class="step-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 5.5h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
-          <h2>Know God</h2>
+          <h2 data-i18n="step1">Know God</h2>
           <span class="step-chevron" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 5.25 7 8.75l3.5-3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
@@ -60,26 +60,26 @@
           <div class="step-inner">
             <div id="video-know_god"></div>
             <form data-step="know_god">
-              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
-              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
+              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
+              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
               <select name="decision" aria-label="Where are you in this journey?">
-                <option value="" disabled selected>Where are you today?</option>
-                <option value="first_time">I just decided to follow Jesus</option>
-                <option value="recommitment">I'm recommitting my life</option>
-                <option value="questions">I have questions</option>
-                <option value="exploring">Just exploring</option>
+                <option value="" disabled selected data-i18n="decision_prompt">Where are you today?</option>
+                <option value="first_time" data-i18n="decision_first">I just decided to follow Jesus</option>
+                <option value="recommitment" data-i18n="decision_recommit">I'm recommitting my life</option>
+                <option value="questions" data-i18n="decision_questions">I have questions</option>
+                <option value="exploring" data-i18n="decision_exploring">Just exploring</option>
               </select>
-              <label class="check"><input type="checkbox" name="interested_in_group" data-reveal="slots-know_god"><span>Join an <strong>online small group</strong> &mdash; meet others starting out, from anywhere</span></label>
+              <label class="check"><input type="checkbox" name="interested_in_group" data-reveal="slots-know_god"><span data-i18n="group1">Join an <strong>online small group</strong> &mdash; meet others starting out, from anywhere</span></label>
               <div class="slot-picker" id="slots-know_god" hidden>
-                <span class="slot-label">Pick a time</span>
+                <span class="slot-label" data-i18n="pick_time">Pick a time</span>
                 <select name="group_slot" data-slots="know_god" aria-label="Online group time">
                   <option value="" disabled selected>Loading times&hellip;</option>
                 </select>
                 <input name="slot_note" class="slot-note" maxlength="200" hidden
-                       placeholder="What time works for you?" aria-label="Your preferred time">
+                       placeholder="What time works for you?" data-i18n-placeholder="propose_placeholder" aria-label="Your preferred time">
               </div>
-              <button type="submit">I took this step</button>
-              <div class="success">Welcome to the family. We'll be in touch soon.</div>
+              <button type="submit" data-i18n="btn1">I took this step</button>
+              <div class="success" data-i18n="ok1">Welcome to the family. We'll be in touch soon.</div>
               <div class="error"></div>
             </form>
           </div>
@@ -90,7 +90,7 @@
       <section class="step-card" id="card-grow_with_god">
         <div class="step-head">
           <span class="step-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 14V7M8 7C8 4.8 6.2 3 4 3c0 2.2 1.8 4 4 4Zm0 0c0-2.2 1.8-4 4-4 0 2.2-1.8 4-4 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <h2>Grow with God</h2>
+          <h2 data-i18n="step2">Grow with God</h2>
           <span class="step-chevron" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 5.25 7 8.75l3.5-3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
@@ -99,19 +99,19 @@
           <div class="step-inner">
             <div id="video-grow_with_god"></div>
             <form data-step="grow_with_god">
-              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
-              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
-              <label class="check"><input type="checkbox" name="interested_in_group" data-reveal="slots-grow_with_god"><span>Go through it in an <strong>online discipleship group</strong> &mdash; weekly, with others</span></label>
+              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
+              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
+              <label class="check"><input type="checkbox" name="interested_in_group" data-reveal="slots-grow_with_god"><span data-i18n="group2">Go through it in an <strong>online discipleship group</strong> &mdash; weekly, with others</span></label>
               <div class="slot-picker" id="slots-grow_with_god" hidden>
-                <span class="slot-label">Pick a time</span>
+                <span class="slot-label" data-i18n="pick_time">Pick a time</span>
                 <select name="group_slot" data-slots="grow_with_god" aria-label="Online discipleship group time">
                   <option value="" disabled selected>Loading times&hellip;</option>
                 </select>
                 <input name="slot_note" class="slot-note" maxlength="200" hidden
-                       placeholder="What time works for you?" aria-label="Your preferred time">
+                       placeholder="What time works for you?" data-i18n-placeholder="propose_placeholder" aria-label="Your preferred time">
               </div>
-              <button type="submit">Start the course</button>
-              <div class="success">You're in. Check your email for the first lesson.</div>
+              <button type="submit" data-i18n="btn2">Start the course</button>
+              <div class="success" data-i18n="ok2">You're in. Check your email for the first lesson.</div>
               <div class="error"></div>
             </form>
           </div>
@@ -122,7 +122,7 @@
       <section class="step-card" id="card-find_church">
         <div class="step-head">
           <span class="step-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="6" r="2.3" stroke="currentColor" stroke-width="1.5"/><path d="M2 13c0-2.2 1.8-3.6 4-3.6S10 10.8 10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 4.2a2.3 2.3 0 0 1 0 4.1M12.2 13c0-1.7-.6-2.8-1.6-3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-          <h2>Gather Locally</h2>
+          <h2 data-i18n="step3">Gather Locally</h2>
           <span class="step-chevron" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 5.25 7 8.75l3.5-3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
@@ -131,19 +131,19 @@
           <div class="step-inner">
             <div id="video-find_church"></div>
             <form data-step="find_church">
-              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
-              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
-              <input name="city" required maxlength="100" placeholder="City" aria-label="City">
+              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
+              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
+              <input name="city" required maxlength="100" placeholder="City" aria-label="City" data-i18n-placeholder="f_city">
               <select name="path" required aria-label="What you'd like to do">
-                <option value="" disabled selected>How do you want to gather?</option>
-                <option value="join_church">Join a local church near me</option>
-                <option value="start_gathering">Start a local gathering of my own</option>
-                <option value="both">Both &mdash; join a church and start a gathering</option>
-                <option value="not_sure">Not sure yet &mdash; help me figure it out</option>
+                <option value="" disabled selected data-i18n="path_prompt">How do you want to gather?</option>
+                <option value="join_church" data-i18n="path_join">Join a local church near me</option>
+                <option value="start_gathering" data-i18n="path_start">Start a local gathering of my own</option>
+                <option value="both" data-i18n="path_both">Both &mdash; join a church and start a gathering</option>
+                <option value="not_sure" data-i18n="path_unsure">Not sure yet &mdash; help me figure it out</option>
               </select>
-              <label class="check"><input type="checkbox" name="interested_in_group"><span>Connect me with others near me who want to gather</span></label>
-              <button type="submit">Count me in</button>
-              <div class="success">Got it &mdash; we'll be in touch about your next gathering.</div>
+              <label class="check"><input type="checkbox" name="interested_in_group"><span data-i18n="group3">Connect me with others near me who want to gather</span></label>
+              <button type="submit" data-i18n="btn3">Count me in</button>
+              <div class="success" data-i18n="ok3">Got it &mdash; we'll be in touch about your next gathering.</div>
               <div class="error"></div>
             </form>
           </div>
@@ -152,9 +152,10 @@
     </div>
 
     <footer>
-      <a href="creator.html">Creators &mdash; get your link</a>
+      <a href="creator.html" data-i18n="footer">Creators &mdash; get your link</a>
     </footer>
   </div>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 </body>

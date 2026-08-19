@@ -129,12 +129,12 @@ const GROUP_CAPACITY = 10;
 // funnel signups, so a brand-new group still shows realistic availability.
 // Times span several zones so people in different regions have a fit.
 const SLOTS = [
-  { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM PT', reserved: 4 },
-  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM CT', reserved: 6 },
-  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM CT', reserved: 1 },
-  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM CT', reserved: 5 },
-  { id: 'gw-wed-18', step: 'grow_with_god', label: 'Wednesdays · 6:30 PM PT', reserved: 7 },
-  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM CT', reserved: 2 },
+  { id: 'kg-tue-19', step: 'know_god', day: 'tue', time: '7:00 PM', tz: 'PT', reserved: 4 },
+  { id: 'kg-thu-12', step: 'know_god', day: 'thu', time: '12:00 PM', tz: 'CT', reserved: 6 },
+  { id: 'kg-sun-17', step: 'know_god', day: 'sun', time: '5:00 PM', tz: 'CT', reserved: 1 },
+  { id: 'gw-mon-20', step: 'grow_with_god', day: 'mon', time: '8:00 PM', tz: 'CT', reserved: 5 },
+  { id: 'gw-wed-18', step: 'grow_with_god', day: 'wed', time: '6:30 PM', tz: 'PT', reserved: 7 },
+  { id: 'gw-sat-10', step: 'grow_with_god', day: 'sat', time: '10:00 AM', tz: 'CT', reserved: 2 },
 ];
 const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
 // People who can't make any listed time can propose their own; those have no

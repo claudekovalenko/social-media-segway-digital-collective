@@ -201,5 +201,12 @@ h3.section { margin: 28px 0 6px; font-weight: 600; font-size: 1rem; }
 .step-card.open.static, body.wide .step-card.open { padding: 24px; }
 body.wide .step-card .step-body, .step-card.static .step-body { display: block; }
 
+/* Right-to-left languages: mirror the few directional bits. */
+[dir="rtl"] .topbar { justify-content: flex-start; }
+[dir="rtl"] .locale-panel { right: auto; left: 0; }
+[dir="rtl"] .step-chevron { transform: scaleX(-1); }
+[dir="rtl"] .step-card.open .step-chevron { transform: rotate(180deg); }
+[dir="rtl"] .hero-sub, [dir="rtl"] header.hero h1 { text-align: right; }
+
 /* Admin uses a wider layout than the phone-first funnel. */
 body.wide .wrap { max-width: 960px; }
