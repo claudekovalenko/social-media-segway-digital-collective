@@ -57,11 +57,12 @@ async function loadCreator() {
 }
 loadCreator();
 
-// Expand a step when its card is clicked.
+// Toggle a step open/closed when its header area is clicked.
+// Clicks inside the expanded body (video, form fields) never collapse it.
 document.querySelectorAll('.step-card').forEach((card) => {
   card.addEventListener('click', (e) => {
-    if (card.classList.contains('open')) return;
-    card.classList.add('open');
+    if (e.target.closest('.step-body')) return;
+    card.classList.toggle('open');
   });
 });
 

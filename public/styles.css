@@ -39,7 +39,6 @@ header.hero p { color: var(--muted); max-width: 520px; margin: 12px auto 0; }
 .step-card p { color: var(--muted); margin-top: 10px; }
 .step-body { display: none; margin-top: 20px; }
 .step-card.open .step-body { display: block; }
-.step-card.open { cursor: default; }
 .video-frame {
   aspect-ratio: 16/9; width: 100%; border: 0; border-radius: 12px; background: #000;
 }
