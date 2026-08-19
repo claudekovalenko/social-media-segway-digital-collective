@@ -12,6 +12,9 @@
   --lime-ink: #131602;
   --ok: #a7dcae;
   --err: #e0a0a0;
+  /* one duration and one easing for every transition on the page */
+  --motion: .22s;
+  --ease: ease-out;
 }
 * { box-sizing: border-box; margin: 0; }
 [hidden] { display: none !important; }
@@ -41,7 +44,7 @@ body {
   background: transparent; border: 1px solid var(--edge-lit); color: var(--text-dim);
   display: flex; align-items: center; justify-content: center;
   font-size: 1.05rem; line-height: 1; cursor: pointer;
-  transition: border-color .2s ease, color .2s ease;
+  transition: border-color var(--motion) var(--ease), color var(--motion) var(--ease);
 }
 .globe:hover { border-color: var(--lime); color: var(--lime); }
 .globe-flag { display: flex; align-items: center; justify-content: center; }
@@ -84,7 +87,7 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
-  transition: border-color .2s ease;
+  transition: border-color var(--motion) var(--ease);
 }
 .step-card:hover { border-color: var(--lime); }
 .step-card.open { border-radius: 28px; cursor: default; }
@@ -97,7 +100,7 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   border: 1px solid var(--edge-lit); color: var(--text-dim);
   display: flex; align-items: center; justify-content: center;
-  transition: border-color .2s ease, color .2s ease;
+  transition: border-color var(--motion) var(--ease), color var(--motion) var(--ease);
 }
 .step-card:hover .step-icon, .step-card.open .step-icon { border-color: var(--lime); color: var(--lime); }
 .step-card h2 {
@@ -107,13 +110,13 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 .step-chevron {
   width: 34px; flex-shrink: 0; color: var(--text-dim);
   display: flex; align-items: center; justify-content: center;
-  transition: transform .26s ease-out, color .2s ease;
+  transition: transform var(--motion) var(--ease), color var(--motion) var(--ease);
 }
 .step-card.open .step-chevron { transform: rotate(180deg); color: var(--lime); }
 
 .step-body {
   display: grid; grid-template-rows: 0fr;
-  transition: grid-template-rows .26s ease-out;
+  transition: grid-template-rows var(--motion) var(--ease);
 }
 .step-card.open .step-body { grid-template-rows: 1fr; }
 .step-inner { min-height: 0; overflow: hidden; padding: 0 18px; }
@@ -135,7 +138,7 @@ input, select, textarea {
   border: 1px solid var(--edge-lit);
   background: var(--bg); color: var(--text);
   font-size: 0.95rem; font-family: inherit;
-  transition: border-color .15s ease;
+  transition: border-color var(--motion) var(--ease);
 }
 textarea { border-radius: 18px; }
 input::placeholder, textarea::placeholder { color: #6b6b67; }
@@ -167,7 +170,7 @@ button {
   font-weight: 700; font-size: 0.95rem; font-family: inherit;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: filter .15s ease, transform .1s ease;
+  transition: filter var(--motion) var(--ease), transform var(--motion) var(--ease);
 }
 button:hover { filter: brightness(1.06); }
 button:active { transform: scale(0.985); }
@@ -178,7 +181,7 @@ button:disabled { opacity: 0.55; cursor: default; }
 .error { color: var(--err); margin-top: 10px; display: none; font-size: 0.9rem; }
 
 /* ---------- misc ---------- */
-a { color: var(--text-dim); font-weight: 500; text-decoration: none; transition: color .15s ease; }
+a { color: var(--text-dim); font-weight: 500; text-decoration: none; transition: color var(--motion) var(--ease); }
 a:hover { color: var(--text); }
 footer { text-align: center; font-size: 0.82rem; margin-top: 48px; }
 
