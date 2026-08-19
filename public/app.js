@@ -64,16 +64,104 @@ async function loadCreator() {
 }
 loadCreator();
 
+// ---- country + language picker ------------------------------------------
+// Stored with each lead so groups can be formed by region and language.
+const COUNTRIES = [
+  ['US', '🇺🇸', 'United States'], ['CA', '🇨🇦', 'Canada'], ['MX', '🇲🇽', 'Mexico'],
+  ['GB', '🇬🇧', 'United Kingdom'], ['IE', '🇮🇪', 'Ireland'], ['AU', '🇦🇺', 'Australia'],
+  ['NZ', '🇳🇿', 'New Zealand'], ['BR', '🇧🇷', 'Brazil'], ['AR', '🇦🇷', 'Argentina'],
+  ['CO', '🇨🇴', 'Colombia'], ['ES', '🇪🇸', 'Spain'], ['FR', '🇫🇷', 'France'],
+  ['DE', '🇩🇪', 'Germany'], ['IT', '🇮🇹', 'Italy'], ['PL', '🇵🇱', 'Poland'],
+  ['UA', '🇺🇦', 'Ukraine'], ['NG', '🇳🇬', 'Nigeria'], ['KE', '🇰🇪', 'Kenya'],
+  ['ZA', '🇿🇦', 'South Africa'], ['EG', '🇪🇬', 'Egypt'], ['IN', '🇮🇳', 'India'],
+  ['PH', '🇵🇭', 'Philippines'], ['ID', '🇮🇩', 'Indonesia'], ['KR', '🇰🇷', 'South Korea'],
+  ['JP', '🇯🇵', 'Japan'], ['CN', '🇨🇳', 'China'], ['OTHER', '🌍', 'Somewhere else'],
+];
+const LANGUAGES = [
+  ['en', 'English'], ['es', 'Español'], ['pt', 'Português'], ['fr', 'Français'],
+  ['de', 'Deutsch'], ['it', 'Italiano'], ['pl', 'Polski'], ['uk', 'Українська'],
+  ['ar', 'العربية'], ['hi', 'हिन्दी'], ['tl', 'Tagalog'], ['id', 'Bahasa Indonesia'],
+  ['ko', '한국어'], ['ja', '日本語'], ['zh', '中文'], ['other', 'Another language'],
+];
+
+const locale = {
+  country: localStorage.getItem('country') || '',
+  language: localStorage.getItem('language') || '',
+};
+
+function setupLocale() {
+  const btn = document.getElementById('globeBtn');
+  const panel = document.getElementById('localePanel');
+  const flag = document.getElementById('globeFlag');
+  const countrySelect = document.getElementById('countrySelect');
+  const languageSelect = document.getElementById('languageSelect');
+  if (!btn || !panel) return;
+
+  const option = (value, text, selected) => {
+    const o = document.createElement('option');
+    o.value = value; o.textContent = text; o.selected = selected;
+    return o;
+  };
+
+  countrySelect.append(option('', 'Choose your country', !locale.country));
+  for (const [code, emoji, name] of COUNTRIES) {
+    countrySelect.append(option(code, `${emoji}  ${name}`, locale.country === code));
+  }
+  languageSelect.append(option('', 'Choose your language', !locale.language));
+  for (const [code, name] of LANGUAGES) {
+    languageSelect.append(option(code, name, locale.language === code));
+  }
+
+  // Once a country is picked, its flag replaces the globe on the button.
+  function paintFlag() {
+    const match = COUNTRIES.find((c) => c[0] === locale.country);
+    if (match && match[0] !== 'OTHER') flag.textContent = match[1];
+    else if (match) flag.textContent = '🌍';
+  }
+  paintFlag();
+
+  // Default to the browser's language when we have nothing stored.
+  if (!locale.language) {
+    const guess = (navigator.language || '').slice(0, 2).toLowerCase();
+    if (LANGUAGES.some(([code]) => code === guess)) {
+      locale.language = guess;
+      languageSelect.value = guess;
+    }
+  }
+
+  const close = () => { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = panel.hidden;
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  });
+  panel.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+  countrySelect.addEventListener('change', () => {
+    locale.country = countrySelect.value;
+    localStorage.setItem('country', locale.country);
+    paintFlag();
+  });
+  languageSelect.addEventListener('change', () => {
+    locale.language = languageSelect.value;
+    localStorage.setItem('language', locale.language);
+  });
+}
+setupLocale();
+
 // ---- online small-group times -------------------------------------------
 // Mirrors the server's list so the picker still works if the API is
 // unreachable; live counts from /api/slots replace these when available.
 const FALLBACK_SLOTS = [
   { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM PT', capacity: 10, remaining: 6 },
-  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM PT', capacity: 10, remaining: 4 },
-  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM PT', capacity: 10, remaining: 9 },
-  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM PT', capacity: 10, remaining: 5 },
+  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM CT', capacity: 10, remaining: 4 },
+  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM CT', capacity: 10, remaining: 9 },
+  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM CT', capacity: 10, remaining: 5 },
   { id: 'gw-wed-18', step: 'grow_with_god', label: 'Wednesdays · 6:30 PM PT', capacity: 10, remaining: 3 },
-  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM PT', capacity: 10, remaining: 8 },
+  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM CT', capacity: 10, remaining: 8 },
 ];
 
 // Times are defined server-side with a fixed capacity; the API reports how
@@ -142,6 +230,8 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     const data = Object.fromEntries(new FormData(form).entries());
     data.step = form.dataset.step;
     data.creator_slug = creatorSlug;
+    data.country = locale.country || null;
+    data.language = locale.language || null;
     data.interested_in_group = form.querySelector('[name=interested_in_group]')?.checked || false;
     if (!data.interested_in_group) delete data.group_slot;
     const success = form.querySelector('.success');

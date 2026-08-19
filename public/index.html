@@ -16,6 +16,29 @@
 <body>
   <div class="glow" aria-hidden="true"></div>
   <div class="wrap">
+  <div class="topbar">
+      <button type="button" class="globe" id="globeBtn" aria-expanded="false"
+              aria-controls="localePanel" aria-label="Choose your country and language">
+        <span class="globe-flag" id="globeFlag" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="7.4" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M2.6 10h14.8M10 2.6c1.9 2 2.9 4.6 2.9 7.4s-1 5.4-2.9 7.4C8.1 15.4 7.1 12.8 7.1 10S8.1 4.6 10 2.6Z"
+                  stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </button>
+      <div class="locale-panel" id="localePanel" hidden>
+        <label class="locale-field">
+          <span>Country</span>
+          <select id="countrySelect" aria-label="Country"></select>
+        </label>
+        <label class="locale-field">
+          <span>Language</span>
+          <select id="languageSelect" aria-label="Language"></select>
+        </label>
+      </div>
+    </div>
+
     <header class="hero">
       <h1>Take your<br><em>next step</em></h1>
       <p class="hero-sub">Wherever you are in your journey &mdash; start here.</p>

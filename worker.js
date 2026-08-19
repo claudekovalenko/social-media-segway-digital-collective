@@ -11,14 +11,15 @@ const VALID_PATHS = new Set(['join_church', 'start_gathering', 'both', 'not_sure
 // grow_with_god -> for people going through discipleship
 const GROUP_CAPACITY = 10;
 // `reserved` is how many of the ten seats are already spoken for before any
-// funnel signups, so a brand-new group can still show realistic availability.
+// funnel signups, so a brand-new group still shows realistic availability.
+// Times span several zones so people in different regions have a fit.
 const SLOTS = [
   { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM PT', reserved: 4 },
-  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM PT', reserved: 6 },
-  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM PT', reserved: 1 },
-  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM PT', reserved: 5 },
+  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM CT', reserved: 6 },
+  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM CT', reserved: 1 },
+  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM CT', reserved: 5 },
   { id: 'gw-wed-18', step: 'grow_with_god', label: 'Wednesdays · 6:30 PM PT', reserved: 7 },
-  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM PT', reserved: 2 },
+  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM CT', reserved: 2 },
 ];
 const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
 
@@ -112,6 +113,8 @@ export default {
         const creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
         const slot = SLOT_IDS.has(b.group_slot) ? b.group_slot : null;
         const path = VALID_PATHS.has(b.path) ? b.path : null;
+        const country = String(b.country || '').slice(0, 8) || null;
+        const language = String(b.language || '').slice(0, 8) || null;
 
         // Don't oversubscribe a group: re-check the slot right before writing.
         if (interested && slot) {
@@ -123,14 +126,14 @@ export default {
         }
 
         const result = await env.DB.prepare(
-          `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, path, creator_slug)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, path, country, language, creator_slug)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(step, name, email,
           String(b.phone || '').slice(0, 40) || null,
           String(b.city || '').slice(0, 100) || null,
           String(b.message || '').slice(0, 2000) || null,
           String(b.decision || '').slice(0, 40) || null,
-          interested, slot, path, creatorSlug).run();
+          interested, slot, path, country, language, creatorSlug).run();
         if (interested) {
           await env.DB.prepare(`INSERT INTO group_signups (lead_id, creator_slug, slot) VALUES (?, ?, ?)`)
             .bind(result.meta.last_row_id, creatorSlug, slot).run();

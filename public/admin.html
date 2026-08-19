@@ -33,7 +33,7 @@
 
       <h3 class="section">Leads</h3>
       <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Path</th><th>Group?</th><th>Group time</th><th>Creator</th><th>Message</th></tr></thead>
+        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Country</th><th>Language</th><th>Path</th><th>Group?</th><th>Group time</th><th>Creator</th><th>Message</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
@@ -118,7 +118,8 @@
       for (const l of data.leads) {
         const tr = document.createElement('tr');
         [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
-         l.decision, PATH_NAMES[l.path] || l.path, l.interested_in_group ? 'Yes' : '',
+         l.decision, l.country, l.language, PATH_NAMES[l.path] || l.path,
+         l.interested_in_group ? 'Yes' : '',
          SLOT_NAMES[l.group_slot] || l.group_slot, l.creator_slug, l.message]
           .forEach(v => tr.appendChild(cell(v)));
         lt.appendChild(tr);
