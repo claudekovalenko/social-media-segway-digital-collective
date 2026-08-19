@@ -94,9 +94,13 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 }
 .step-card:hover .step-head { border-color: var(--lime); }
 /* A gentle press: contents only, and the pill's own edge stays put. */
-.step-card:active .step-head { transform: scale(0.995); }
+.step-card:active .step-head { transform: scale(0.985); }
 .step-card.open:active .step-head { transform: none; }
-.step-card.open .step-head { border-color: var(--lime); background: var(--surface-2); }
+.step-card.open .step-head {
+  border-color: var(--lime); background: var(--surface-2);
+  /* a gentle deform: the pill relaxes toward the panel it opened */
+  border-radius: 999px 999px 22px 22px;
+}
 
 .step-icon {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
@@ -124,7 +128,7 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 .step-card.open .step-body { grid-template-rows: 1fr; }
 .step-inner { min-height: 0; overflow: hidden; }
 .step-card.open .step-inner {
-  margin-top: 8px; padding: 18px;
+  margin-top: 6px; padding: 18px;
   border: 1px solid var(--edge); border-radius: 18px;
   background: var(--surface);
 }
