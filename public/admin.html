@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Funnel Admin</title>
+  <title>Database &mdash; Digital Collective</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,20 +15,44 @@
 </head>
 <body class="wide">
   <div class="wrap">
+    <nav class="site-nav">
+      <a class="brand" href="index.html"><svg class="dc-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="4.4" r="2.6" fill="currentColor"/><circle cx="4.8" cy="17.6" r="2.6" fill="currentColor"/><circle cx="19.2" cy="17.6" r="2.6" fill="currentColor"/><path d="M12 8.6v7.2M8.6 11.6h6.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>Digital Collective</a>
+      <a class="nav-login" href="dashboard.html">Creator login</a>
+    </nav>
     <header class="hero">
-      <h1>Funnel Dashboard</h1>
-      <p>All leads collected across every creator's funnel.</p>
+      <h1>The <em>database</em></h1>
+      <p class="hero-sub">Everything collected across every creator&rsquo;s link &mdash; leads, group signups, and creators.</p>
     </header>
 
-    <section class="step-card open" id="login">
+    <section class="step-card open static" id="login">
+      <form id="emailForm" hidden>
+        <label>Your email
+          <input name="email" type="email" required placeholder="you@example.com" autocomplete="email">
+        </label>
+        <button type="submit">Email me a sign-in link</button>
+        <p class="aside-link">Sign in with an email that has database access &mdash; no password to remember.</p>
+        <div class="success" id="sent">Check your email for the sign-in link.</div>
+        <div class="error"></div>
+      </form>
+
+      <p class="aside-link" id="toggleRow" hidden>
+        <a href="#" id="useKey">Use the admin key instead</a>
+      </p>
+
       <form id="keyForm">
-        <label>Admin key<input name="key" type="password" required></label>
-        <button type="submit">View dashboard</button>
+        <label>Admin key
+          <input name="key" type="password" required autocomplete="current-password">
+        </label>
+        <button type="submit">Open the database</button>
         <div class="error"></div>
       </form>
     </section>
 
     <div id="dash" hidden>
+      <div class="creator-bar">
+        <span id="whoami"></span>
+        <a href="#" id="signOut">Sign out</a>
+      </div>
       <div class="stat-row" id="stats"></div>
 
       <h3 class="section">Leads</h3>
@@ -55,6 +79,12 @@
         <tbody></tbody>
       </table></div>
     </div>
+
+    <footer>
+      <a href="index.html">Digital Collective</a> &middot;
+      <a href="dashboard.html">Creator login</a> &middot;
+      <a href="privacy.html">Privacy &amp; Consent</a>
+    </footer>
   </div>
 
   <script>
@@ -69,18 +99,107 @@
       both: 'Both', not_sure: 'Not sure yet',
     };
     let SLOT_NAMES = {};
-    const form = document.getElementById('keyForm');
-    form.addEventListener('submit', async (e) => {
+    // ---- sign in ------------------------------------------------------------
+    // Two ways in: a Supabase magic link for an allow-listed email (preferred,
+    // when Supabase is configured) or the shared admin key.
+    let auth = { magic_link: false };
+
+    async function setupAuth() {
+      try {
+        const res = await fetch(API_BASE + '/api/auth/config');
+        if (res.ok) auth = await res.json();
+      } catch { /* fall back to the key form */ }
+      if (auth.magic_link) {
+        document.getElementById('emailForm').hidden = false;
+        document.getElementById('toggleRow').hidden = false;
+        document.getElementById('keyForm').hidden = true;
+      }
+      // Coming back from the emailed link: the token arrives in the URL hash.
+      const hash = new URLSearchParams(location.hash.slice(1));
+      const token = hash.get('access_token');
+      if (token) {
+        history.replaceState(null, '', location.pathname);
+        sessionStorage.setItem('dc_admin_token', token);
+      }
+      const saved = token || sessionStorage.getItem('dc_admin_token');
+      if (saved) openDb({ Authorization: 'Bearer ' + saved });
+    }
+
+    document.getElementById('useKey').addEventListener('click', (e) => {
       e.preventDefault();
-      const key = new FormData(form).get('key');
-      const error = form.querySelector('.error');
-      error.style.display = 'none';
-      const res = await fetch(API_BASE + '/api/admin/leads', { headers: { 'x-admin-key': key } });
-      if (!res.ok) { error.textContent = 'Wrong key'; error.style.display = 'block'; return; }
+      document.getElementById('emailForm').hidden = true;
+      document.getElementById('keyForm').hidden = false;
+      document.getElementById('toggleRow').hidden = true;
+    });
+
+    document.getElementById('emailForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const email = new FormData(f).get('email').trim();
+      const error = f.querySelector('.error');
+      const sent = document.getElementById('sent');
+      error.style.display = sent.style.display = 'none';
+      try {
+        const res = await fetch(auth.url.replace(/\/+$/, '') + '/auth/v1/otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: auth.anon_key },
+          body: JSON.stringify({
+            email,
+            options: { email_redirect_to: location.origin + location.pathname },
+          }),
+        });
+        if (!res.ok) throw new Error('Could not send the link — check the address.');
+        sent.style.display = 'block';
+      } catch (err) {
+        error.textContent = err.message;
+        error.style.display = 'block';
+      }
+    });
+
+    // Opens the database with whatever credentials are supplied. Returns the
+    // problem as a message so each form can show it in its own place.
+    async function openDb(headers) {
+      let res;
+      try {
+        res = await fetch(API_BASE + '/api/admin/leads', { headers });
+      } catch {
+        return 'Could not reach the server — try again.';
+      }
+      if (res.status === 403) {
+        sessionStorage.removeItem('dc_admin_token');
+        return 'That account does not have database access.';
+      }
+      if (!res.ok) {
+        sessionStorage.removeItem('dc_admin_token');
+        return 'Sign-in was not accepted.';
+      }
       const data = await res.json();
       document.getElementById('login').hidden = true;
       document.getElementById('dash').hidden = false;
+      document.getElementById('whoami').textContent =
+        (data.admin_email ? data.admin_email : 'Signed in with the admin key')
+        + (data.backend ? ' · ' + data.backend : '');
       render(data);
+      return null;
+    }
+
+    document.getElementById('signOut').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('dc_admin_token');
+      location.href = location.pathname;
+    });
+
+    const form = document.getElementById('keyForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = new FormData(form).get('key').trim();
+      const error = form.querySelector('.error');
+      error.style.display = 'none';
+      const problem = await openDb({ 'x-admin-key': key });
+      if (problem) {
+        error.textContent = problem === 'Sign-in was not accepted.' ? 'That key was not recognized.' : problem;
+        error.style.display = 'block';
+      }
     });
 
     function renderSlots(slots) {
@@ -115,6 +234,7 @@
       }
 
       const lt = document.querySelector('#leadsTable tbody');
+      lt.replaceChildren();
       for (const l of data.leads) {
         const tr = document.createElement('tr');
         [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
@@ -127,20 +247,25 @@
       }
 
       const gt = document.querySelector('#groupsTable tbody');
+      gt.replaceChildren();
       for (const g of data.group_signups) {
         const tr = document.createElement('tr');
-        [g.created_at, g.name, g.email, g.city, SLOT_NAMES[g.slot] || g.slot, g.creator_slug, g.status]
+        [g.created_at, g.name, g.email, g.city,
+         g.slot === 'propose' ? 'Proposed a time' : (SLOT_NAMES[g.slot] || g.slot),
+         g.slot_note, g.creator_slug, g.status]
           .forEach(v => tr.appendChild(cell(v)));
         gt.appendChild(tr);
       }
 
       const ct = document.querySelector('#creatorsTable tbody');
+      ct.replaceChildren();
       for (const c of data.creators) {
         const tr = document.createElement('tr');
         [c.name, `/c/${c.slug}`, c.mode, c.created_at].forEach(v => tr.appendChild(cell(v)));
         ct.appendChild(tr);
       }
     }
+    setupAuth();
   </script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 </body>

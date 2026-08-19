@@ -6,6 +6,11 @@
   "scripts": {
     "start": "node server.js"
   },
-  "engines": { "node": ">=22.5" },
-  "license": "MIT"
+  "engines": {
+    "node": ">=22.5"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
 }

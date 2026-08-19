@@ -29,10 +29,14 @@ const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
 const PROPOSED = 'propose';
 
 // Slots with live remaining counts, straight from whichever database is active.
+const DAY_NAMES = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+
 async function slotsWithAvailability(db) {
   const counts = await db.slotCounts();
   return SLOTS.map((s) => ({
     ...s,
+    // A plain English label for places that don't translate, like the database view.
+    label: `${DAY_NAMES[s.day] || s.day} ${s.time} ${s.tz}`,
     capacity: GROUP_CAPACITY,
     remaining: Math.max(0, GROUP_CAPACITY - s.reserved - (counts[s.id] || 0)),
   }));
@@ -62,7 +66,19 @@ function newAccessKey() {
   return 'dc_' + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function isAdmin(req, url, env) {
+// Who is allowed to see the whole database. ADMIN_EMAILS is a comma-separated
+// allow-list checked against a verified Supabase magic-link sign-in; ADMIN_KEY
+// is the shared-secret fallback that works with or without Supabase.
+function adminEmails(env) {
+  return new Set(
+    String(env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+function adminKeyMatches(req, url, env) {
   const key = req.headers.get('x-admin-key') || url.searchParams.get('key');
   if (!key || !env.ADMIN_KEY) return false;
   // constant-time-ish compare
@@ -70,6 +86,18 @@ function isAdmin(req, url, env) {
   let diff = 0;
   for (let i = 0; i < key.length; i++) diff |= key.charCodeAt(i) ^ env.ADMIN_KEY.charCodeAt(i);
   return diff === 0;
+}
+
+// Returns { ok, email } so the page can greet whoever signed in.
+async function isAdmin(req, url, env) {
+  const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (bearer) {
+    const email = await emailFromToken(env, bearer);
+    if (email && adminEmails(env).has(email.toLowerCase())) return { ok: true, email };
+    if (email) return { ok: false, email, denied: true };
+  }
+  if (adminKeyMatches(req, url, env)) return { ok: true, email: null };
+  return { ok: false };
 }
 
 export default {
@@ -202,9 +230,19 @@ export default {
       }
 
       if (p === '/api/admin/leads' && req.method === 'GET') {
-        if (!isAdmin(req, url, env)) return json({ error: 'unauthorized' }, 401);
+        const who = await isAdmin(req, url, env);
+        if (!who.ok) {
+          return who.denied
+            ? json({ error: 'That account does not have database access.' }, 403)
+            : json({ error: 'unauthorized' }, 401);
+        }
         const all = await db.everything();
-        return json({ ...all, slots: await slotsWithAvailability(db), backend: db.backend });
+        return json({
+          ...all,
+          slots: await slotsWithAvailability(db),
+          backend: db.backend,
+          admin_email: who.email,
+        });
       }
 
       // Creator share links: /c/<slug> loads the funnel tagged to that creator.

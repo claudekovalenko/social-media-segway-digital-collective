@@ -325,3 +325,6 @@ body.prose .wrap { max-width: 560px; }
 
 /* Admin uses a wider layout than the phone-first funnel. */
 body.wide .wrap { max-width: 960px; }
+
+/* Two links can sit on the right of the nav (creator login + database). */
+.nav-links { display: flex; gap: 8px; }

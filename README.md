@@ -75,9 +75,32 @@ ADMIN_KEY=your-secret npm start
 
 - Funnel: `/` (or `/c/<creator-slug>` for an attributed link)
 - Creator signup: `/creator.html`
-- Admin dashboard: `/admin.html` (enter your `ADMIN_KEY`)
+- Database view: `/admin.html` (enter your `ADMIN_KEY`)
 
 Data is stored in `data/funnel.db` (SQLite). Set `PORT`, `DB_PATH`, and `ADMIN_KEY` via environment variables.
+
+## Viewing the whole database
+
+`/admin.html` — linked from the Digital Collective home page as **Database** —
+shows everything: every lead, the online group times and how full they are, the
+small-group waitlist, and all creators. Two ways to sign in:
+
+- **Login (preferred).** Set `ADMIN_EMAILS` to a comma-separated allow-list of
+  email addresses. Those people enter their email, click the link Supabase
+  sends, and the Worker verifies the token before returning any data. Requires
+  Supabase (see above), and the admin page address must be in the Supabase
+  redirect allow-list too.
+
+  ```bash
+  npx wrangler secret put ADMIN_EMAILS   # e.g. you@example.com,leader@example.com
+  ```
+
+- **Admin key.** `ADMIN_KEY` still works, with or without Supabase, and is the
+  only option locally. It's a shared secret, so prefer the email login for
+  anyone but yourself.
+
+An email that signs in successfully but isn't on the allow-list gets a clear
+"no database access" message rather than a silent failure.
 
 ## Adding the default videos
 
@@ -88,4 +111,4 @@ Edit `DEFAULT_CONTENT` at the top of `public/app.js` with your embed URLs (e.g. 
 - `POST /api/leads` — `{ step, name, email, phone?, city?, message?, decision?, interested_in_group?, creator_slug? }`
 - `POST /api/creators/register` — `{ slug, name, mode, know_god_video_url?, grow_course_url?, find_church_video_url? }`
 - `GET /api/creators/:slug` — public creator config
-- `GET /api/admin/leads` — all leads, group signups, creators, and per-step counts (requires `x-admin-key` header)
+- `GET /api/admin/leads` — all leads, group signups, creators, and per-step counts (requires an allow-listed magic-link `Authorization: Bearer` token or the `x-admin-key` header)
