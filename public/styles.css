@@ -84,10 +84,9 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
-  transition: border-color .2s ease, border-radius .1s ease-out, background .2s ease, transform .12s ease;
+  transition: border-color .2s ease, border-radius .1s ease-out, background .2s ease;
 }
 .step-card:hover { border-color: var(--lime); }
-.step-card:active { transform: scale(0.99); }
 .step-card.open { border-radius: 28px; background: var(--surface); cursor: default; }
 
 .step-head {
