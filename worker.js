@@ -43,7 +43,7 @@ async function slotsWithAvailability(db) {
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, x-admin-key',
+  'Access-Control-Allow-Headers': 'Content-Type, x-admin-key, x-creator-key',
 };
 
 function json(body, status = 200) {
@@ -51,6 +51,16 @@ function json(body, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS },
   });
+}
+
+async function sha256hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function newAccessKey() {
+  const bytes = crypto.getRandomValues(new Uint8Array(18));
+  return 'dc_' + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function isAdmin(req, url, env) {
@@ -78,17 +88,50 @@ export default {
         const slug = String(b.slug || '').toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').slice(0, 40);
         const name = String(b.name || '').trim().slice(0, 100);
         const mode = b.mode === 'custom' ? 'custom' : 'default';
+        const handle = String(b.handle || '').trim().slice(0, 60) || null;
+        const topic = String(b.topic || '').trim().slice(0, 60) || null;
         if (!slug || !name) return json({ error: 'slug and name are required' }, 400);
+        // The key is shown once at signup; only its hash is stored.
+        const accessKey = newAccessKey();
+        const keyHash = await sha256hex(accessKey);
         try {
           await env.DB.prepare(
-            `INSERT INTO creators (slug, name, mode, know_god_video_url, grow_course_url, find_church_video_url)
-             VALUES (?, ?, ?, ?, ?, ?)`
-          ).bind(slug, name, mode,
+            `INSERT INTO creators (slug, name, mode, handle, topic, key_hash, know_god_video_url, grow_course_url, find_church_video_url)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(slug, name, mode, handle, topic, keyHash,
             b.know_god_video_url || null, b.grow_course_url || null, b.find_church_video_url || null).run();
         } catch {
           return json({ error: 'that link name is already taken' }, 409);
         }
-        return json({ ok: true, slug, link: `/c/${slug}` }, 201);
+        return json({ ok: true, slug, link: `/c/${slug}`, access_key: accessKey }, 201);
+      }
+
+      // Public directory: creators who set a handle, with their topic tag.
+      if (p === '/api/directory' && req.method === 'GET') {
+        const rows = await env.DB.prepare(
+          `SELECT slug, name, handle, topic FROM creators
+           WHERE handle IS NOT NULL AND slug != 'default' ORDER BY created_at ASC`
+        ).all();
+        return json({ creators: rows.results });
+      }
+
+      // A creator's own leads, gated by their access key.
+      if (p === '/api/creator/leads' && req.method === 'GET') {
+        const key = req.headers.get('x-creator-key') || '';
+        if (!key.startsWith('dc_')) return json({ error: 'unauthorized' }, 401);
+        const keyHash = await sha256hex(key);
+        const me = await env.DB.prepare(
+          `SELECT slug, name, handle, topic FROM creators WHERE key_hash = ?`
+        ).bind(keyHash).first();
+        if (!me) return json({ error: 'unauthorized' }, 401);
+        const [leads, counts] = await Promise.all([
+          env.DB.prepare(`SELECT * FROM leads WHERE creator_slug = ? ORDER BY created_at DESC LIMIT 500`)
+            .bind(me.slug).all(),
+          env.DB.prepare(`SELECT step, COUNT(*) AS n FROM leads WHERE creator_slug = ? GROUP BY step`)
+            .bind(me.slug).all(),
+        ]);
+        return json({ creator: me, leads: leads.results, counts: counts.results,
+                      link: `/c/${me.slug}` });
       }
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
@@ -119,6 +162,7 @@ export default {
         const country = String(b.country || '').slice(0, 8) || null;
         const language = String(b.language || '').slice(0, 8) || null;
         const slotNote = slot === PROPOSED ? (String(b.slot_note || '').slice(0, 200) || null) : null;
+        if (!b.consent) return json({ error: 'consent is required' }, 400);
 
         // Don't oversubscribe a group: re-check the slot right before writing.
         if (interested && slot && slot !== PROPOSED) {
@@ -130,8 +174,8 @@ export default {
         }
 
         const result = await env.DB.prepare(
-          `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, slot_note, path, country, language, creator_slug)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, slot_note, path, country, language, consent, consent_at, creator_slug)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), ?)`
         ).bind(step, name, email,
           String(b.phone || '').slice(0, 40) || null,
           String(b.city || '').slice(0, 100) || null,
@@ -165,7 +209,7 @@ export default {
       // Creator share links: /c/<slug> loads the funnel tagged to that creator.
       if (p.startsWith('/c/')) {
         const slug = p.split('/')[2] || 'default';
-        return Response.redirect(new URL(`/?creator=${encodeURIComponent(slug)}`, url).toString(), 302);
+        return Response.redirect(new URL(`/journey.html?creator=${encodeURIComponent(slug)}`, url).toString(), 302);
       }
 
       // Anything else falls through to static assets.

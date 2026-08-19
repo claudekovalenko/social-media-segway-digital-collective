@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creator Dashboard &mdash; Digital Collective</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#0b0b0b">
+  <link rel="icon" href="icons/icon-192.png">
+</head>
+<body class="wide">
+  <div class="wrap">
+    <nav class="site-nav">
+      <a class="brand" href="index.html">Digital Collective</a>
+    </nav>
+    <header class="hero">
+      <h1>Your <em>dashboard</em></h1>
+      <p class="hero-sub">The people God is bringing through your link.</p>
+    </header>
+
+    <section class="step-card open static" id="login">
+      <form id="keyForm">
+        <label>Your access key
+          <input name="key" type="password" required placeholder="dc_&hellip;" autocomplete="current-password">
+        </label>
+        <button type="submit">Open my dashboard</button>
+        <p class="aside-link">Lost your key? Contact Digital Collective to have it reset.</p>
+        <div class="error"></div>
+      </form>
+    </section>
+
+    <div id="dash" hidden>
+      <div class="creator-bar">
+        <span id="whoami"></span>
+        <a id="mylink" href="#" target="_blank"></a>
+      </div>
+      <div class="stat-row" id="stats"></div>
+
+      <h3 class="section">Your leads</h3>
+      <div class="table-scroll"><table id="leadsTable">
+        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Country</th><th>Language</th><th>Group time</th><th>Proposed</th><th>Path</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="aside-link">Everyone here checked the consent box, so you may contact them about the step they took. Please honor opt-outs immediately.</p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = location.hostname.endsWith('github.io')
+      ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
+      : '';
+    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Gather Locally' };
+    const PATH_NAMES = {
+      join_church: 'Join a local church', start_gathering: 'Start a local gathering',
+      both: 'Both', not_sure: 'Not sure yet',
+    };
+    const SLOT_NAMES = {
+      'kg-tue-19': 'Tue 7:00 PM PT', 'kg-thu-12': 'Thu 12:00 PM CT', 'kg-sun-17': 'Sun 5:00 PM CT',
+      'gw-mon-20': 'Mon 8:00 PM CT', 'gw-wed-18': 'Wed 6:30 PM PT', 'gw-sat-10': 'Sat 10:00 AM CT',
+    };
+
+    function cell(text) { const td = document.createElement('td'); td.textContent = text ?? ''; return td; }
+
+    const form = document.getElementById('keyForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = new FormData(form).get('key').trim();
+      const error = form.querySelector('.error');
+      error.style.display = 'none';
+      let res;
+      try {
+        res = await fetch(API_BASE + '/api/creator/leads', { headers: { 'x-creator-key': key } });
+      } catch {
+        error.textContent = 'Could not reach the server — try again.';
+        error.style.display = 'block';
+        return;
+      }
+      if (!res.ok) {
+        error.textContent = 'That key was not recognized.';
+        error.style.display = 'block';
+        return;
+      }
+      const data = await res.json();
+      document.getElementById('login').hidden = true;
+      document.getElementById('dash').hidden = false;
+
+      document.getElementById('whoami').textContent =
+        data.creator.name + (data.creator.handle ? ' · ' + data.creator.handle : '');
+      const link = document.getElementById('mylink');
+      link.href = API_BASE ? API_BASE + data.link : data.link;
+      link.textContent = 'Your share link';
+
+      const stats = document.getElementById('stats');
+      stats.replaceChildren();
+      const total = document.createElement('div');
+      total.className = 'stat';
+      const b = document.createElement('b'); b.textContent = data.leads.length;
+      total.append(b, document.createTextNode('Total leads'));
+      stats.appendChild(total);
+      for (const c of data.counts) {
+        const el = document.createElement('div');
+        el.className = 'stat';
+        const n = document.createElement('b'); n.textContent = c.n;
+        el.append(n, document.createTextNode(STEP_NAMES[c.step] || c.step));
+        stats.appendChild(el);
+      }
+
+      const tbody = document.querySelector('#leadsTable tbody');
+      tbody.replaceChildren();
+      for (const l of data.leads) {
+        const tr = document.createElement('tr');
+        [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
+         l.country, l.language,
+         l.group_slot === 'propose' ? 'Proposed' : (SLOT_NAMES[l.group_slot] || l.group_slot),
+         l.slot_note, PATH_NAMES[l.path] || l.path]
+          .forEach(v => tr.appendChild(cell(v)));
+        tbody.appendChild(tr);
+      }
+    });
+  </script>
+</body>
+</html>

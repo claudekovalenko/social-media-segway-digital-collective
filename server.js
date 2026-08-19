@@ -26,6 +26,9 @@ db.exec(`
     slug TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     mode TEXT NOT NULL DEFAULT 'default' CHECK (mode IN ('default','custom')),
+    handle TEXT,                 -- public @handle for the directory
+    topic TEXT,                  -- what they're known for / want to pursue
+    key_hash TEXT,               -- sha-256 of their access key (never the key itself)
     know_god_video_url TEXT,
     grow_course_url TEXT,
     find_church_video_url TEXT,
@@ -48,6 +51,8 @@ db.exec(`
     path TEXT,                   -- step 3: join a church, start a gathering, or both
     country TEXT,                -- ISO-ish country code from the globe picker
     language TEXT,               -- preferred language code
+    consent INTEGER NOT NULL DEFAULT 0,  -- agreed to be contacted (required)
+    consent_at TEXT,             -- when they agreed
     creator_slug TEXT,           -- which creator's link they came through
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -71,6 +76,11 @@ for (const [table, column, type] of [
   ['leads', 'country', 'TEXT'],
   ['leads', 'language', 'TEXT'],
   ['group_signups', 'slot', 'TEXT'],
+  ['creators', 'handle', 'TEXT'],
+  ['creators', 'topic', 'TEXT'],
+  ['creators', 'key_hash', 'TEXT'],
+  ['leads', 'consent', 'INTEGER'],
+  ['leads', 'consent_at', 'TEXT'],
 ]) {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all();
   if (!cols.some((c) => c.name === column)) {
@@ -111,6 +121,14 @@ function readBody(req) {
     });
     req.on('error', reject);
   });
+}
+
+function sha256hex(text) {
+  return crypto.createHash('sha256').update(text).digest('hex');
+}
+
+function newAccessKey() {
+  return 'dc_' + crypto.randomBytes(18).toString('hex');
 }
 
 function isAdmin(req, url) {
@@ -165,17 +183,39 @@ const server = http.createServer(async (req, res) => {
       const slug = String(b.slug || '').toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').slice(0, 40);
       const name = String(b.name || '').trim().slice(0, 100);
       const mode = b.mode === 'custom' ? 'custom' : 'default';
+      const handle = String(b.handle || '').trim().slice(0, 60) || null;
+      const topic = String(b.topic || '').trim().slice(0, 60) || null;
       if (!slug || !name) return json(res, 400, { error: 'slug and name are required' });
+      const accessKey = newAccessKey();
       try {
         db.prepare(
-          `INSERT INTO creators (slug, name, mode, know_god_video_url, grow_course_url, find_church_video_url)
-           VALUES (?, ?, ?, ?, ?, ?)`
-        ).run(slug, name, mode,
+          `INSERT INTO creators (slug, name, mode, handle, topic, key_hash, know_god_video_url, grow_course_url, find_church_video_url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(slug, name, mode, handle, topic, sha256hex(accessKey),
           b.know_god_video_url || null, b.grow_course_url || null, b.find_church_video_url || null);
       } catch {
         return json(res, 409, { error: 'that link name is already taken' });
       }
-      return json(res, 201, { ok: true, slug, link: `/c/${slug}` });
+      return json(res, 201, { ok: true, slug, link: `/c/${slug}`, access_key: accessKey });
+    }
+
+    if (p === '/api/directory' && req.method === 'GET') {
+      const rows = db.prepare(
+        `SELECT slug, name, handle, topic FROM creators
+         WHERE handle IS NOT NULL AND slug != 'default' ORDER BY created_at ASC`
+      ).all();
+      return json(res, 200, { creators: rows });
+    }
+
+    if (p === '/api/creator/leads' && req.method === 'GET') {
+      const key = String(req.headers['x-creator-key'] || '');
+      if (!key.startsWith('dc_')) return json(res, 401, { error: 'unauthorized' });
+      const me = db.prepare(`SELECT slug, name, handle, topic FROM creators WHERE key_hash = ?`)
+        .get(sha256hex(key));
+      if (!me) return json(res, 401, { error: 'unauthorized' });
+      const leads = db.prepare(`SELECT * FROM leads WHERE creator_slug = ? ORDER BY created_at DESC LIMIT 500`).all(me.slug);
+      const counts = db.prepare(`SELECT step, COUNT(*) AS n FROM leads WHERE creator_slug = ? GROUP BY step`).all(me.slug);
+      return json(res, 200, { creator: me, leads, counts, link: `/c/${me.slug}` });
     }
 
     if (p.startsWith('/api/creators/') && req.method === 'GET') {
@@ -206,6 +246,7 @@ const server = http.createServer(async (req, res) => {
       const country = String(b.country || '').slice(0, 8) || null;
       const language = String(b.language || '').slice(0, 8) || null;
       const slotNote = slot === PROPOSED ? (String(b.slot_note || '').slice(0, 200) || null) : null;
+      if (!b.consent) return json(res, 400, { error: 'consent is required' });
 
       if (interested && slot && slot !== PROPOSED) {
         const chosen = slotsWithAvailability().find((s) => s.id === slot);
@@ -215,8 +256,8 @@ const server = http.createServer(async (req, res) => {
       }
 
       const result = db.prepare(
-        `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, slot_note, path, country, language, creator_slug)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, slot_note, path, country, language, consent, consent_at, creator_slug)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), ?)`
       ).run(step, name, email,
         String(b.phone || '').slice(0, 40) || null,
         String(b.city || '').slice(0, 100) || null,
@@ -247,7 +288,7 @@ const server = http.createServer(async (req, res) => {
     // ---- creator share links: /c/<slug> loads the funnel tagged to that creator ----
     if (p.startsWith('/c/')) {
       const slug = p.split('/')[2] || 'default';
-      res.writeHead(302, { Location: `/?creator=${encodeURIComponent(slug)}` });
+      res.writeHead(302, { Location: `/journey.html?creator=${encodeURIComponent(slug)}` });
       return res.end();
     }
 

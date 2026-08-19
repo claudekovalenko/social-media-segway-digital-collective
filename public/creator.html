@@ -26,6 +26,12 @@
         <label>Your link name
           <input name="slug" required maxlength="40" pattern="[a-zA-Z0-9-]+" placeholder="faith-with-sarah">
         </label>
+        <label>Your public handle
+          <input name="handle" maxlength="60" placeholder="@faithwithsarah">
+        </label>
+        <label>What you're known for
+          <input name="topic" maxlength="60" placeholder="e.g. Testimonies, Apologetics, Worship">
+        </label>
         <label>Content mode
           <select name="mode" id="modeSelect">
             <option value="default">Use the default videos</option>
@@ -43,7 +49,7 @@
       </form>
     </section>
 
-    <footer><p><a href="./">&larr; Back to the steps</a></p></footer>
+    <footer><p><a href="index.html">&larr; Back to Digital Collective</a></p></footer>
   </div>
 
   <script>
@@ -74,8 +80,19 @@
         const body = await res.json();
         if (!res.ok) throw new Error(body.error || 'Something went wrong');
         const link = (API_BASE || location.origin) + body.link;
-        result.innerHTML = `Your link is ready: <a href="${link}">${link}</a> — put it in your bio!`;
-        result.style.display = 'block';
+        result.replaceChildren();
+        const p1 = document.createElement('p');
+        const a = document.createElement('a'); a.href = link; a.textContent = link;
+        p1.append('Your link is ready: ', a, ' — put it in your bio!');
+        const p2 = document.createElement('p');
+        p2.className = 'access-key-box';
+        const code = document.createElement('code'); code.textContent = body.access_key;
+        p2.append('Your access key (save it now — it is shown only once): ', code);
+        const p3 = document.createElement('p');
+        const d = document.createElement('a'); d.href = 'dashboard.html'; d.textContent = 'your dashboard';
+        p3.append('Use it to sign in to ', d, ' and see your leads.');
+        result.append(p1, p2, p3);
+        result.style.display = 'grid';
       } catch (err) {
         error.textContent = err.message;
         error.style.display = 'block';

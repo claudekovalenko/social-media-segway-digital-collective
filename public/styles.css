@@ -170,6 +170,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--l
   text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
 }
 .check strong { color: var(--text); font-weight: 600; }
+.aside-link { font-size: 0.84rem; padding: 0 4px; }
+.aside-link a { color: var(--lime); }
 
 button {
   padding: 15px 24px; border: 0; border-radius: 999px;
@@ -220,6 +222,79 @@ body.wide .step-card .step-body, .step-card.static .step-body { display: block; 
 [dir="rtl"] .step-chevron { transform: scaleX(-1); }
 [dir="rtl"] .step-card.open .step-chevron { transform: rotate(180deg); }
 [dir="rtl"] .hero-sub, [dir="rtl"] header.hero h1 { text-align: right; }
+
+/* ---------- landing (Digital Collective home) ---------- */
+body.landing .wrap { max-width: 560px; }
+.site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 2px 0; }
+.brand { font-weight: 700; letter-spacing: -0.01em; }
+.nav-login {
+  font-size: 0.82rem; padding: 8px 16px; border-radius: 999px;
+  border: 1px solid var(--edge-lit); color: var(--text-dim);
+}
+.nav-login:hover { border-color: var(--lime); color: var(--lime); }
+.cta-row { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.btn-primary {
+  padding: 14px 24px; border-radius: 999px; background: var(--lime);
+  color: var(--lime-ink); font-weight: 700; font-size: 0.95rem;
+}
+.btn-primary:hover { color: var(--lime-ink); filter: brightness(1.06); }
+.btn-ghost {
+  padding: 14px 24px; border-radius: 999px; border: 1px solid var(--edge-lit);
+  color: var(--text); font-weight: 600; font-size: 0.95rem;
+}
+.btn-ghost:hover { border-color: var(--lime); color: var(--text); }
+.land-section { margin-top: 44px; }
+.land-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 10px; }
+.land-copy { color: var(--text-dim); font-size: 0.94rem; margin-bottom: 12px; }
+.mini-steps { list-style: none; display: grid; gap: 10px; margin: 16px 0; padding: 0; counter-reset: step; }
+.mini-steps li {
+  border: 1px solid var(--edge); border-radius: 16px; padding: 14px 18px;
+  display: grid; gap: 2px; counter-increment: step; position: relative; padding-left: 52px;
+}
+.mini-steps li::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute; left: 18px; top: 15px;
+  color: var(--lime); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em;
+}
+.mini-steps b { font-size: 0.95rem; }
+.mini-steps span { color: var(--text-dim); font-size: 0.86rem; }
+.directory { display: grid; gap: 8px; }
+.dir-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--edge); border-radius: 999px; padding: 12px 18px;
+  transition: border-color var(--motion) var(--ease);
+}
+.dir-row:hover { border-color: var(--lime); }
+.dir-handle { font-weight: 600; color: var(--text); }
+.dir-tag {
+  font-size: 0.74rem; font-weight: 600; letter-spacing: 0.04em;
+  padding: 5px 12px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--edge-lit); color: var(--lime);
+  white-space: nowrap;
+}
+.dir-empty { color: var(--text-dim); font-size: 0.9rem; }
+.creator-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--edge); border-radius: 14px; padding: 12px 18px; margin-bottom: 6px;
+}
+.creator-bar a { color: var(--lime); }
+
+.access-key-box {
+  border: 1px solid var(--edge-lit); border-radius: 12px; padding: 10px 14px;
+  background: var(--surface-2);
+}
+.access-key-box code { color: var(--lime); word-break: break-all; font-size: 0.9rem; }
+#result { gap: 8px; }
+
+/* ---------- prose pages (beliefs, privacy) ---------- */
+body.prose .wrap { max-width: 560px; }
+.prose-body { color: var(--text-dim); font-size: 0.94rem; display: grid; gap: 14px; }
+.prose-body h2 { color: var(--text); font-size: 1.05rem; margin-top: 14px; }
+.prose-body strong { color: var(--text); }
+.draft-note {
+  border: 1px dashed var(--edge-lit); border-radius: 14px; padding: 12px 16px;
+  color: var(--text-dim); font-size: 0.82rem; margin-bottom: 8px;
+}
 
 /* Admin uses a wider layout than the phone-first funnel. */
 body.wide .wrap { max-width: 960px; }

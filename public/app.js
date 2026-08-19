@@ -126,6 +126,18 @@ function applyLanguage() {
     if (text.includes('**')) setRich(el, text);
     else el.textContent = text;
   });
+  document.querySelectorAll('.consent-text').forEach((el) => {
+    const text = t('consent');
+    if (!text) return;
+    el.replaceChildren();
+    const [before, after] = text.split('{privacy}');
+    el.appendChild(document.createTextNode(before ?? ''));
+    const a = document.createElement('a');
+    a.href = 'privacy.html'; a.target = '_blank';
+    a.textContent = t('privacy_name');
+    el.appendChild(a);
+    el.appendChild(document.createTextNode(after ?? ''));
+  });
   document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
     const text = t(el.dataset.i18nPlaceholder);
     if (text) el.placeholder = text;
@@ -332,6 +344,7 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     data.country = locale.country || null;
     data.language = locale.language || null;
     data.interested_in_group = form.querySelector('[name=interested_in_group]')?.checked || false;
+    data.consent = form.querySelector('[name=consent]')?.checked || false;
     if (!data.interested_in_group) { delete data.group_slot; delete data.slot_note; }
     if (data.group_slot !== 'propose') delete data.slot_note;
     const success = form.querySelector('.success');
