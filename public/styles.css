@@ -37,14 +37,6 @@ body {
 /* ---------- hero ---------- */
 header.hero { padding: 48px 2px 36px; }
 header.hero .avatar { display: none; }
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 0.74rem; font-weight: 500; letter-spacing: 0.02em;
-  color: var(--text-dim);
-  border: 1px solid var(--edge); border-radius: 999px;
-  padding: 6px 14px; margin-bottom: 22px;
-}
-.hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); }
 header.hero h1 {
   font-size: clamp(2.4rem, 11vw, 3.2rem);
   font-weight: 700;
