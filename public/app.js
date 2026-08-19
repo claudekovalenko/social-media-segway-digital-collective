@@ -23,7 +23,7 @@ const DEFAULT_CONTENT = {
 const PLACEHOLDERS = {
   know_god: 'Gospel video goes here — a short message about knowing God personally.',
   grow_with_god: 'Discipleship course intro video goes here.',
-  find_church: 'Training video: finding a healthy local church — and starting a simple gathering of your own.',
+  find_church: 'Training video: joining a healthy local church — or starting a local gathering of your own.',
 };
 
 function embed(containerId, url, placeholderText) {
