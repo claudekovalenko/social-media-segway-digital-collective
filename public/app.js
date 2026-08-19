@@ -120,12 +120,21 @@ function setupLocale() {
   }
   paintFlag();
 
-  // Default to the browser's language when we have nothing stored.
+  // Guess both from the browser so most people never open this panel.
   if (!locale.language) {
     const guess = (navigator.language || '').slice(0, 2).toLowerCase();
     if (LANGUAGES.some(([code]) => code === guess)) {
       locale.language = guess;
       languageSelect.value = guess;
+    }
+  }
+  if (!locale.country) {
+    const region = (navigator.language || '').split('-')[1];
+    const guess = region && region.toUpperCase();
+    if (guess && COUNTRIES.some(([code]) => code === guess)) {
+      locale.country = guess;
+      countrySelect.value = guess;
+      paintFlag();
     }
   }
 
@@ -223,6 +232,28 @@ document.querySelectorAll('.step-card').forEach((card) => {
   });
 });
 
+// People often take more than one step; reuse what they already typed so the
+// second and third forms are close to one tap.
+const REMEMBERED = ['name', 'email', 'phone', 'city'];
+
+function prefillForms() {
+  for (const field of REMEMBERED) {
+    const saved = localStorage.getItem('lead_' + field);
+    if (!saved) continue;
+    document.querySelectorAll(`form[data-step] [name="${field}"]`).forEach((input) => {
+      if (!input.value) input.value = saved;
+    });
+  }
+}
+prefillForms();
+
+function remember(data) {
+  for (const field of REMEMBERED) {
+    if (data[field]) localStorage.setItem('lead_' + field, data[field]);
+  }
+  prefillForms();
+}
+
 // Submit each step's form to the leads API.
 document.querySelectorAll('form[data-step]').forEach((form) => {
   form.addEventListener('submit', async (e) => {
@@ -247,7 +278,8 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
       if (!res.ok) throw new Error(body.error || 'Something went wrong');
       success.style.display = 'block';
       form.querySelector('button').disabled = true;
-      loadSlots(); // spots just changed
+      remember(data);  // save typing on the next step
+      loadSlots();     // spots just changed
     } catch (err) {
       error.textContent = err.message;
       error.style.display = 'block';
