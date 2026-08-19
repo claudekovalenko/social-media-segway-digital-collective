@@ -1,0 +1,18 @@
+name = "faith-journey-funnel"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+account_id = "830375f1830fccce2dac031f42817b3d"
+workers_dev = true
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/c/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "faith-journey-funnel"
+database_id = "5524e683-498e-4954-9498-b5958f5d3774"
+
+# Set the admin key as a secret before/after deploy:
+#   npx wrangler secret put ADMIN_KEY

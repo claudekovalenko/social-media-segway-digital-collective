@@ -15,7 +15,21 @@ When a creator registers at `/creator.html` they pick a mode:
 
 Each creator gets a shareable link like `/c/their-name`. Every lead that comes through it is tagged with that creator, which powers phase 2: matching people who signed up through the same creator into small groups (the `group_signups` table already collects that waitlist — anyone who checks "connect me with a group" on any form lands there).
 
-## Running it
+## It's a PWA
+
+The site installs to the home screen (manifest + service worker + icons). Static pages work offline; forms and live data always use the network.
+
+## Deploying to Cloudflare (production)
+
+The app runs as a Cloudflare Worker (`worker.js`) with a D1 database. The database `faith-journey-funnel` already exists on the Cloudflare account with the schema applied, and `wrangler.toml` is fully configured. To deploy:
+
+```bash
+npx wrangler login          # one-time browser login (or set CLOUDFLARE_API_TOKEN)
+npx wrangler deploy         # publishes to https://faith-journey-funnel.<your-subdomain>.workers.dev
+npx wrangler secret put ADMIN_KEY   # set your admin dashboard password
+```
+
+## Running it locally
 
 Requires Node 22.5+ (uses the built-in `node:sqlite` — no dependencies to install).
 
