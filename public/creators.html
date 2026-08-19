@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creators &mdash; Digital Collective</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b0b0b">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body class="landing">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <nav class="site-nav">
+      <a class="brand" href="index.html"><svg class="dc-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="4.4" r="2.6" fill="currentColor"/><circle cx="4.8" cy="17.6" r="2.6" fill="currentColor"/><circle cx="19.2" cy="17.6" r="2.6" fill="currentColor"/><path d="M12 8.6v7.2M8.6 11.6h6.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>Digital Collective</a>
+      <a class="nav-login" href="creator.html">Join</a>
+    </nav>
+
+    <header class="hero">
+      <h1>The <em>creators</em></h1>
+      <p class="hero-sub">Everyone building discipleship on their platform &mdash; and what they carry. Tap a creator to walk their journey page.</p>
+    </header>
+
+    <div class="topic-filter" id="topicFilter" hidden></div>
+
+    <div id="creatorList" class="directory directory-full">
+      <p class="dir-empty">Loading creators&hellip;</p>
+    </div>
+
+    <section class="land-section" id="joinCta">
+      <h2 class="land-title">Create with us</h2>
+      <p class="land-copy">If you're making content that points people to Jesus, there's room for you here. You'll get your own link, your own topic tag on this page, and a dashboard of the people responding.</p>
+      <div class="cta-row">
+        <a class="btn-primary" href="creator.html">Join the collective</a>
+        <a class="btn-ghost" href="beliefs.html">What we believe</a>
+      </div>
+    </section>
+
+    <footer>
+      <a href="index.html">Digital Collective</a> &middot;
+      <a href="beliefs.html">Statement of Faith</a> &middot;
+      <a href="privacy.html">Privacy &amp; Consent</a>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = location.hostname.endsWith('github.io')
+      ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
+      : '';
+
+    // Examples shown when no creators have joined yet, so the page still
+    // communicates what it is. Marked clearly so nobody mistakes them for real.
+    const EXAMPLES = [
+      { handle: '@yourhandle', name: 'Your name here', topic: 'Testimonies', example: true },
+      { handle: '@yourhandle', name: 'Your name here', topic: 'Apologetics', example: true },
+      { handle: '@yourhandle', name: 'Your name here', topic: 'Bible teaching', example: true },
+      { handle: '@yourhandle', name: 'Your name here', topic: 'Worship', example: true },
+      { handle: '@yourhandle', name: 'Your name here', topic: 'Discipleship', example: true },
+      { handle: '@yourhandle', name: 'Your name here', topic: 'Youth &amp; students', example: true },
+    ];
+
+    let all = [];
+    let activeTopic = null;
+
+    function render() {
+      const list = document.getElementById('creatorList');
+      list.replaceChildren();
+      const shown = activeTopic ? all.filter(c => (c.topic || '') === activeTopic) : all;
+      if (!shown.length) {
+        const p = document.createElement('p');
+        p.className = 'dir-empty';
+        p.textContent = 'No creators under that topic yet.';
+        list.appendChild(p);
+        return;
+      }
+      for (const c of shown) {
+        const row = document.createElement(c.example ? 'div' : 'a');
+        row.className = 'dir-row' + (c.example ? ' dir-example' : '');
+        if (!c.example) row.href = 'journey.html?creator=' + encodeURIComponent(c.slug);
+
+        const left = document.createElement('span');
+        left.className = 'dir-person';
+        const handle = document.createElement('span');
+        handle.className = 'dir-handle';
+        handle.textContent = (c.handle || '').startsWith('@') ? c.handle : '@' + (c.handle || '');
+        const name = document.createElement('span');
+        name.className = 'dir-name';
+        name.textContent = c.name || '';
+        left.append(handle, name);
+
+        const tag = document.createElement('span');
+        tag.className = 'dir-tag';
+        tag.textContent = c.topic || 'creator';
+
+        row.append(left, tag);
+        list.appendChild(row);
+      }
+    }
+
+    function renderTopics() {
+      const topics = [...new Set(all.map(c => c.topic).filter(Boolean))];
+      if (topics.length < 2) return;
+      const bar = document.getElementById('topicFilter');
+      bar.hidden = false;
+      bar.replaceChildren();
+      const mk = (label, value) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'topic-chip' + (activeTopic === value ? ' on' : '');
+        chip.textContent = label;
+        chip.addEventListener('click', () => {
+          activeTopic = value;
+          renderTopics();
+          render();
+        });
+        return chip;
+      };
+      bar.appendChild(mk('All', null));
+      for (const t of topics) bar.appendChild(mk(t, t));
+    }
+
+    (async () => {
+      try {
+        const res = await fetch(API_BASE + '/api/directory');
+        if (res.ok) {
+          const { creators } = await res.json();
+          if (creators && creators.length) all = creators;
+        }
+      } catch { /* fall through to examples */ }
+      if (!all.length) {
+        all = EXAMPLES;
+        document.getElementById('creatorList').classList.add('is-examples');
+      }
+      renderTopics();
+      render();
+    })();
+  </script>
+  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
+</body>
+</html>

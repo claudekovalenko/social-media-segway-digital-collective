@@ -43,10 +43,11 @@
 
     <section class="land-section">
       <h2 class="land-title">The collective</h2>
-      <p class="land-copy">Creators in the collective, and what they carry:</p>
+      <p class="land-copy">Creators in the collective, and what they carry &mdash; <a href="creators.html">see them all</a>.</p>
       <div id="directory" class="directory">
         <p class="dir-empty">Be the first &mdash; <a href="creator.html">join the collective</a>.</p>
       </div>
+      <p class="land-copy see-all"><a href="creators.html">All creators &amp; topics &rarr;</a></p>
     </section>
 
     <section class="land-section">
@@ -55,6 +56,7 @@
     </section>
 
     <footer>
+      <a href="creators.html">Creators</a> &middot;
       <a href="beliefs.html">Statement of Faith</a> &middot;
       <a href="privacy.html">Privacy &amp; Consent</a> &middot;
       <a href="dashboard.html">Creator login</a>
@@ -73,7 +75,7 @@
         if (!creators || !creators.length) return;
         const wrap = document.getElementById('directory');
         wrap.replaceChildren();
-        for (const c of creators) {
+        for (const c of creators.slice(0, 4)) {
           const row = document.createElement('a');
           row.className = 'dir-row';
           row.href = 'journey.html?creator=' + encodeURIComponent(c.slug);

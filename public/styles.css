@@ -281,6 +281,25 @@ body.landing .wrap { max-width: 560px; }
   white-space: nowrap;
 }
 .dir-empty { color: var(--text-dim); font-size: 0.9rem; }
+.see-all { margin-top: 14px; }
+.see-all a { color: var(--lime); }
+.directory-full .dir-row { padding: 14px 20px; }
+.dir-person { display: grid; gap: 1px; min-width: 0; }
+.dir-name { font-size: 0.76rem; color: var(--text-dim); }
+.dir-example { opacity: 0.5; cursor: default; }
+.is-examples::after {
+  content: 'Example rows — real creators appear here as they join.';
+  display: block; margin-top: 12px; font-size: 0.78rem; color: var(--text-dim);
+}
+.topic-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.topic-chip {
+  padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  background: transparent; border: 1px solid var(--edge-lit);
+  color: var(--text-dim); font-size: 0.78rem; font-weight: 600; font-family: inherit;
+  transition: border-color var(--motion) var(--ease), color var(--motion) var(--ease);
+}
+.topic-chip:hover { border-color: var(--lime); color: var(--text); }
+.topic-chip.on { border-color: var(--lime); color: var(--lime-ink); background: var(--lime); }
 .creator-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   border: 1px solid var(--edge); border-radius: 14px; padding: 12px 18px; margin-bottom: 6px;
