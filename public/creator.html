@@ -47,6 +47,11 @@
   </div>
 
   <script>
+    // Pages has no backend of its own — send API calls to the Worker.
+    const API_BASE = location.hostname.endsWith('github.io')
+      ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
+      : '';
+
     const modeSelect = document.getElementById('modeSelect');
     const customFields = document.getElementById('customFields');
     modeSelect.addEventListener('change', () => {
@@ -61,14 +66,14 @@
       const error = form.querySelector('.error');
       result.style.display = error.style.display = 'none';
       try {
-        const res = await fetch('/api/creators/register', {
+        const res = await fetch(API_BASE + '/api/creators/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
         const body = await res.json();
         if (!res.ok) throw new Error(body.error || 'Something went wrong');
-        const link = location.origin + body.link;
+        const link = (API_BASE || location.origin) + body.link;
         result.innerHTML = `Your link is ready: <a href="${link}">${link}</a> — put it in your bio!`;
         result.style.display = 'block';
       } catch (err) {

@@ -52,6 +52,11 @@
   </div>
 
   <script>
+    // The dashboard reads live data, so it always talks to the Worker.
+    const API_BASE = location.hostname.endsWith('github.io')
+      ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
+      : '';
+
     const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Find a Church' };
     const form = document.getElementById('keyForm');
     form.addEventListener('submit', async (e) => {
@@ -59,7 +64,7 @@
       const key = new FormData(form).get('key');
       const error = form.querySelector('.error');
       error.style.display = 'none';
-      const res = await fetch('/api/admin/leads', { headers: { 'x-admin-key': key } });
+      const res = await fetch(API_BASE + '/api/admin/leads', { headers: { 'x-admin-key': key } });
       if (!res.ok) { error.textContent = 'Wrong key'; error.style.display = 'block'; return; }
       const data = await res.json();
       document.getElementById('login').hidden = true;
