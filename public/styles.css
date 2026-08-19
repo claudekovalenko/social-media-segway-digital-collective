@@ -84,7 +84,7 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
-  transition: border-color .2s ease, border-radius .1s ease-out;
+  transition: border-color .2s ease;
 }
 .step-card:hover { border-color: var(--lime); }
 .step-card.open { border-radius: 28px; cursor: default; }
@@ -107,13 +107,13 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 .step-chevron {
   width: 34px; flex-shrink: 0; color: var(--text-dim);
   display: flex; align-items: center; justify-content: center;
-  transition: transform .28s cubic-bezier(.4, 0, .2, 1), color .2s ease;
+  transition: transform .26s ease-out, color .2s ease;
 }
 .step-card.open .step-chevron { transform: rotate(180deg); color: var(--lime); }
 
 .step-body {
   display: grid; grid-template-rows: 0fr;
-  transition: grid-template-rows .32s cubic-bezier(.4, 0, .2, 1);
+  transition: grid-template-rows .26s ease-out;
 }
 .step-card.open .step-body { grid-template-rows: 1fr; }
 .step-inner { min-height: 0; overflow: hidden; padding: 0 18px; }
