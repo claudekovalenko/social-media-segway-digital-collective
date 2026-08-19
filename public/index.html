@@ -6,19 +6,17 @@
   <title>Your Next Step</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Black&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#7b2ff7">
+  <meta name="theme-color" content="#0a0b0d">
   <link rel="icon" href="/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
-      <div class="avatar">✝️</div>
-      <h1>Take Your Next Step</h1>
-      <p>Three simple steps on your journey of faith. Start wherever you are.</p>
+      <h1>Take Your<br><span class="alt">Next Step</span></h1>
       <span class="creator-badge" id="creatorBadge" hidden></span>
     </header>
 
@@ -26,25 +24,21 @@
       <!-- STEP 1: Know God -->
       <section class="step-card" id="card-know_god">
         <span class="num">1</span><h2>Know God</h2>
-        <p>Watch this short video about what it means to know God personally.</p>
         <div class="step-body">
           <div id="video-know_god"></div>
           <form data-step="know_god">
-            <label>Your name *<input name="name" required maxlength="100"></label>
-            <label>Email *<input name="email" type="email" required maxlength="200"></label>
-            <label>Phone (optional)<input name="phone" maxlength="40"></label>
-            <label>Where are you in this journey?
-              <select name="decision">
-                <option value="first_time">I just decided to follow Jesus for the first time</option>
-                <option value="recommitment">I'm recommitting my life to God</option>
-                <option value="questions">I have questions and want to talk to someone</option>
-                <option value="exploring">I'm just exploring</option>
-              </select>
-            </label>
-            <label>Anything you'd like to share? (optional)<textarea name="message" rows="3" maxlength="2000"></textarea></label>
-            <label class="check"><input type="checkbox" name="interested_in_group"> I'd like to be connected with a small group of others starting this journey</label>
+            <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
+            <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
+            <select name="decision" aria-label="Where are you in this journey?">
+              <option value="" disabled selected>Where are you today?</option>
+              <option value="first_time">I just decided to follow Jesus</option>
+              <option value="recommitment">I'm recommitting my life</option>
+              <option value="questions">I have questions</option>
+              <option value="exploring">Just exploring</option>
+            </select>
+            <label class="check"><input type="checkbox" name="interested_in_group"> Connect me with a small group</label>
             <button type="submit">I took this step</button>
-            <div class="success">Welcome to the family! We'll be in touch soon. 🎉</div>
+            <div class="success">Welcome to the family. We’ll be in touch soon.</div>
             <div class="error"></div>
           </form>
         </div>
@@ -53,16 +47,14 @@
       <!-- STEP 2: Grow with God -->
       <section class="step-card" id="card-grow_with_god">
         <span class="num">2</span><h2>Grow with God</h2>
-        <p>Start a discipleship course to build daily habits of prayer, Scripture, and community.</p>
         <div class="step-body">
           <div id="video-grow_with_god"></div>
           <form data-step="grow_with_god">
-            <label>Your name *<input name="name" required maxlength="100"></label>
-            <label>Email *<input name="email" type="email" required maxlength="200"></label>
-            <label>Phone (optional)<input name="phone" maxlength="40"></label>
-            <label class="check"><input type="checkbox" name="interested_in_group"> I'd like to go through this course with a small group</label>
-            <button type="submit">Sign me up for the course</button>
-            <div class="success">You're in! Check your email for the first lesson. 📖</div>
+            <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
+            <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
+            <label class="check"><input type="checkbox" name="interested_in_group"> Do it with a small group</label>
+            <button type="submit">Start the course</button>
+            <div class="success">You’re in. Check your email for the first lesson.</div>
             <div class="error"></div>
           </form>
         </div>
@@ -71,16 +63,15 @@
       <!-- STEP 3: Find a Faith Family -->
       <section class="step-card" id="card-find_church">
         <span class="num">3</span><h2>Find a Faith Family</h2>
-        <p>Learn how to find a healthy local church where you can belong and grow.</p>
         <div class="step-body">
           <div id="video-find_church"></div>
           <form data-step="find_church">
-            <label>Your name *<input name="name" required maxlength="100"></label>
-            <label>Email *<input name="email" type="email" required maxlength="200"></label>
-            <label>City / area *<input name="city" required maxlength="100"></label>
-            <label class="check"><input type="checkbox" name="interested_in_group"> Connect me with others near me looking for a church</label>
+            <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
+            <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
+            <input name="city" required maxlength="100" placeholder="City" aria-label="City">
+            <label class="check"><input type="checkbox" name="interested_in_group"> Connect me with others near me</label>
             <button type="submit">Help me find a church</button>
-            <div class="success">Got it — we'll help you find a faith family near you. ⛪</div>
+            <div class="success">Got it — we’ll help you find a church near you.</div>
             <div class="error"></div>
           </form>
         </div>
@@ -88,7 +79,7 @@
     </div>
 
     <footer>
-      <p>Are you a content creator? <a href="/creator.html">Get your own funnel link</a></p>
+      <p><a href="/creator.html">Creators: get your link</a></p>
     </footer>
   </div>
   <script src="/app.js"></script>
