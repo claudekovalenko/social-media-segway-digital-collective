@@ -193,9 +193,13 @@ button:disabled { opacity: 0.55; cursor: default; }
 a { color: var(--text-dim); font-weight: 500; text-decoration: none; transition: color var(--motion) var(--ease); }
 a:hover { color: var(--text); }
 footer { text-align: center; font-size: 0.82rem; margin-top: 48px; }
-.footer-quiet { margin-top: 14px; font-size: 0.72rem; }
-.footer-quiet a { color: #4f4f4c; }
+.footer-quiet { margin-top: 16px; font-size: 0.72rem; }
+.footer-quiet a {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: #4f4f4c;
+}
 .footer-quiet a:hover { color: var(--text-dim); }
+.dc-mark { flex-shrink: 0; opacity: 0.9; }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 12px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--edge); }
