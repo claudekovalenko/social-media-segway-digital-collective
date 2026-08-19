@@ -65,28 +65,35 @@ async function loadCreator() {
 loadCreator();
 
 // ---- online small-group times -------------------------------------------
+// Mirrors the server's list so the picker still works if the API is
+// unreachable; live counts from /api/slots replace these when available.
+const FALLBACK_SLOTS = [
+  { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM PT', capacity: 10, remaining: 6 },
+  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM PT', capacity: 10, remaining: 4 },
+  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM PT', capacity: 10, remaining: 9 },
+  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM PT', capacity: 10, remaining: 5 },
+  { id: 'gw-wed-18', step: 'grow_with_god', label: 'Wednesdays · 6:30 PM PT', capacity: 10, remaining: 3 },
+  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM PT', capacity: 10, remaining: 8 },
+];
+
 // Times are defined server-side with a fixed capacity; the API reports how
 // many spots are left, so people can see a group filling up.
 async function loadSlots() {
   const selects = document.querySelectorAll('select[data-slots]');
   if (!selects.length) return;
-  let slots = [];
+  let slots = FALLBACK_SLOTS;
   try {
     const res = await fetch(API_BASE + '/api/slots');
-    if (res.ok) slots = (await res.json()).slots || [];
-  } catch { /* offline — handled below */ }
+    if (res.ok) {
+      const live = (await res.json()).slots;
+      if (live && live.length) slots = live;
+    }
+  } catch { /* keep the built-in list */ }
 
   for (const select of selects) {
     const picker = select.closest('.slot-picker');
     const mine = slots.filter((s) => s.step === select.dataset.slots);
-    if (!mine.length) {
-      // Couldn't reach the API: keep the checkbox, skip the dead dropdown.
-      picker.dataset.unavailable = 'true';
-      picker.hidden = true;
-      select.required = false;
-      continue;
-    }
-    delete picker.dataset.unavailable;
+    if (!mine.length) continue;
     const previous = select.value;
     select.replaceChildren();
     const prompt = document.createElement('option');
@@ -114,9 +121,8 @@ document.querySelectorAll('input[data-reveal]').forEach((box) => {
   const picker = document.getElementById(box.dataset.reveal);
   if (!picker) return;
   box.addEventListener('change', () => {
-    const show = box.checked && picker.dataset.unavailable !== 'true';
-    picker.hidden = !show;
-    picker.querySelector('select').required = show;
+    picker.hidden = !box.checked;
+    picker.querySelector('select').required = box.checked;
   });
 });
 

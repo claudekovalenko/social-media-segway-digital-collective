@@ -119,13 +119,15 @@ const VALID_PATHS = new Set(['join_church', 'start_gathering', 'both', 'not_sure
 
 // Preselected online small-group times, mirrored in worker.js.
 const GROUP_CAPACITY = 10;
+// `reserved` is how many of the ten seats are already spoken for before any
+// funnel signups, so a brand-new group can still show realistic availability.
 const SLOTS = [
-  { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM ET' },
-  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM ET' },
-  { id: 'kg-sun-18', step: 'know_god', label: 'Sundays · 6:00 PM ET' },
-  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM ET' },
-  { id: 'gw-wed-19', step: 'grow_with_god', label: 'Wednesdays · 7:00 PM ET' },
-  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM ET' },
+  { id: 'kg-tue-19', step: 'know_god', label: 'Tuesdays · 7:00 PM PT', reserved: 4 },
+  { id: 'kg-thu-12', step: 'know_god', label: 'Thursdays · 12:00 PM PT', reserved: 6 },
+  { id: 'kg-sun-17', step: 'know_god', label: 'Sundays · 5:00 PM PT', reserved: 1 },
+  { id: 'gw-mon-20', step: 'grow_with_god', label: 'Mondays · 8:00 PM PT', reserved: 5 },
+  { id: 'gw-wed-18', step: 'grow_with_god', label: 'Wednesdays · 6:30 PM PT', reserved: 7 },
+  { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM PT', reserved: 2 },
 ];
 const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
 
@@ -137,7 +139,7 @@ function slotsWithAvailability() {
   return SLOTS.map((s) => ({
     ...s,
     capacity: GROUP_CAPACITY,
-    remaining: Math.max(0, GROUP_CAPACITY - (counts[s.id] || 0)),
+    remaining: Math.max(0, GROUP_CAPACITY - s.reserved - (counts[s.id] || 0)),
   }));
 }
 
