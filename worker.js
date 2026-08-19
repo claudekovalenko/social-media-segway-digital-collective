@@ -1,3 +1,5 @@
+import { makeDb, usingSupabase, emailFromToken } from './db.js';
+
 // Cloudflare Worker backend for the Faith Journey funnel.
 // Static files in public/ are served by Workers Assets; this handles /api/* and /c/*.
 // Bindings: DB (D1 database), ADMIN_KEY (secret).
@@ -26,12 +28,9 @@ const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
 // capacity of their own and carry a free-text note about what suits them.
 const PROPOSED = 'propose';
 
-// Slots with live remaining counts, newest counts straight from the database.
+// Slots with live remaining counts, straight from whichever database is active.
 async function slotsWithAvailability(db) {
-  const taken = await db.prepare(
-    `SELECT slot, COUNT(*) AS n FROM group_signups WHERE slot IS NOT NULL GROUP BY slot`
-  ).all();
-  const counts = Object.fromEntries((taken.results || []).map((r) => [r.slot, r.n]));
+  const counts = await db.slotCounts();
   return SLOTS.map((s) => ({
     ...s,
     capacity: GROUP_CAPACITY,
@@ -43,7 +42,7 @@ async function slotsWithAvailability(db) {
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, x-admin-key, x-creator-key',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-key, x-creator-key',
 };
 
 function json(body, status = 200) {
@@ -77,6 +76,7 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const p = url.pathname;
+    const db = makeDb(env);
 
     try {
       if (req.method === 'OPTIONS' && p.startsWith('/api/')) {
@@ -90,62 +90,75 @@ export default {
         const mode = b.mode === 'custom' ? 'custom' : 'default';
         const handle = String(b.handle || '').trim().slice(0, 60) || null;
         const topic = String(b.topic || '').trim().slice(0, 60) || null;
+        const email = String(b.email || '').trim().toLowerCase().slice(0, 200) || null;
         if (!slug || !name) return json({ error: 'slug and name are required' }, 400);
+        if (email && !/.+@.+\..+/.test(email)) return json({ error: 'that email looks wrong' }, 400);
         // The key is shown once at signup; only its hash is stored.
         const accessKey = newAccessKey();
         const keyHash = await sha256hex(accessKey);
         try {
-          await env.DB.prepare(
-            `INSERT INTO creators (slug, name, mode, handle, topic, key_hash, know_god_video_url, grow_course_url, find_church_video_url)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-          ).bind(slug, name, mode, handle, topic, keyHash,
-            b.know_god_video_url || null, b.grow_course_url || null, b.find_church_video_url || null).run();
+          await db.createCreator({
+            slug, name, email, mode, handle, topic, key_hash: keyHash,
+            know_god_video_url: b.know_god_video_url || null,
+            grow_course_url: b.grow_course_url || null,
+            find_church_video_url: b.find_church_video_url || null,
+          });
         } catch {
-          return json({ error: 'that link name is already taken' }, 409);
+          return json({ error: 'that link name or email is already taken' }, 409);
         }
         return json({ ok: true, slug, link: `/c/${slug}`, access_key: accessKey }, 201);
       }
 
       // Public directory: creators who set a handle, with their topic tag.
       if (p === '/api/directory' && req.method === 'GET') {
-        const rows = await env.DB.prepare(
-          `SELECT slug, name, handle, topic FROM creators
-           WHERE handle IS NOT NULL AND slug != 'default' ORDER BY created_at ASC`
-        ).all();
-        return json({ creators: rows.results });
+        return json({ creators: await db.directory() });
+      }
+
+      // What the dashboard needs to start a magic-link sign-in, if configured.
+      if (p === '/api/auth/config' && req.method === 'GET') {
+        return json({
+          magic_link: Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY),
+          url: env.SUPABASE_URL || null,
+          anon_key: env.SUPABASE_ANON_KEY || null,
+        });
       }
 
       // A creator's own leads, gated by their access key.
       if (p === '/api/creator/leads' && req.method === 'GET') {
-        const key = req.headers.get('x-creator-key') || '';
-        if (!key.startsWith('dc_')) return json({ error: 'unauthorized' }, 401);
-        const keyHash = await sha256hex(key);
-        const me = await env.DB.prepare(
-          `SELECT slug, name, handle, topic FROM creators WHERE key_hash = ?`
-        ).bind(keyHash).first();
+        let me = null;
+
+        // Preferred: a Supabase magic-link token, verified with Supabase.
+        const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+        if (bearer) {
+          const email = await emailFromToken(env, bearer);
+          if (email) me = await db.creatorByEmail(email);
+          if (email && !me) {
+            return json({ error: 'That email is not registered as a creator yet.' }, 403);
+          }
+        }
+
+        // Fallback: the access key issued at signup.
+        if (!me) {
+          const key = req.headers.get('x-creator-key') || '';
+          if (key.startsWith('dc_')) me = await db.creatorByKeyHash(await sha256hex(key));
+        }
+
         if (!me) return json({ error: 'unauthorized' }, 401);
         const [leads, counts] = await Promise.all([
-          env.DB.prepare(`SELECT * FROM leads WHERE creator_slug = ? ORDER BY created_at DESC LIMIT 500`)
-            .bind(me.slug).all(),
-          env.DB.prepare(`SELECT step, COUNT(*) AS n FROM leads WHERE creator_slug = ? GROUP BY step`)
-            .bind(me.slug).all(),
+          db.leadsForCreator(me.slug),
+          db.countsForCreator(me.slug),
         ]);
-        return json({ creator: me, leads: leads.results, counts: counts.results,
-                      link: `/c/${me.slug}` });
+        return json({ creator: me, leads, counts, link: `/c/${me.slug}` });
       }
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
-        const slug = p.split('/')[3];
-        const row = await env.DB.prepare(
-          `SELECT slug, name, mode, know_god_video_url, grow_course_url, find_church_video_url
-           FROM creators WHERE slug = ?`
-        ).bind(slug).first();
+        const row = await db.creatorBySlug(p.split('/')[3]);
         if (!row) return json({ error: 'creator not found' }, 404);
         return json(row);
       }
 
       if (p === '/api/slots' && req.method === 'GET') {
-        return json({ slots: await slotsWithAvailability(env.DB) });
+        return json({ slots: await slotsWithAvailability(db) });
       }
 
       if (p === '/api/leads' && req.method === 'POST') {
@@ -166,44 +179,32 @@ export default {
 
         // Don't oversubscribe a group: re-check the slot right before writing.
         if (interested && slot && slot !== PROPOSED) {
-          const live = await slotsWithAvailability(env.DB);
+          const live = await slotsWithAvailability(db);
           const chosen = live.find((s) => s.id === slot);
           if (!chosen || chosen.remaining <= 0) {
             return json({ error: 'That group just filled up — please pick another time.' }, 409);
           }
         }
 
-        const result = await env.DB.prepare(
-          `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, slot_note, path, country, language, consent, consent_at, creator_slug)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), ?)`
-        ).bind(step, name, email,
-          String(b.phone || '').slice(0, 40) || null,
-          String(b.city || '').slice(0, 100) || null,
-          String(b.message || '').slice(0, 2000) || null,
-          String(b.decision || '').slice(0, 40) || null,
-          interested, slot, slotNote, path, country, language, creatorSlug).run();
+        const leadId = await db.insertLead({
+          step, name, email,
+          phone: String(b.phone || '').slice(0, 40) || null,
+          city: String(b.city || '').slice(0, 100) || null,
+          message: String(b.message || '').slice(0, 2000) || null,
+          decision: String(b.decision || '').slice(0, 40) || null,
+          interested_in_group: interested, group_slot: slot, slot_note: slotNote,
+          path, country, language, creator_slug: creatorSlug,
+        });
         if (interested) {
-          await env.DB.prepare(`INSERT INTO group_signups (lead_id, creator_slug, slot) VALUES (?, ?, ?)`)
-            .bind(result.meta.last_row_id, creatorSlug, slot).run();
+          await db.insertGroupSignup({ lead_id: leadId, creator_slug: creatorSlug, slot });
         }
         return json({ ok: true }, 201);
       }
 
       if (p === '/api/admin/leads' && req.method === 'GET') {
         if (!isAdmin(req, url, env)) return json({ error: 'unauthorized' }, 401);
-        const [leads, creators, groups, counts] = await Promise.all([
-          env.DB.prepare(`SELECT * FROM leads ORDER BY created_at DESC LIMIT 500`).all(),
-          env.DB.prepare(`SELECT * FROM creators ORDER BY created_at DESC`).all(),
-          env.DB.prepare(
-            `SELECT g.*, l.name, l.email, l.city, l.step FROM group_signups g JOIN leads l ON l.id = g.lead_id
-             ORDER BY g.created_at DESC`).all(),
-          env.DB.prepare(`SELECT step, COUNT(*) AS n FROM leads GROUP BY step`).all(),
-        ]);
-        return json({
-          leads: leads.results, creators: creators.results,
-          group_signups: groups.results, counts: counts.results,
-          slots: await slotsWithAvailability(env.DB),
-        });
+        const all = await db.everything();
+        return json({ ...all, slots: await slotsWithAvailability(db), backend: db.backend });
       }
 
       // Creator share links: /c/<slug> loads the funnel tagged to that creator.

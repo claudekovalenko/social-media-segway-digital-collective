@@ -19,6 +19,41 @@ Each creator gets a shareable link like `/c/their-name`. Every lead that comes t
 
 The site installs to the home screen (manifest + service worker + icons). Static pages work offline; forms and live data always use the network.
 
+## Database: Supabase (Postgres) or D1
+
+The Worker reads and writes through one small adapter (`db.js`). If
+`SUPABASE_URL` and `SUPABASE_SERVICE_KEY` are set it uses Postgres on Supabase;
+otherwise it falls back to the Cloudflare D1 database, so the site keeps working
+while a migration is in progress. `GET /api/admin/leads` reports which backend
+answered, as `backend`.
+
+### Moving to Supabase
+
+1. Create a project at supabase.com (the free tier is fine to start; note that
+   free projects pause after a period of inactivity).
+2. In **SQL Editor → New query**, paste and run `supabase/schema.sql`. It creates
+   the tables, indexes and row-level security policies.
+3. From **Project Settings → API**, copy the project URL, the `anon` key and the
+   `service_role` key. The service role key is a full-access secret — it belongs
+   only in Worker secrets, never in a page.
+4. Give them to the Worker:
+
+   ```bash
+   npx wrangler secret put SUPABASE_URL
+   npx wrangler secret put SUPABASE_SERVICE_KEY
+   npx wrangler secret put SUPABASE_ANON_KEY
+   npx wrangler deploy
+   ```
+
+5. In **Authentication → URL Configuration**, add the dashboard address to the
+   redirect allow-list so magic links come back to the right place, e.g.
+   `https://<your-site>/dashboard.html`.
+
+Creators then sign in by entering their email and clicking the link Supabase
+sends. The Worker verifies that token with Supabase and matches the creator by
+email, so a creator only ever sees their own leads. The access keys issued at
+signup keep working as a fallback.
+
 ## Deploying to Cloudflare (production)
 
 The app runs as a Cloudflare Worker (`worker.js`) with a D1 database. The database `faith-journey-funnel` already exists on the Cloudflare account with the schema applied, and `wrangler.toml` is fully configured. To deploy:

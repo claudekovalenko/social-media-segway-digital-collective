@@ -22,6 +22,20 @@
     </header>
 
     <section class="step-card open static" id="login">
+      <form id="emailForm" hidden>
+        <label>Your email
+          <input name="email" type="email" required placeholder="you@example.com" autocomplete="email">
+        </label>
+        <button type="submit">Email me a sign-in link</button>
+        <p class="aside-link">We'll send a link that signs you in &mdash; no password to remember.</p>
+        <div class="success" id="sent">Check your email for the sign-in link.</div>
+        <div class="error"></div>
+      </form>
+
+      <p class="aside-link" id="toggleRow" hidden>
+        <a href="#" id="useKey">Use an access key instead</a>
+      </p>
+
       <form id="keyForm">
         <label>Your access key
           <input name="key" type="password" required placeholder="dc_&hellip;" autocomplete="current-password">
@@ -64,6 +78,75 @@
 
     function cell(text) { const td = document.createElement('td'); td.textContent = text ?? ''; return td; }
 
+    // ---- sign in ------------------------------------------------------------
+    // Two ways in: a Supabase magic link (preferred, when configured) or the
+    // access key issued at signup.
+    let auth = { magic_link: false };
+
+    async function setupAuth() {
+      try {
+        const res = await fetch(API_BASE + '/api/auth/config');
+        if (res.ok) auth = await res.json();
+      } catch { /* fall back to the key form */ }
+      if (auth.magic_link) {
+        document.getElementById('emailForm').hidden = false;
+        document.getElementById('toggleRow').hidden = false;
+        document.getElementById('keyForm').hidden = true;
+      }
+      // Coming back from the emailed link: the token arrives in the URL hash.
+      const hash = new URLSearchParams(location.hash.slice(1));
+      const token = hash.get('access_token');
+      if (token) {
+        history.replaceState(null, '', location.pathname);
+        sessionStorage.setItem('dc_token', token);
+      }
+      const saved = token || sessionStorage.getItem('dc_token');
+      if (saved) open({ Authorization: 'Bearer ' + saved });
+    }
+
+    document.getElementById('useKey').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('emailForm').hidden = true;
+      document.getElementById('keyForm').hidden = false;
+      document.getElementById('toggleRow').hidden = true;
+    });
+
+    document.getElementById('emailForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const email = new FormData(f).get('email').trim();
+      const error = f.querySelector('.error');
+      const sent = document.getElementById('sent');
+      error.style.display = sent.style.display = 'none';
+      try {
+        const res = await fetch(auth.url.replace(/\/+$/, '') + '/auth/v1/otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: auth.anon_key },
+          body: JSON.stringify({
+            email,
+            options: { email_redirect_to: location.origin + location.pathname },
+          }),
+        });
+        if (!res.ok) throw new Error('Could not send the link — check the address.');
+        sent.style.display = 'block';
+      } catch (err) {
+        error.textContent = err.message;
+        error.style.display = 'block';
+      }
+    });
+
+    async function open(headers) {
+      let res;
+      try {
+        res = await fetch(API_BASE + '/api/creator/leads', { headers });
+      } catch {
+        return false;
+      }
+      if (!res.ok) { sessionStorage.removeItem('dc_token'); return false; }
+      show(await res.json());
+      return true;
+    }
+
     const form = document.getElementById('keyForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -83,7 +166,10 @@
         error.style.display = 'block';
         return;
       }
-      const data = await res.json();
+      show(await res.json());
+    });
+
+    function show(data) {
       document.getElementById('login').hidden = true;
       document.getElementById('dash').hidden = false;
 
@@ -119,7 +205,9 @@
           .forEach(v => tr.appendChild(cell(v)));
         tbody.appendChild(tr);
       }
-    });
+    }
+
+    setupAuth();
   </script>
 </body>
 </html>

@@ -29,6 +29,9 @@
         <label>Your link name
           <input name="slug" required maxlength="40" pattern="[a-zA-Z0-9-]+" placeholder="faith-with-sarah">
         </label>
+        <label>Your email
+          <input name="email" type="email" required maxlength="200" placeholder="you@example.com">
+        </label>
         <label>Your public handle
           <input name="handle" maxlength="60" placeholder="@faithwithsarah">
         </label>
@@ -93,7 +96,7 @@
         p2.append('Your access key (save it now — it is shown only once): ', code);
         const p3 = document.createElement('p');
         const d = document.createElement('a'); d.href = 'dashboard.html'; d.textContent = 'your dashboard';
-        p3.append('Use it to sign in to ', d, ' and see your leads.');
+        p3.append('Sign in at ', d, ' with your email — the key above is a backup.');
         result.append(p1, p2, p3);
         result.style.display = 'grid';
       } catch (err) {

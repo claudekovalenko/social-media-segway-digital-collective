@@ -26,6 +26,7 @@ db.exec(`
     slug TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     mode TEXT NOT NULL DEFAULT 'default' CHECK (mode IN ('default','custom')),
+    email TEXT,                  -- used for magic-link sign-in
     handle TEXT,                 -- public @handle for the directory
     topic TEXT,                  -- what they're known for / want to pursue
     key_hash TEXT,               -- sha-256 of their access key (never the key itself)
@@ -76,6 +77,7 @@ for (const [table, column, type] of [
   ['leads', 'country', 'TEXT'],
   ['leads', 'language', 'TEXT'],
   ['group_signups', 'slot', 'TEXT'],
+  ['creators', 'email', 'TEXT'],
   ['creators', 'handle', 'TEXT'],
   ['creators', 'topic', 'TEXT'],
   ['creators', 'key_hash', 'TEXT'],
@@ -185,18 +187,23 @@ const server = http.createServer(async (req, res) => {
       const mode = b.mode === 'custom' ? 'custom' : 'default';
       const handle = String(b.handle || '').trim().slice(0, 60) || null;
       const topic = String(b.topic || '').trim().slice(0, 60) || null;
+      const email = String(b.email || '').trim().toLowerCase().slice(0, 200) || null;
       if (!slug || !name) return json(res, 400, { error: 'slug and name are required' });
       const accessKey = newAccessKey();
       try {
         db.prepare(
-          `INSERT INTO creators (slug, name, mode, handle, topic, key_hash, know_god_video_url, grow_course_url, find_church_video_url)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        ).run(slug, name, mode, handle, topic, sha256hex(accessKey),
+          `INSERT INTO creators (slug, name, email, mode, handle, topic, key_hash, know_god_video_url, grow_course_url, find_church_video_url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(slug, name, email, mode, handle, topic, sha256hex(accessKey),
           b.know_god_video_url || null, b.grow_course_url || null, b.find_church_video_url || null);
       } catch {
         return json(res, 409, { error: 'that link name is already taken' });
       }
       return json(res, 201, { ok: true, slug, link: `/c/${slug}`, access_key: accessKey });
+    }
+
+    if (p === '/api/auth/config' && req.method === 'GET') {
+      return json(res, 200, { magic_link: false, url: null, anon_key: null });
     }
 
     if (p === '/api/directory' && req.method === 'GET') {
