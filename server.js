@@ -203,7 +203,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (p === '/api/auth/config' && req.method === 'GET') {
-      return json(res, 200, { magic_link: false, url: null, anon_key: null });
+      return json(res, 200, { magic_link: false, providers: [], url: null, anon_key: null });
     }
 
     if (p === '/api/directory' && req.method === 'GET') {

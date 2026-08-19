@@ -144,8 +144,13 @@ export default {
 
       // What the dashboard needs to start a magic-link sign-in, if configured.
       if (p === '/api/auth/config' && req.method === 'GET') {
+        // AUTH_PROVIDERS lists the social logins actually enabled in Supabase,
+        // so a page never shows a button that would fail. Defaults to Google.
+        const providers = String(env.AUTH_PROVIDERS ?? 'google')
+          .split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
         return json({
           magic_link: Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY),
+          providers,
           url: env.SUPABASE_URL || null,
           anon_key: env.SUPABASE_ANON_KEY || null,
         });

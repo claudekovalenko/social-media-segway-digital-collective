@@ -329,15 +329,17 @@ body.wide .wrap { max-width: 960px; }
 /* Two links can sit on the right of the nav (creator login + database). */
 .nav-links { display: flex; gap: 8px; }
 
-/* Sign in with Google, and the "or" rule under it. */
-.btn-google {
+/* Social sign-in buttons, and the "or" rule under them. */
+#providerButtons { display: grid; gap: 10px; }
+.btn-google, .btn-apple {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
   padding: 14px 20px; border-radius: 999px; border: 1px solid var(--edge-lit);
   background: var(--text); color: #1f1f1f; font-family: inherit; font-weight: 600;
   font-size: 0.95rem; cursor: pointer;
   transition: filter var(--motion) var(--ease);
 }
-.btn-google:hover { filter: brightness(0.94); }
+.btn-google:hover, .btn-apple:hover { filter: brightness(0.94); }
+.btn-apple { background: #f6f6f4; color: #111; }
 .or-divider {
   display: flex; align-items: center; gap: 12px;
   margin: 18px 0; color: var(--text-dim); font-size: 0.78rem; letter-spacing: 0.08em;

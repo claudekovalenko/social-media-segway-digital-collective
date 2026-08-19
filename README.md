@@ -105,16 +105,46 @@ The creator dashboard (`/dashboard.html`) offers the same two ways in, and
 matches the signed-in email against the creator record so a creator only sees
 their own leads.
 
-### Turning on Google sign-in
+### Turning on Google or Apple sign-in
 
-1. In Google Cloud → **APIs & Services → Credentials**, create an OAuth 2.0
-   Client ID (type: Web application). For the authorized redirect URI use
-   `https://<your-project>.supabase.co/auth/v1/callback`.
-2. In Supabase → **Authentication → Providers → Google**, enable it and paste
-   the client ID and secret.
-3. In Supabase → **Authentication → URL Configuration**, add both pages to the
-   redirect allow-list: `https://<your-site>/dashboard.html` and
-   `https://<your-site>/admin.html`.
+Which buttons appear is controlled by `AUTH_PROVIDERS`, a comma-separated list
+(default `google`). Only list a provider after you've enabled it in Supabase, so
+a page never shows a button that would fail:
+
+```bash
+npx wrangler secret put AUTH_PROVIDERS    # google        (or: google,apple)
+```
+
+**Google**
+
+1. Google Cloud Console → **APIs & Services → OAuth consent screen**: pick
+   *External*, fill in the app name, support email, and developer email.
+2. **APIs & Services → Credentials → Create credentials → OAuth client ID**,
+   type *Web application*. Authorized redirect URI:
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+3. Copy the client ID and client secret.
+4. Supabase → **Authentication → Providers → Google**: enable, paste both, save.
+
+**Apple** (needs a paid Apple Developer account)
+
+1. Apple Developer → **Certificates, Identifiers & Profiles → Identifiers**:
+   create an *App ID*, then a **Services ID** (this is the client ID).
+2. Configure the Services ID: domain `<project-ref>.supabase.co`, return URL
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+3. **Keys → new key** with *Sign in with Apple* enabled; download the `.p8`
+   once. Note the Key ID and your Team ID.
+4. Supabase → **Authentication → Providers → Apple**: enable, paste the
+   Services ID, Team ID, Key ID, and the `.p8` contents.
+
+**Both**
+
+Supabase → **Authentication → URL Configuration** → *Redirect URLs*: add the two
+pages people sign in on, so tokens come back to the right place:
+
+```
+https://<your-site>/dashboard.html
+https://<your-site>/admin.html
+```
 
 ### The admin key
 
