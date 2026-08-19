@@ -76,32 +76,24 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   border: 1px solid var(--edge); color: var(--text-dim); font-size: 0.8rem;
 }
 
-/* ---------- step rows: the pill never changes shape ----------
-   The card is only a container. The pill is the header row, which keeps its
-   own border and radius whether open or closed; opening reveals a separate
-   panel beneath it, so nothing deforms and nothing creeps into its
-   neighbours. */
+/* ---------- step rows: outlined pills with icon badge + centered label ---------- */
 .steps { display: flex; flex-direction: column; gap: 10px; }
-.step-card { background: transparent; border: 0; padding: 0; cursor: pointer; }
-.step-card.open { cursor: default; }
+.step-card {
+  background: transparent;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color .2s ease, border-radius .3s ease, background .2s ease, transform .12s ease;
+}
+.step-card:hover { border-color: var(--lime); }
+.step-card:active { transform: scale(0.99); }
+.step-card.open { border-radius: 28px; background: var(--surface); cursor: default; }
 
 .step-head {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 14px;
-  border: 1px solid var(--edge); border-radius: 999px;
-  background: transparent;
-  transition: border-color .2s ease, background .2s ease, transform .12s ease;
 }
-.step-card:hover .step-head { border-color: var(--lime); }
-/* A gentle press: contents only, and the pill's own edge stays put. */
-.step-card:active .step-head { transform: scale(0.985); }
-.step-card.open:active .step-head { transform: none; }
-.step-card.open .step-head {
-  border-color: var(--lime); background: var(--surface-2);
-  /* a gentle deform: the pill relaxes toward the panel it opened */
-  border-radius: 999px 999px 22px 22px;
-}
-
 .step-icon {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   border: 1px solid var(--edge-lit); color: var(--text-dim);
@@ -120,18 +112,13 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 }
 .step-card.open .step-chevron { transform: rotate(180deg); color: var(--lime); }
 
-/* The panel that opens under the pill. */
 .step-body {
   display: grid; grid-template-rows: 0fr;
   transition: grid-template-rows .32s cubic-bezier(.4, 0, .2, 1);
 }
 .step-card.open .step-body { grid-template-rows: 1fr; }
-.step-inner { min-height: 0; overflow: hidden; }
-.step-card.open .step-inner {
-  margin-top: 6px; padding: 18px;
-  border: 1px solid var(--edge); border-radius: 18px;
-  background: var(--surface);
-}
+.step-inner { min-height: 0; overflow: hidden; padding: 0 18px; }
+.step-card.open .step-inner { padding: 4px 18px 18px; }
 
 /* ---------- video ---------- */
 .video-frame { aspect-ratio: 16/9; width: 100%; border: 0; border-radius: 18px; background: #000; display: block; }
