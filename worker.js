@@ -4,10 +4,17 @@
 
 const VALID_STEPS = new Set(['know_god', 'grow_with_god', 'find_church']);
 
+// Allow the GitHub Pages copy of the front-end to call this API.
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, x-admin-key',
+};
+
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS },
   });
 }
 
@@ -27,6 +34,10 @@ export default {
     const p = url.pathname;
 
     try {
+      if (req.method === 'OPTIONS' && p.startsWith('/api/')) {
+        return new Response(null, { status: 204, headers: CORS });
+      }
+
       if (p === '/api/creators/register' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
         const slug = String(b.slug || '').toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').slice(0, 40);

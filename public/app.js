@@ -1,6 +1,13 @@
 // Funnel front-end: loads the creator's config (default vs custom content),
 // expands step cards, and posts form submissions to /api/leads.
 
+// When the pages are served from somewhere without the backend (e.g. GitHub
+// Pages), point this at the Cloudflare Worker so forms still reach the database.
+// Empty string = same origin, which is correct on the Worker itself.
+const API_BASE = location.hostname.endsWith('github.io')
+  ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
+  : '';
+
 const params = new URLSearchParams(location.search);
 // Remember the creator across visits so the attribution survives navigation.
 const creatorSlug = params.get('creator') || localStorage.getItem('creator') || 'default';
@@ -39,7 +46,7 @@ function embed(containerId, url, placeholderText) {
 async function loadCreator() {
   let creator = { slug: 'default', name: null, mode: 'default' };
   try {
-    const res = await fetch(`/api/creators/${encodeURIComponent(creatorSlug)}`);
+    const res = await fetch(`${API_BASE}/api/creators/${encodeURIComponent(creatorSlug)}`);
     if (res.ok) creator = await res.json();
   } catch { /* fall back to defaults */ }
 
@@ -78,7 +85,7 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     const error = form.querySelector('.error');
     success.style.display = error.style.display = 'none';
     try {
-      const res = await fetch('/api/leads', {
+      const res = await fetch(API_BASE + '/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

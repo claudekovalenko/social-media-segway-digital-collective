@@ -9,77 +9,110 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0a0b0d">
+  <meta name="theme-color" content="#0b0b0b">
   <link rel="icon" href="/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 </head>
 <body>
+  <div class="glow" aria-hidden="true"></div>
   <div class="wrap">
     <header class="hero">
-      <h1>Take Your<br><span class="alt">Next Step</span></h1>
+      <div class="hero-badge"><span class="dot"></span>3 steps &middot; free &middot; 2 min</div>
+      <h1>Take your<br><em>next step</em></h1>
+      <p class="hero-sub">Wherever you are in your journey &mdash; start here.</p>
       <span class="creator-badge" id="creatorBadge" hidden></span>
     </header>
 
     <div class="steps">
       <!-- STEP 1: Know God -->
       <section class="step-card" id="card-know_god">
-        <span class="num">1</span><h2>Know God</h2>
+        <div class="step-head">
+          <div class="step-meta">
+            <span class="num">01</span>
+            <h2>Know God</h2>
+          </div>
+          <span class="step-arrow" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h9M7.5 2.5 12 7l-4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
         <div class="step-body">
-          <div id="video-know_god"></div>
-          <form data-step="know_god">
-            <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
-            <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
-            <select name="decision" aria-label="Where are you in this journey?">
-              <option value="" disabled selected>Where are you today?</option>
-              <option value="first_time">I just decided to follow Jesus</option>
-              <option value="recommitment">I'm recommitting my life</option>
-              <option value="questions">I have questions</option>
-              <option value="exploring">Just exploring</option>
-            </select>
-            <label class="check"><input type="checkbox" name="interested_in_group"> Connect me with a small group</label>
-            <button type="submit">I took this step</button>
-            <div class="success">Welcome to the family. We’ll be in touch soon.</div>
-            <div class="error"></div>
-          </form>
+          <div class="step-inner">
+            <div id="video-know_god"></div>
+            <form data-step="know_god">
+              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
+              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
+              <select name="decision" aria-label="Where are you in this journey?">
+                <option value="" disabled selected>Where are you today?</option>
+                <option value="first_time">I just decided to follow Jesus</option>
+                <option value="recommitment">I'm recommitting my life</option>
+                <option value="questions">I have questions</option>
+                <option value="exploring">Just exploring</option>
+              </select>
+              <label class="check"><input type="checkbox" name="interested_in_group"> Connect me with a small group</label>
+              <button type="submit">I took this step</button>
+              <div class="success">Welcome to the family. We'll be in touch soon.</div>
+              <div class="error"></div>
+            </form>
+          </div>
         </div>
       </section>
 
       <!-- STEP 2: Grow with God -->
       <section class="step-card" id="card-grow_with_god">
-        <span class="num">2</span><h2>Grow with God</h2>
+        <div class="step-head">
+          <div class="step-meta">
+            <span class="num">02</span>
+            <h2>Grow with God</h2>
+          </div>
+          <span class="step-arrow" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h9M7.5 2.5 12 7l-4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
         <div class="step-body">
-          <div id="video-grow_with_god"></div>
-          <form data-step="grow_with_god">
-            <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
-            <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
-            <label class="check"><input type="checkbox" name="interested_in_group"> Do it with a small group</label>
-            <button type="submit">Start the course</button>
-            <div class="success">You’re in. Check your email for the first lesson.</div>
-            <div class="error"></div>
-          </form>
+          <div class="step-inner">
+            <div id="video-grow_with_god"></div>
+            <form data-step="grow_with_god">
+              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
+              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
+              <label class="check"><input type="checkbox" name="interested_in_group"> Do it with a small group</label>
+              <button type="submit">Start the course</button>
+              <div class="success">You're in. Check your email for the first lesson.</div>
+              <div class="error"></div>
+            </form>
+          </div>
         </div>
       </section>
 
       <!-- STEP 3: Find a Faith Family -->
       <section class="step-card" id="card-find_church">
-        <span class="num">3</span><h2>Find a Faith Family</h2>
+        <div class="step-head">
+          <div class="step-meta">
+            <span class="num">03</span>
+            <h2>Find a Faith Family</h2>
+          </div>
+          <span class="step-arrow" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h9M7.5 2.5 12 7l-4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
         <div class="step-body">
-          <div id="video-find_church"></div>
-          <form data-step="find_church">
-            <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
-            <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
-            <input name="city" required maxlength="100" placeholder="City" aria-label="City">
-            <label class="check"><input type="checkbox" name="interested_in_group"> Connect me with others near me</label>
-            <button type="submit">Help me find a church</button>
-            <div class="success">Got it — we’ll help you find a church near you.</div>
-            <div class="error"></div>
-          </form>
+          <div class="step-inner">
+            <div id="video-find_church"></div>
+            <form data-step="find_church">
+              <input name="name" required maxlength="100" placeholder="Name" aria-label="Name">
+              <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email">
+              <input name="city" required maxlength="100" placeholder="City" aria-label="City">
+              <label class="check"><input type="checkbox" name="interested_in_group"> Connect me with others near me</label>
+              <button type="submit">Help me find a church</button>
+              <div class="success">Got it &mdash; we'll help you find a church near you.</div>
+              <div class="error"></div>
+            </form>
+          </div>
         </div>
       </section>
     </div>
 
     <footer>
-      <p><a href="/creator.html">Creators: get your link</a></p>
+      <a href="/creator.html">Creators &mdash; get your link</a>
     </footer>
   </div>
   <script src="/app.js"></script>
