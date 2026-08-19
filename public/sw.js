@@ -1,16 +1,16 @@
 // Service worker: cache-first for the app shell, network-only for the API.
 // Bump CACHE_VERSION whenever static files change.
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 const CACHE_NAME = `faith-journey-${CACHE_VERSION}`;
 const SHELL = [
-  '/',
-  '/index.html',
-  '/creator.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.webmanifest',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  './',
+  'index.html',
+  'creator.html',
+  'styles.css',
+  'app.js',
+  'manifest.webmanifest',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {
