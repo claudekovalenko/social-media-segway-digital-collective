@@ -87,10 +87,17 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
-  transition: border-color var(--motion) var(--ease);
+  /* Closing: hold the card's corner until the height has finished, then snap
+     back to a pill. Opening snaps first (below). Either way the box is a
+     rounded rectangle for the whole animation, so both directions match. */
+  transition: border-color var(--motion) var(--ease),
+              border-radius 0s var(--ease) var(--motion);
 }
 .step-card:hover { border-color: var(--lime); }
-.step-card.open { border-radius: 28px; cursor: default; }
+.step-card.open {
+  border-radius: 28px; cursor: default;
+  transition: border-color var(--motion) var(--ease), border-radius 0s;
+}
 
 .step-head {
   display: flex; align-items: center; gap: 12px;
