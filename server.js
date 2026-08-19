@@ -43,7 +43,8 @@ db.exec(`
     message TEXT,
     decision TEXT,               -- e.g. 'first_time','recommitment','questions' (know_god step)
     interested_in_group INTEGER NOT NULL DEFAULT 0,  -- wants an online small group
-    group_slot TEXT,             -- chosen online meeting time (see SLOTS)
+    group_slot TEXT,             -- chosen online meeting time (see SLOTS), or 'propose'
+    slot_note TEXT,              -- their suggested time, when proposing one
     path TEXT,                   -- step 3: join a church, start a gathering, or both
     country TEXT,                -- ISO-ish country code from the globe picker
     language TEXT,               -- preferred language code
@@ -65,6 +66,7 @@ db.exec(`
 // Add columns to databases created before these fields existed.
 for (const [table, column, type] of [
   ['leads', 'group_slot', 'TEXT'],
+  ['leads', 'slot_note', 'TEXT'],
   ['leads', 'path', 'TEXT'],
   ['leads', 'country', 'TEXT'],
   ['leads', 'language', 'TEXT'],
@@ -135,6 +137,9 @@ const SLOTS = [
   { id: 'gw-sat-10', step: 'grow_with_god', label: 'Saturdays · 10:00 AM CT', reserved: 2 },
 ];
 const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
+// People who can't make any listed time can propose their own; those have no
+// capacity of their own and carry a free-text note about what suits them.
+const PROPOSED = 'propose';
 
 function slotsWithAvailability() {
   const taken = db.prepare(
@@ -196,12 +201,13 @@ const server = http.createServer(async (req, res) => {
       if (!name || !/.+@.+\..+/.test(email)) return json(res, 400, { error: 'name and a valid email are required' });
       const interested = b.interested_in_group ? 1 : 0;
       const creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
-      const slot = SLOT_IDS.has(b.group_slot) ? b.group_slot : null;
+      const slot = SLOT_IDS.has(b.group_slot) || b.group_slot === PROPOSED ? b.group_slot : null;
       const path = VALID_PATHS.has(b.path) ? b.path : null;
       const country = String(b.country || '').slice(0, 8) || null;
       const language = String(b.language || '').slice(0, 8) || null;
+      const slotNote = slot === PROPOSED ? (String(b.slot_note || '').slice(0, 200) || null) : null;
 
-      if (interested && slot) {
+      if (interested && slot && slot !== PROPOSED) {
         const chosen = slotsWithAvailability().find((s) => s.id === slot);
         if (!chosen || chosen.remaining <= 0) {
           return json(res, 409, { error: 'That group just filled up — please pick another time.' });
@@ -209,14 +215,14 @@ const server = http.createServer(async (req, res) => {
       }
 
       const result = db.prepare(
-        `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, path, country, language, creator_slug)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO leads (step, name, email, phone, city, message, decision, interested_in_group, group_slot, slot_note, path, country, language, creator_slug)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(step, name, email,
         String(b.phone || '').slice(0, 40) || null,
         String(b.city || '').slice(0, 100) || null,
         String(b.message || '').slice(0, 2000) || null,
         String(b.decision || '').slice(0, 40) || null,
-        interested, slot, path, country, language, creatorSlug);
+        interested, slot, slotNote, path, country, language, creatorSlug);
       if (interested) {
         db.prepare(`INSERT INTO group_signups (lead_id, creator_slug, slot) VALUES (?, ?, ?)`)
           .run(result.lastInsertRowid, creatorSlug, slot);

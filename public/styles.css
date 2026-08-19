@@ -154,6 +154,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--l
   border: 1px solid var(--edge-lit); border-radius: 18px;
   background: var(--surface-2);
 }
+.slot-note { margin-top: 2px; }
 .slot-label {
   font-size: 0.78rem; color: var(--lime);
   text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;

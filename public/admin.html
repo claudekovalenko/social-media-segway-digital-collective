@@ -33,7 +33,7 @@
 
       <h3 class="section">Leads</h3>
       <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Country</th><th>Language</th><th>Path</th><th>Group?</th><th>Group time</th><th>Creator</th><th>Message</th></tr></thead>
+        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Country</th><th>Language</th><th>Path</th><th>Group?</th><th>Group time</th><th>Proposed</th><th>Creator</th><th>Message</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
@@ -45,7 +45,7 @@
 
       <h3 class="section">Small-group signups</h3>
       <div class="table-scroll"><table id="groupsTable">
-        <thead><tr><th>When</th><th>Name</th><th>Email</th><th>City</th><th>Group time</th><th>Creator</th><th>Status</th></tr></thead>
+        <thead><tr><th>When</th><th>Name</th><th>Email</th><th>City</th><th>Group time</th><th>Proposed</th><th>Creator</th><th>Status</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
@@ -120,7 +120,8 @@
         [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
          l.decision, l.country, l.language, PATH_NAMES[l.path] || l.path,
          l.interested_in_group ? 'Yes' : '',
-         SLOT_NAMES[l.group_slot] || l.group_slot, l.creator_slug, l.message]
+         l.group_slot === 'propose' ? 'Proposed a time' : (SLOT_NAMES[l.group_slot] || l.group_slot),
+         l.slot_note, l.creator_slug, l.message]
           .forEach(v => tr.appendChild(cell(v)));
         lt.appendChild(tr);
       }

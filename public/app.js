@@ -208,10 +208,25 @@ async function loadSlots() {
         : `${slot.label} — full`;
       select.appendChild(opt);
     }
+    const propose = document.createElement('option');
+    propose.value = 'propose';
+    propose.textContent = 'None of these — propose a time';
+    select.appendChild(propose);
     if (previous) select.value = previous;
   }
 }
 loadSlots();
+
+// Choosing "propose a time" swaps the list for a free-text box.
+document.querySelectorAll('select[data-slots]').forEach((select) => {
+  const note = select.parentElement.querySelector('.slot-note');
+  if (!note) return;
+  select.addEventListener('change', () => {
+    note.hidden = select.value !== 'propose';
+    note.required = select.value === 'propose';
+    if (!note.hidden) note.focus();
+  });
+});
 
 // Checking the small-group box reveals that group's time picker.
 document.querySelectorAll('input[data-reveal]').forEach((box) => {
@@ -264,7 +279,8 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     data.country = locale.country || null;
     data.language = locale.language || null;
     data.interested_in_group = form.querySelector('[name=interested_in_group]')?.checked || false;
-    if (!data.interested_in_group) delete data.group_slot;
+    if (!data.interested_in_group) { delete data.group_slot; delete data.slot_note; }
+    if (data.group_slot !== 'propose') delete data.slot_note;
     const success = form.querySelector('.success');
     const error = form.querySelector('.error');
     success.style.display = error.style.display = 'none';
