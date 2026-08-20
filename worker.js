@@ -94,6 +94,35 @@ function adminKeyMatches(req, url, env) {
 // kept in the browser, and the Worker re-verifies its signature every request.
 const SESSION_HOURS = 12;
 
+// Passwords are stored as PBKDF2-SHA256 with a random salt — never in the clear.
+const PBKDF2_ROUNDS = 100000;
+
+async function pbkdf2(password, saltBytes) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: saltBytes, iterations: PBKDF2_ROUNDS, hash: 'SHA-256' },
+    key, 256
+  );
+  return new Uint8Array(bits);
+}
+
+const toHex = (bytes) => [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+const fromHex = (hex) => Uint8Array.from(hex.match(/.{1,2}/g) || [], (b) => parseInt(b, 16));
+
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return `pbkdf2$${PBKDF2_ROUNDS}$${toHex(salt)}$${toHex(await pbkdf2(password, salt))}`;
+}
+
+async function passwordMatches(password, stored) {
+  const [scheme, rounds, salt, hash] = String(stored || '').split('$');
+  if (scheme !== 'pbkdf2' || Number(rounds) !== PBKDF2_ROUNDS || !salt || !hash) return false;
+  return sameString(toHex(await pbkdf2(password, fromHex(salt))), hash);
+}
+
+
 function adminLogins(env) {
   const out = new Map();
   for (const pair of String(env.ADMIN_LOGINS || '').split(',')) {
@@ -115,12 +144,24 @@ const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-'
 
 // The signing secret is whatever secret the deployment already has, so there's
 // nothing extra to configure. Tokens die if those secrets are rotated.
-function sessionSecret(env) {
-  return String(env.SESSION_SECRET || env.ADMIN_LOGINS || env.ADMIN_KEY || '');
+// The signing key mixes in something only the server knows about that one
+// account — its stored password hash — so a token can't be forged even on a
+// deployment with no secrets configured at all.
+function sessionSecret(env, accountSecret) {
+  return String(env.SESSION_SECRET || env.ADMIN_KEY || 'dc') + '|' + String(accountSecret || '');
 }
 
-async function signSession(env, payload) {
-  const secret = sessionSecret(env);
+// What we mix in for a given email: the stored hash for a database account, or
+// the configured password for an ADMIN_LOGINS one.
+async function accountSecretFor(env, email) {
+  const configured = adminLogins(env).get(email);
+  if (configured) return 'env:' + configured;
+  const account = await makeDb(env).adminByEmail(email).catch(() => null);
+  return account ? 'db:' + account.pass_hash : null;
+}
+
+async function signSession(env, payload, accountSecret) {
+  const secret = sessionSecret(env, accountSecret);
   const key = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode(secret),
     { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
@@ -131,16 +172,18 @@ async function signSession(env, payload) {
 }
 
 async function readSession(env, token) {
-  if (!token.startsWith('dcs.') || !sessionSecret(env)) return null;
+  if (!token.startsWith('dcs.')) return null;
   const [, body, sig] = token.split('.');
   if (!body || !sig) return null;
   try {
     const payload = JSON.parse(new TextDecoder().decode(Uint8Array.from(
       atob(body.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)
     )));
-    // Re-sign the payload and compare: a tampered token can't match.
-    if (!sameString(await signSession(env, payload), token)) return null;
     if (!payload.exp || payload.exp < Date.now()) return null;
+    const accountSecret = await accountSecretFor(env, payload.email);
+    if (!accountSecret) return null;
+    // Re-sign the payload and compare: a tampered token can't match.
+    if (!sameString(await signSession(env, payload, accountSecret), token)) return null;
     return payload;
   } catch {
     return null;
@@ -153,8 +196,7 @@ async function isAdmin(req, url, env) {
   if (bearer.startsWith('dcs.')) {
     const session = await readSession(env, bearer);
     // Re-check the account still exists, so removing a login ends its sessions.
-    if (session && adminLogins(env).has(session.email)) return { ok: true, email: session.email };
-    return { ok: false };
+    return session ? { ok: true, email: session.email } : { ok: false };
   }
   if (bearer) {
     const email = await emailFromToken(env, bearer);
@@ -208,19 +250,56 @@ export default {
       }
 
       // What the dashboard needs to start a magic-link sign-in, if configured.
+      // Does this site have an admin account yet? Drives the login page.
+      if (p === '/api/admin/status' && req.method === 'GET') {
+        const count = await db.countAdmins().catch(() => 0);
+        return json({ has_accounts: count > 0 || adminLogins(env).size > 0 });
+      }
+
+      // Create an admin account. The very first one is open, because a brand
+      // new site has no one to authorise it; after that you must be signed in.
+      if (p === '/api/admin/accounts' && req.method === 'POST') {
+        const b = await req.json().catch(() => ({}));
+        const email = String(b.email || '').trim().toLowerCase();
+        const password = String(b.password || '');
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          return json({ error: 'Enter a valid email address.' }, 400);
+        }
+        if (password.length < 10) {
+          return json({ error: 'Use a password of at least 10 characters.' }, 400);
+        }
+        const existing = await db.countAdmins();
+        if (existing > 0 || adminLogins(env).size > 0) {
+          const who = await isAdmin(req, url, env);
+          if (!who.ok) return json({ error: 'Sign in first to add an account.' }, 401);
+        }
+        if (await db.adminByEmail(email)) {
+          return json({ error: 'That email already has an account.' }, 409);
+        }
+        await db.insertAdmin(email, await hashPassword(password));
+        const token = await signSession(
+          env,
+          { email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },
+          await accountSecretFor(env, email)
+        );
+        return json({ token, email }, 201);
+      }
+
       if (p === '/api/admin/login' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
         const email = String(b.email || '').trim().toLowerCase();
         const password = String(b.password || '');
-        const expected = adminLogins(env).get(email);
-        // Compare even on an unknown email so a wrong address and a wrong
-        // password take the same path.
-        if (!expected || !sameString(password, expected)) {
-          return json({ error: 'Email or password is incorrect.' }, 401);
-        }
-        const token = await signSession(env, {
-          email, exp: Date.now() + SESSION_HOURS * 3600 * 1000,
-        });
+        // Accounts created on the site come first; ADMIN_LOGINS still works.
+        const account = await db.adminByEmail(email).catch(() => null);
+        const ok = account
+          ? await passwordMatches(password, account.pass_hash)
+          : sameString(password, adminLogins(env).get(email) || '');
+        if (!ok) return json({ error: 'Email or password is incorrect.' }, 401);
+        const token = await signSession(
+          env,
+          { email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },
+          await accountSecretFor(env, email)
+        );
         return json({ token, email });
       }
 

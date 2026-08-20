@@ -205,9 +205,12 @@ table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--edge); }
 th { color: var(--text-dim); font-weight: 600; }
 .table-scroll {
-  overflow-x: auto; background: var(--surface); border: 1px solid var(--edge);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  background: var(--surface); border: 1px solid var(--edge);
   border-radius: 16px; padding: 8px 12px;
 }
+.table-scroll table { min-width: 100%; }
+.table-scroll th, .table-scroll td { white-space: nowrap; }
 .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
 .stat {
   background: var(--surface); border: 1px solid var(--edge);
@@ -301,7 +304,8 @@ body.landing .wrap { max-width: 560px; }
 .topic-chip:hover { border-color: var(--lime); color: var(--text); }
 .topic-chip.on { border-color: var(--lime); color: var(--lime-ink); background: var(--lime); }
 .creator-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
   border: 1px solid var(--edge); border-radius: 14px; padding: 12px 18px; margin-bottom: 6px;
 }
 .creator-bar a { color: var(--lime); }
@@ -324,7 +328,7 @@ body.prose .wrap { max-width: 560px; }
 }
 
 /* Admin uses a wider layout than the phone-first funnel. */
-body.wide .wrap { max-width: 960px; }
+body.wide .wrap { max-width: min(1360px, 94vw); }
 
 /* Two links can sit on the right of the nav (creator login + database). */
 .nav-links { display: flex; gap: 8px; }
@@ -351,3 +355,40 @@ body.wide .wrap { max-width: 960px; }
 
 /* The sign-in page is a single card; keep it from stretching wide. */
 .wrap-narrow { max-width: 520px; }
+
+
+/* ---- screens ------------------------------------------------------------
+   The layout is fluid by default; these adjust the few places where a phone
+   or a wide desktop wants different proportions. */
+
+/* Phones: use the full width, and keep tap targets and type comfortable. */
+@media (max-width: 520px) {
+  .wrap { padding: 18px 16px 44px; }
+  .hero h1 { font-size: clamp(2rem, 11vw, 2.8rem); }
+  .stat { flex: 1 1 calc(50% - 6px); min-width: 0; }
+  .table-scroll { padding: 6px 8px; }
+  .table-scroll th, .table-scroll td { padding: 8px; font-size: 0.82rem; }
+  .btn-primary, .btn-ghost { width: 100%; text-align: center; }
+  .cta-row { flex-direction: column; }
+  .site-nav { gap: 10px; }
+  .nav-links { flex-wrap: wrap; justify-content: flex-end; }
+}
+
+/* Laptops and up: the funnel and reading pages stay narrow on purpose, but
+   give them a little more room than a phone column. */
+@media (min-width: 900px) {
+  body.landing .wrap { max-width: 720px; }
+  body.prose .wrap { max-width: 680px; }
+  .wrap { max-width: 520px; }
+  .wrap-narrow { max-width: 460px; }
+}
+
+/* Big desktops: let the data tables breathe. */
+@media (min-width: 1500px) {
+  body.wide .wrap { max-width: 1440px; }
+}
+
+/* Fine pointers get hover affordances; touch screens shouldn't keep them. */
+@media (hover: none) {
+  .step-card:hover { border-color: var(--edge); }
+}

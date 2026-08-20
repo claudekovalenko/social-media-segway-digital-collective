@@ -89,6 +89,43 @@ function d1Adapter(DB) {
       return r.results;
     },
 
+    // ---- admin accounts ----
+    // Created on the page, so there's no secret to configure. The table is made
+    // on first use, which keeps this working on a database created before it.
+    async ensureAdmins() {
+      await DB.prepare(
+        `CREATE TABLE IF NOT EXISTS admins (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           email TEXT NOT NULL UNIQUE,
+           pass_hash TEXT NOT NULL,
+           created_at TEXT NOT NULL DEFAULT (datetime('now'))
+         )`).run();
+    },
+
+    async countAdmins() {
+      await this.ensureAdmins();
+      const r = await DB.prepare(`SELECT COUNT(*) AS n FROM admins`).first();
+      return r ? r.n : 0;
+    },
+
+    async adminByEmail(email) {
+      await this.ensureAdmins();
+      return DB.prepare(`SELECT email, pass_hash FROM admins WHERE email = lower(?)`)
+        .bind(email).first();
+    },
+
+    async insertAdmin(email, passHash) {
+      await this.ensureAdmins();
+      await DB.prepare(`INSERT INTO admins (email, pass_hash) VALUES (lower(?), ?)`)
+        .bind(email, passHash).run();
+    },
+
+    async listAdmins() {
+      await this.ensureAdmins();
+      const r = await DB.prepare(`SELECT email, created_at FROM admins ORDER BY created_at ASC`).all();
+      return r.results;
+    },
+
     async everything() {
       const [leads, creators, groups, counts] = await Promise.all([
         DB.prepare(`SELECT * FROM leads ORDER BY created_at DESC LIMIT 500`).all(),
@@ -203,6 +240,29 @@ function supabaseAdapter(url, serviceKey) {
       const tally = {};
       for (const r of rows) tally[r.step] = (tally[r.step] || 0) + 1;
       return Object.entries(tally).map(([step, n]) => ({ step, n }));
+    },
+
+    // ---- admin accounts ---- (table comes from supabase/schema.sql)
+    async ensureAdmins() { /* created by the schema */ },
+
+    async countAdmins() {
+      const rows = await rest('admins?select=email');
+      return rows.length;
+    },
+
+    async adminByEmail(email) {
+      return first(await rest(`admins?select=email,pass_hash&email=eq.${encodeURIComponent(email.toLowerCase())}`));
+    },
+
+    async insertAdmin(email, passHash) {
+      await rest('admins', {
+        method: 'POST',
+        body: JSON.stringify({ email: email.toLowerCase(), pass_hash: passHash }),
+      });
+    },
+
+    listAdmins() {
+      return rest('admins?select=email,created_at&order=created_at.asc');
     },
 
     async everything() {

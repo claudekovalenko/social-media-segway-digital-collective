@@ -149,25 +149,20 @@ https://<your-site>/dashboard.html
 https://<your-site>/admin.html
 ```
 
-### Email + password login (no third party)
+### Email + password accounts (no third party, nothing to configure)
 
-Set `ADMIN_LOGINS` to `email:password` pairs, comma-separated, and the database
-page shows a plain email + password form — no Google, no Supabase, nothing else
-to configure:
+The first person to open `/login.html` on a fresh site is asked to **create the
+owner account** — email and password, stored in the database. After that the
+page asks for those credentials, and further accounts can only be added by
+someone already signed in.
 
-Set it as a **GitHub repo secret** named `ADMIN_LOGINS` (Settings → Secrets and
-variables → Actions → New repository secret), value `you@example.com:your-password`.
-The deploy workflow pushes it to Cloudflare on the next run — no local wrangler.
+Passwords are stored as PBKDF2-SHA256 hashes with a random salt per account,
+never in the clear. A correct sign-in returns a token that expires after 12
+hours and is signed with a key derived from that account's stored hash, so a
+token can't be forged and changing a password ends the old sessions.
 
-The workflow syncs these repo secrets the same way, skipping any that are empty:
-`ADMIN_LOGINS`, `ADMIN_KEY`, `ADMIN_EMAILS`, `AUTH_PROVIDERS`, `SUPABASE_URL`,
-`SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`.
-
-A correct sign-in gets a signed token that expires after 12 hours; the Worker
-re-checks its signature on every request, and removing someone from
-`ADMIN_LOGINS` ends their session immediately. Pick a long password — it's the
-whole gate. This works alongside Google and magic links; when both are
-configured, both appear.
+`ADMIN_LOGINS` (`email:password` pairs, comma-separated) still works as an
+alternative for anyone who prefers configuring logins as a secret.
 
 ### The admin key
 

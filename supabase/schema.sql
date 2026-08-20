@@ -103,3 +103,15 @@ create policy "creators read their own signups"
 
 -- No insert/update/delete policies exist on purpose: writes go through the
 -- Worker with the service role key, which is where validation lives.
+
+-- Admin accounts for the database view. Passwords are PBKDF2 hashes written by
+-- the Worker; no policy grants the browser access, so only the service key
+-- (server side) can read or write this table.
+create table if not exists admins (
+  id bigint generated always as identity primary key,
+  email text not null unique,
+  pass_hash text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table admins enable row level security;

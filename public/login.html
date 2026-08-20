@@ -52,13 +52,19 @@
         </form>
       </div>
 
-      <!-- Only where no login is configured at all, e.g. running locally. -->
-      <form id="keyForm" hidden>
-        <label>Admin key
-          <input name="key" type="password" required autocomplete="current-password">
+      <!-- Shown only until the first account exists. -->
+      <form id="createForm" hidden>
+        <label>Email
+          <input name="email" type="email" required placeholder="you@example.com" autocomplete="username">
         </label>
-        <button type="submit">Sign in</button>
-        <p class="aside-link">No login is configured on this copy of the site, so the admin key is the way in.</p>
+        <label>Password
+          <input name="password" type="password" required autocomplete="new-password" minlength="10">
+        </label>
+        <label>Confirm password
+          <input name="confirm" type="password" required autocomplete="new-password" minlength="10">
+        </label>
+        <button type="submit" id="createBtn">Create account</button>
+        <p class="aside-link">At least 10 characters. This is the owner account for the database.</p>
         <div class="error"></div>
       </form>
 
@@ -133,15 +139,29 @@
     }
 
     async function setup() {
+      let hasAccounts = true;
       try {
-        const res = await fetch(API_BASE + '/api/auth/config');
-        if (res.ok) auth = await res.json();
-      } catch { /* show the key form as a last resort */ }
+        const [cfg, status] = await Promise.all([
+          fetch(API_BASE + '/api/auth/config').then((r) => r.json()),
+          fetch(API_BASE + '/api/admin/status').then((r) => r.json()),
+        ]);
+        auth = cfg;
+        hasAccounts = status.has_accounts;
+      } catch {
+        document.getElementById('loading').textContent =
+          'Could not reach the server. Refresh to try again.';
+        return;
+      }
       document.getElementById('loading').hidden = true;
-      document.getElementById('passwordForm').hidden = !auth.password_login;
+      // A brand new site has no account yet, so the first visit creates one.
+      document.getElementById('createForm').hidden = hasAccounts;
+      document.getElementById('passwordForm').hidden = !hasAccounts;
       document.getElementById('realAuth').hidden = !auth.magic_link;
-      document.getElementById('orRow').hidden = !(auth.password_login && auth.magic_link);
-      document.getElementById('keyForm').hidden = auth.password_login || auth.magic_link;
+      document.getElementById('orRow').hidden = !(hasAccounts && auth.magic_link);
+      if (!hasAccounts) {
+        document.getElementById('why').textContent =
+          'No account exists yet. Create the owner account for the database.';
+      }
       renderProviders();
 
       // Coming back from Google, Apple, or the emailed link.
@@ -200,27 +220,39 @@
       }
     });
 
-    document.getElementById('keyForm').addEventListener('submit', async (e) => {
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.currentTarget;
-      const key = new FormData(f).get('key').trim();
+      const data = new FormData(f);
       const error = f.querySelector('.error');
+      const btn = document.getElementById('createBtn');
       error.style.display = 'none';
-      let res;
+      if (data.get('password') !== data.get('confirm')) {
+        error.textContent = 'Those passwords do not match.';
+        error.style.display = 'block';
+        return;
+      }
+      btn.disabled = true;
       try {
-        res = await fetch(API_BASE + '/api/admin/leads', { headers: { 'x-admin-key': key } });
-      } catch {
-        error.textContent = 'Could not reach the server — try again.';
+        const res = await fetch(API_BASE + '/api/admin/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.get('email').trim(),
+            password: data.get('password'),
+          }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Could not create the account.');
+        }
+        done((await res.json()).token);
+      } catch (err) {
+        error.textContent = err.message === 'Failed to fetch'
+          ? 'Could not reach the server — try again.' : err.message;
         error.style.display = 'block';
-        return;
+        btn.disabled = false;
       }
-      if (!res.ok) {
-        error.textContent = 'That key was not recognized.';
-        error.style.display = 'block';
-        return;
-      }
-      sessionStorage.setItem('dc_admin_key', key);
-      location.replace(next);
     });
 
     setup();
