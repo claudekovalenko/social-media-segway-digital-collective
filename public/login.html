@@ -86,18 +86,20 @@
         <label>Your handle
           <input name="handle" type="text" placeholder="@yourhandle">
         </label>
-        <label>Where you create
-          <select name="platform">
-            <option value="">Choose one</option>
-            <option>TikTok</option>
-            <option>Instagram</option>
-            <option>YouTube</option>
-            <option>Facebook</option>
-            <option>X</option>
-            <option>Podcast</option>
-            <option>Other</option>
-          </select>
-        </label>
+        <fieldset class="pick-set">
+          <legend>Where you create <span class="pick-hint">pick all that apply</span></legend>
+          <div class="pick-row">
+            <label class="pick"><input type="checkbox" name="platform" value="TikTok"><span>TikTok</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Instagram"><span>Instagram</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="YouTube"><span>YouTube</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Facebook"><span>Facebook</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="X"><span>X / Twitter</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Threads"><span>Threads</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Podcast"><span>Podcast</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Blog"><span>Blog</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Other"><span>Other</span></label>
+          </div>
+        </fieldset>
         <label>Audience size
           <select name="audience">
             <option value="">Choose one</option>
@@ -343,7 +345,10 @@
     document.getElementById('joinForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.currentTarget;
-      const data = Object.fromEntries(new FormData(f).entries());
+      const form = new FormData(f);
+      const data = Object.fromEntries(form.entries());
+      // Checkboxes: every ticked platform, not just the last one.
+      data.platform = form.getAll('platform').join(', ');
       const error = f.querySelector('.error');
       const btn = document.getElementById('joinBtn');
       error.style.display = 'none';

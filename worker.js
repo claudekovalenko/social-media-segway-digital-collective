@@ -358,7 +358,7 @@ export default {
         await db.insertApplication({
           email, name, why,
           handle: String(b.handle || '').trim().slice(0, 60) || null,
-          platform: String(b.platform || '').trim().slice(0, 60) || null,
+          platform: String(b.platform || '').trim().slice(0, 200) || null,
           audience: String(b.audience || '').trim().slice(0, 60) || null,
           topic: String(b.topic || '').trim().slice(0, 60) || null,
         });
