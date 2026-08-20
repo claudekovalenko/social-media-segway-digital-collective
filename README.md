@@ -81,8 +81,11 @@ Data is stored in `data/funnel.db` (SQLite). Set `PORT`, `DB_PATH`, and `ADMIN_K
 
 ## Viewing the whole database
 
-`/admin.html` — linked from the Digital Collective home page as **Database** —
-shows everything: every lead, the online group times and how full they are, the
+Sign-in lives on its own page, `/login.html` — that's what **Database** links to
+from the site. `/admin.html` holds no login of its own: it reads the session
+saved by the login page, pulls live data from the API, and sends anyone without
+a valid session back to `/login.html`. Signing out, or an expired session,
+returns there too. It shows everything: every lead, the online group times and how full they are, the
 small-group waitlist, and all creators.
 
 Signing in is a real login, either way you choose:

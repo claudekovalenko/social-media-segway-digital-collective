@@ -348,3 +348,6 @@ body.wide .wrap { max-width: 960px; }
 .or-divider::before, .or-divider::after {
   content: ""; flex: 1; height: 1px; background: var(--edge);
 }
+
+/* The sign-in page is a single card; keep it from stretching wide. */
+.wrap-narrow { max-width: 520px; }
