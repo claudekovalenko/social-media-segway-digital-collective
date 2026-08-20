@@ -115,3 +115,36 @@ create table if not exists admins (
 );
 
 alter table admins enable row level security;
+
+-- Everyone signs in through one accounts table; `role` decides the tier:
+-- admin (everything), creator (their own leads), pending (applied).
+alter table admins add column if not exists role text not null default 'admin';
+alter table admins add column if not exists creator_slug text;
+alter table admins add column if not exists name text;
+
+-- Requests to join the collective, reviewed by an admin.
+create table if not exists applications (
+  id bigint generated always as identity primary key,
+  email text not null,
+  name text,
+  handle text,
+  platform text,
+  audience text,
+  topic text,
+  why text,
+  status text not null default 'pending' check (status in ('pending','approved','declined')),
+  reviewed_by text,
+  reviewed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table applications enable row level security;
+
+-- Follow-up tracking on each lead.
+alter table leads add column if not exists status text not null default 'new';
+alter table leads add column if not exists notes text;
+alter table leads add column if not exists next_follow_up date;
+alter table leads add column if not exists last_contacted_at timestamptz;
+
+create index if not exists leads_follow_up_idx on leads (next_follow_up);
+create index if not exists leads_status_idx on leads (status);

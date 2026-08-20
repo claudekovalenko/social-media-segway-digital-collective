@@ -21,9 +21,14 @@
     </nav>
 
     <header class="hero">
-      <h1>Sign <em>in</em></h1>
-      <p class="hero-sub" id="why">Access to the Digital Collective database.</p>
+      <h1>Digital <em>Collective</em></h1>
+      <p class="hero-sub" id="why">Sign in, or apply to join the collective.</p>
     </header>
+
+    <div class="tab-row" id="tabs" hidden>
+      <button type="button" class="tab on" data-tab="signin">Sign in</button>
+      <button type="button" class="tab" data-tab="join">Join the collective</button>
+    </div>
 
     <section class="step-card open static">
       <form id="passwordForm" hidden>
@@ -68,6 +73,53 @@
         <div class="error"></div>
       </form>
 
+      <form id="joinForm" hidden>
+        <label>Your name
+          <input name="name" type="text" required placeholder="Sam Rivera" autocomplete="name">
+        </label>
+        <label>Email
+          <input name="email" type="email" required placeholder="you@example.com" autocomplete="username">
+        </label>
+        <label>Password
+          <input name="password" type="password" required autocomplete="new-password" minlength="10">
+        </label>
+        <label>Your handle
+          <input name="handle" type="text" placeholder="@yourhandle">
+        </label>
+        <label>Where you create
+          <select name="platform">
+            <option value="">Choose one</option>
+            <option>TikTok</option>
+            <option>Instagram</option>
+            <option>YouTube</option>
+            <option>Facebook</option>
+            <option>X</option>
+            <option>Podcast</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>Audience size
+          <select name="audience">
+            <option value="">Choose one</option>
+            <option>Under 1,000</option>
+            <option>1,000 &ndash; 10,000</option>
+            <option>10,000 &ndash; 100,000</option>
+            <option>100,000+</option>
+          </select>
+        </label>
+        <label>What you create about
+          <input name="topic" type="text" placeholder="Testimonies, apologetics, worship&hellip;">
+        </label>
+        <label>Why do you want to join?
+          <textarea name="why" rows="4" required minlength="20"
+            placeholder="What you&rsquo;re building, and what you hope Digital Collective helps you do."></textarea>
+        </label>
+        <button type="submit" id="joinBtn">Send application</button>
+        <p class="aside-link">Creators in the collective hold to our <a href="beliefs.html">statement of faith</a>. You&rsquo;ll get an account right away and your link once you&rsquo;re approved.</p>
+        <div class="success" id="applied">Application sent. We&rsquo;ll be in touch — you can sign in any time to check.</div>
+        <div class="error"></div>
+      </form>
+
       <p class="aside-link" id="loading">Loading sign-in options&hellip;</p>
     </section>
 
@@ -86,7 +138,15 @@
     // crafted link can't bounce anyone off to another site.
     const ALLOWED_NEXT = new Set(['admin.html', 'dashboard.html']);
     const params = new URLSearchParams(location.search);
-    const next = ALLOWED_NEXT.has(params.get('next')) ? params.get('next') : 'admin.html';
+    const asked = ALLOWED_NEXT.has(params.get('next')) ? params.get('next') : null;
+
+    // Admins land on the database, creators on their own leads. An explicit
+    // ?next= wins, unless the role can't open that page.
+    function destination(role) {
+      if (role === 'admin') return asked || 'admin.html';
+      if (role === 'creator') return asked === 'admin.html' ? 'dashboard.html' : (asked || 'dashboard.html');
+      return 'dashboard.html';
+    }
     if (params.get('expired')) {
       document.getElementById('why').textContent = 'Your session ended. Sign in again to open the database.';
     }
@@ -111,9 +171,9 @@
       },
     };
 
-    function done(token) {
+    function done(token, role) {
       sessionStorage.setItem('dc_admin_token', token);
-      location.replace(next);
+      location.replace(destination(role));
     }
 
     function renderProviders() {
@@ -128,7 +188,7 @@
         btn.innerHTML = p.icon;
         btn.appendChild(document.createTextNode(p.label));
         btn.addEventListener('click', () => {
-          const back = encodeURIComponent(location.origin + location.pathname + '?next=' + next);
+          const back = encodeURIComponent(location.origin + location.pathname + (asked ? '?next=' + asked : ''));
           location.href = auth.url.replace(/\/+$/, '')
             + '/auth/v1/authorize?provider=' + encodeURIComponent(name)
             + '&redirect_to=' + back;
@@ -164,10 +224,15 @@
       }
       renderProviders();
 
+      // Tabs only make sense once an account exists; a brand new site goes
+      // straight to creating the owner account.
+      document.getElementById('tabs').hidden = !hasAccounts;
+      if (hasAccounts && params.get('join')) showTab('join');
+
       // Coming back from Google, Apple, or the emailed link.
       const hash = new URLSearchParams(location.hash.slice(1));
       const token = hash.get('access_token');
-      if (token) done(token);
+      if (token) done(token, null);
     }
 
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
@@ -188,7 +253,8 @@
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || 'Email or password is incorrect.');
         }
-        done((await res.json()).token);
+        const body = await res.json();
+        done(body.token, body.role);
       } catch (err) {
         error.textContent = err.message === 'Failed to fetch'
           ? 'Could not reach the server — try again.' : err.message;
@@ -209,7 +275,7 @@
           headers: { 'Content-Type': 'application/json', apikey: auth.anon_key },
           body: JSON.stringify({
             email: new FormData(f).get('email').trim(),
-            options: { email_redirect_to: location.origin + location.pathname + '?next=' + next },
+            options: { email_redirect_to: location.origin + location.pathname + (asked ? '?next=' + asked : '') },
           }),
         });
         if (!res.ok) throw new Error('Could not send the link — check the address.');
@@ -246,7 +312,54 @@
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || 'Could not create the account.');
         }
-        done((await res.json()).token);
+        const body = await res.json();
+        done(body.token, body.role);
+      } catch (err) {
+        error.textContent = err.message === 'Failed to fetch'
+          ? 'Could not reach the server — try again.' : err.message;
+        error.style.display = 'block';
+        btn.disabled = false;
+      }
+    });
+
+    function showTab(which) {
+      const join = which === 'join';
+      document.getElementById('joinForm').hidden = !join;
+      document.getElementById('passwordForm').hidden = join;
+      document.getElementById('realAuth').hidden = join || !auth.magic_link;
+      document.getElementById('orRow').hidden = join || !auth.magic_link;
+      document.getElementById('why').textContent = join
+        ? 'Tell us about your work and why you want to join.'
+        : 'Sign in to your Digital Collective account.';
+      for (const t of document.querySelectorAll('.tab')) {
+        t.classList.toggle('on', t.dataset.tab === which);
+      }
+    }
+
+    for (const t of document.querySelectorAll('.tab')) {
+      t.addEventListener('click', () => showTab(t.dataset.tab));
+    }
+
+    document.getElementById('joinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const data = Object.fromEntries(new FormData(f).entries());
+      const error = f.querySelector('.error');
+      const btn = document.getElementById('joinBtn');
+      error.style.display = 'none';
+      btn.disabled = true;
+      try {
+        const res = await fetch(API_BASE + '/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Could not send the application.');
+        }
+        const body = await res.json();
+        done(body.token, body.role);
       } catch (err) {
         error.textContent = err.message === 'Failed to fetch'
           ? 'Could not reach the server — try again.' : err.message;

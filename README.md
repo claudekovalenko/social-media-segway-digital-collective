@@ -79,95 +79,51 @@ ADMIN_KEY=your-secret npm start
 
 Data is stored in `data/funnel.db` (SQLite). Set `PORT`, `DB_PATH`, and `ADMIN_KEY` via environment variables.
 
-## Viewing the whole database
+## Accounts, tiers, and the CRM
 
-Sign-in lives on its own page, `/login.html` — that's what **Database** links to
-from the site. `/admin.html` holds no login of its own: it reads the session
-saved by the login page, pulls live data from the API, and sends anyone without
-a valid session back to `/login.html`. Signing out, or an expired session,
-returns there too. It shows everything: every lead, the online group times and how full they are, the
-small-group waitlist, and all creators.
+Everyone — you and every creator — signs in at **`/login.html`**. One page, two
+tabs: **Sign in** and **Join the collective**. The account's `role` decides
+what opens next:
 
-Signing in is a real login, either way you choose:
+| Role | Lands on | Can see |
+|---|---|---|
+| `admin` | `/admin.html` | Everything: all leads, applications, creators, group capacity |
+| `creator` | `/dashboard.html` | Only the leads that came through their own link |
+| `pending` | `/dashboard.html` | A note that their application is under review |
 
-- **Continue with Google** — Google account sign-in through Supabase.
-- **Email me a sign-in link** — a magic link, no password.
+The very first visit to a fresh site creates the owner account (`admin`).
+After that, further admin accounts can only be added by someone already signed
+in. Passwords are PBKDF2-SHA256 with a per-account salt; the session token is
+signed with a key derived from that account's hash, so it can't be forged and
+changing a password ends old sessions.
 
-Either way Supabase hands the browser a token, the Worker verifies that token
-with Supabase, and only then checks the email against `ADMIN_EMAILS`, a
-comma-separated allow-list:
+### Joining the collective
 
-```bash
-npx wrangler secret put ADMIN_EMAILS   # e.g. you@example.com,leader@example.com
-```
+The **Join** tab collects name, email, password, handle, platform, audience
+size, topic, and *why they want to join*. That's stored in `applications` and
+the person gets a `pending` account immediately, so they can sign in and watch
+for the decision.
 
-An email that signs in successfully but isn't on the allow-list gets a clear
-"no database access" message rather than a silent failure.
+Pending applications appear at the top of the database page. **Approve** creates
+the creator record and their `/c/<slug>` link, lifts their account to `creator`,
+and shows the access key once. **Decline** marks it declined.
 
-The creator dashboard (`/dashboard.html`) offers the same two ways in, and
-matches the signed-in email against the creator record so a creator only sees
-their own leads.
+### Who can see which leads
 
-### Turning on Google or Apple sign-in
+A creator's leads are filtered server-side by their own slug — the API never
+returns another creator's leads, so it isn't something the page could leak. The
+same rule covers edits: a creator updating a lead that isn't theirs gets a 403.
 
-Which buttons appear is controlled by `AUTH_PROVIDERS`, a comma-separated list
-(default `google`). Only list a provider after you've enabled it in Supabase, so
-a page never shows a button that would fail:
+### Follow-ups
 
-```bash
-npx wrangler secret put AUTH_PROVIDERS    # google        (or: google,apple)
-```
+Every lead carries `status`, `notes`, `next_follow_up` and `last_contacted_at`.
+Both dashboards show a **Follow-ups due** table first (overdue or due within
+three days, excluding closed and connected), then the full list. Status, date
+and notes save the moment they change; moving a lead off `new` stamps the
+contact time.
 
-**Google**
-
-1. Google Cloud Console → **APIs & Services → OAuth consent screen**: pick
-   *External*, fill in the app name, support email, and developer email.
-2. **APIs & Services → Credentials → Create credentials → OAuth client ID**,
-   type *Web application*. Authorized redirect URI:
-   `https://<project-ref>.supabase.co/auth/v1/callback`.
-3. Copy the client ID and client secret.
-4. Supabase → **Authentication → Providers → Google**: enable, paste both, save.
-
-**Apple** (needs a paid Apple Developer account)
-
-1. Apple Developer → **Certificates, Identifiers & Profiles → Identifiers**:
-   create an *App ID*, then a **Services ID** (this is the client ID).
-2. Configure the Services ID: domain `<project-ref>.supabase.co`, return URL
-   `https://<project-ref>.supabase.co/auth/v1/callback`.
-3. **Keys → new key** with *Sign in with Apple* enabled; download the `.p8`
-   once. Note the Key ID and your Team ID.
-4. Supabase → **Authentication → Providers → Apple**: enable, paste the
-   Services ID, Team ID, Key ID, and the `.p8` contents.
-
-**Both**
-
-Supabase → **Authentication → URL Configuration** → *Redirect URLs*: add the two
-pages people sign in on, so tokens come back to the right place:
-
-```
-https://<your-site>/dashboard.html
-https://<your-site>/admin.html
-```
-
-### Email + password accounts (no third party, nothing to configure)
-
-The first person to open `/login.html` on a fresh site is asked to **create the
-owner account** — email and password, stored in the database. After that the
-page asks for those credentials, and further accounts can only be added by
-someone already signed in.
-
-Passwords are stored as PBKDF2-SHA256 hashes with a random salt per account,
-never in the clear. A correct sign-in returns a token that expires after 12
-hours and is signed with a key derived from that account's stored hash, so a
-token can't be forged and changing a password ends the old sessions.
-
-`ADMIN_LOGINS` (`email:password` pairs, comma-separated) still works as an
-alternative for anyone who prefers configuring logins as a secret.
-
-### The admin key
-
-`ADMIN_KEY` remains as a fallback, shown only where no login at all is
-configured. It still works over the API, so keep it secret.
+Statuses: `new`, `contacted`, `following_up`, `in_group`, `connected`,
+`no_response`, `closed`.
 
 ## Adding the default videos
 

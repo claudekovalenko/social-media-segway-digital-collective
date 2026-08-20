@@ -89,17 +89,47 @@ function d1Adapter(DB) {
       return r.results;
     },
 
-    // ---- admin accounts ----
-    // Created on the page, so there's no secret to configure. The table is made
-    // on first use, which keeps this working on a database created before it.
+    // ---- accounts, applications, follow-ups ----
+    // One accounts table for everyone; `role` decides what they can see.
+    // Tables and added columns are created on first use, so a database made
+    // before any of this keeps working without a migration step.
     async ensureAdmins() {
-      await DB.prepare(
-        `CREATE TABLE IF NOT EXISTS admins (
-           id INTEGER PRIMARY KEY AUTOINCREMENT,
-           email TEXT NOT NULL UNIQUE,
-           pass_hash TEXT NOT NULL,
-           created_at TEXT NOT NULL DEFAULT (datetime('now'))
-         )`).run();
+      await DB.batch([
+        DB.prepare(
+          `CREATE TABLE IF NOT EXISTS admins (
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+             email TEXT NOT NULL UNIQUE,
+             pass_hash TEXT NOT NULL,
+             created_at TEXT NOT NULL DEFAULT (datetime('now'))
+           )`),
+        DB.prepare(
+          `CREATE TABLE IF NOT EXISTS applications (
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+             email TEXT NOT NULL,
+             name TEXT,
+             handle TEXT,
+             platform TEXT,
+             audience TEXT,
+             topic TEXT,
+             why TEXT,
+             status TEXT NOT NULL DEFAULT 'pending',
+             reviewed_by TEXT,
+             reviewed_at TEXT,
+             created_at TEXT NOT NULL DEFAULT (datetime('now'))
+           )`),
+      ]);
+      // Columns added after the first release.
+      for (const [table, col, type] of [
+        ['admins', 'role', "TEXT NOT NULL DEFAULT 'admin'"],
+        ['admins', 'creator_slug', 'TEXT'],
+        ['admins', 'name', 'TEXT'],
+        ['leads', 'status', "TEXT NOT NULL DEFAULT 'new'"],
+        ['leads', 'notes', 'TEXT'],
+        ['leads', 'next_follow_up', 'TEXT'],
+        ['leads', 'last_contacted_at', 'TEXT'],
+      ]) {
+        await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`).run().catch(() => {});
+      }
     },
 
     async countAdmins() {
@@ -110,14 +140,62 @@ function d1Adapter(DB) {
 
     async adminByEmail(email) {
       await this.ensureAdmins();
-      return DB.prepare(`SELECT email, pass_hash FROM admins WHERE email = lower(?)`)
+      return DB.prepare(
+        `SELECT email, pass_hash, role, creator_slug, name FROM admins WHERE email = lower(?)`)
         .bind(email).first();
     },
 
-    async insertAdmin(email, passHash) {
+    async insertAdmin(email, passHash, role = 'admin', creatorSlug = null, name = null) {
       await this.ensureAdmins();
-      await DB.prepare(`INSERT INTO admins (email, pass_hash) VALUES (lower(?), ?)`)
-        .bind(email, passHash).run();
+      await DB.prepare(
+        `INSERT INTO admins (email, pass_hash, role, creator_slug, name) VALUES (lower(?), ?, ?, ?, ?)`)
+        .bind(email, passHash, role, creatorSlug, name).run();
+    },
+
+    async setAccountRole(email, role, creatorSlug) {
+      await this.ensureAdmins();
+      await DB.prepare(`UPDATE admins SET role = ?, creator_slug = ? WHERE email = lower(?)`)
+        .bind(role, creatorSlug, email).run();
+    },
+
+    async insertApplication(a) {
+      await this.ensureAdmins();
+      const r = await DB.prepare(
+        `INSERT INTO applications (email, name, handle, platform, audience, topic, why)
+         VALUES (lower(?), ?, ?, ?, ?, ?, ?)`)
+        .bind(a.email, a.name, a.handle, a.platform, a.audience, a.topic, a.why).run();
+      return r.meta.last_row_id;
+    },
+
+    async applications() {
+      await this.ensureAdmins();
+      const r = await DB.prepare(`SELECT * FROM applications ORDER BY created_at DESC`).all();
+      return r.results;
+    },
+
+    async applicationById(id) {
+      await this.ensureAdmins();
+      return DB.prepare(`SELECT * FROM applications WHERE id = ?`).bind(id).first();
+    },
+
+    async reviewApplication(id, status, reviewer) {
+      await this.ensureAdmins();
+      await DB.prepare(
+        `UPDATE applications SET status = ?, reviewed_by = ?, reviewed_at = datetime('now') WHERE id = ?`)
+        .bind(status, reviewer, id).run();
+    },
+
+    async leadById(id) {
+      return DB.prepare(`SELECT * FROM leads WHERE id = ?`).bind(id).first();
+    },
+
+    async updateLead(id, fields) {
+      await this.ensureAdmins();
+      const cols = Object.keys(fields);
+      if (!cols.length) return;
+      await DB.prepare(
+        `UPDATE leads SET ${cols.map((c) => `${c} = ?`).join(', ')} WHERE id = ?`)
+        .bind(...cols.map((c) => fields[c]), id).run();
     },
 
     async listAdmins() {
@@ -242,7 +320,7 @@ function supabaseAdapter(url, serviceKey) {
       return Object.entries(tally).map(([step, n]) => ({ step, n }));
     },
 
-    // ---- admin accounts ---- (table comes from supabase/schema.sql)
+    // ---- accounts, applications, follow-ups ---- (tables from supabase/schema.sql)
     async ensureAdmins() { /* created by the schema */ },
 
     async countAdmins() {
@@ -251,18 +329,66 @@ function supabaseAdapter(url, serviceKey) {
     },
 
     async adminByEmail(email) {
-      return first(await rest(`admins?select=email,pass_hash&email=eq.${encodeURIComponent(email.toLowerCase())}`));
+      return first(await rest(
+        `admins?select=email,pass_hash,role,creator_slug,name&email=eq.${encodeURIComponent(email.toLowerCase())}`));
     },
 
-    async insertAdmin(email, passHash) {
+    async insertAdmin(email, passHash, role = 'admin', creatorSlug = null, name = null) {
       await rest('admins', {
         method: 'POST',
-        body: JSON.stringify({ email: email.toLowerCase(), pass_hash: passHash }),
+        body: JSON.stringify({
+          email: email.toLowerCase(), pass_hash: passHash, role,
+          creator_slug: creatorSlug, name,
+        }),
+      });
+    },
+
+    async setAccountRole(email, role, creatorSlug) {
+      await rest(`admins?email=eq.${encodeURIComponent(email.toLowerCase())}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role, creator_slug: creatorSlug }),
       });
     },
 
     listAdmins() {
-      return rest('admins?select=email,created_at&order=created_at.asc');
+      return rest('admins?select=email,role,creator_slug,created_at&order=created_at.asc');
+    },
+
+    async insertApplication(a) {
+      const rows = await rest('applications', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ ...a, email: a.email.toLowerCase() }),
+      });
+      return first(rows)?.id;
+    },
+
+    applications() {
+      return rest('applications?select=*&order=created_at.desc');
+    },
+
+    async applicationById(id) {
+      return first(await rest(`applications?select=*&id=eq.${encodeURIComponent(id)}`));
+    },
+
+    async reviewApplication(id, status, reviewer) {
+      await rest(`applications?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status, reviewed_by: reviewer, reviewed_at: new Date().toISOString(),
+        }),
+      });
+    },
+
+    async leadById(id) {
+      return first(await rest(`leads?select=*&id=eq.${encodeURIComponent(id)}`));
+    },
+
+    async updateLead(id, fields) {
+      await rest(`leads?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(fields),
+      });
     },
 
     async everything() {

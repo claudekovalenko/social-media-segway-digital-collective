@@ -33,9 +33,20 @@
       </div>
       <div class="stat-row" id="stats"></div>
 
+      <h3 class="section">Applications to join</h3>
+      <div id="applications"></div>
+      <p class="dir-empty" id="appsEmpty" hidden>No applications waiting.</p>
+
+      <h3 class="section">Follow-ups due</h3>
+      <div class="table-scroll"><table id="dueTable">
+        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th><th>Group time</th><th>Creator</th><th>Message</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="dir-empty" id="dueEmpty" hidden>Nothing due in the next few days.</p>
+
       <h3 class="section">Leads</h3>
       <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Decision</th><th>Country</th><th>Language</th><th>Path</th><th>Group?</th><th>Group time</th><th>Proposed</th><th>Creator</th><th>Message</th></tr></thead>
+        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th><th>Group time</th><th>Creator</th><th>Message</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
@@ -65,7 +76,9 @@
     </footer>
   </div>
 
-  <script>
+  <script type="module">
+    import { LEAD_STATUS, statusCell, followUpCell, notesCell, saverFor, dueLeads } from './crm.js';
+
     // The dashboard reads live data, so it always talks to the Worker.
     const API_BASE = location.hostname.endsWith('github.io')
       ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
@@ -137,6 +150,89 @@
       toLogin(false);
     });
 
+    // One row builder for both the full list and the follow-ups view.
+    function renderLeads(selector, leads) {
+      const tb = document.querySelector(selector);
+      tb.replaceChildren();
+      for (const l of leads) {
+        const tr = document.createElement('tr');
+        const save = saverFor(API_BASE, credentials() || {}, l.id);
+        tr.appendChild(statusCell(l, save));
+        tr.appendChild(followUpCell(l, save));
+        tr.appendChild(notesCell(l, save));
+        [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
+         l.country, PATH_NAMES[l.path] || l.path,
+         l.group_slot === 'propose' ? 'Proposed a time' : (SLOT_NAMES[l.group_slot] || l.group_slot),
+         l.creator_slug, l.message]
+          .forEach(v => tr.appendChild(cell(v)));
+        tb.appendChild(tr);
+      }
+    }
+
+    // Applications waiting on a decision. Approving creates the creator, their
+    // link, and lifts their account to the creator tier.
+    function renderApplications(all) {
+      const wrap = document.getElementById('applications');
+      wrap.replaceChildren();
+      const pending = all.filter(a => a.status === 'pending');
+      document.getElementById('appsEmpty').hidden = pending.length > 0;
+      for (const a of pending) {
+        const card = document.createElement('div');
+        card.className = 'app-card';
+
+        const h = document.createElement('h4');
+        h.textContent = a.name || a.email;
+        const meta = document.createElement('p');
+        meta.className = 'app-meta';
+        meta.textContent = [a.email, a.handle, a.platform, a.audience, a.topic]
+          .filter(Boolean).join(' · ');
+        const why = document.createElement('p');
+        why.className = 'app-why';
+        why.textContent = a.why || '';
+
+        const actions = document.createElement('div');
+        actions.className = 'app-actions';
+        const slug = document.createElement('input');
+        slug.placeholder = 'link name, e.g. sam-rivera';
+        slug.value = (a.handle || a.name || '').toLowerCase().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-');
+        const approve = document.createElement('button');
+        approve.className = 'btn-small go';
+        approve.textContent = 'Approve';
+        const decline = document.createElement('button');
+        decline.className = 'btn-small';
+        decline.textContent = 'Decline';
+        const said = document.createElement('span');
+        said.className = 'crm-saved';
+
+        async function review(action, body) {
+          approve.disabled = decline.disabled = true;
+          said.textContent = '…';
+          try {
+            const res = await fetch(`${API_BASE}/api/admin/applications/${a.id}/${action}`, {
+              method: 'POST',
+              headers: { ...(credentials() || {}), 'Content-Type': 'application/json' },
+              body: JSON.stringify(body || {}),
+            });
+            const out = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(out.error || 'That did not work.');
+            said.textContent = action === 'approve'
+              ? `Approved · link /c/${out.slug} · access key ${out.access_key}`
+              : 'Declined';
+            card.classList.add('done');
+          } catch (err) {
+            said.textContent = err.message;
+            approve.disabled = decline.disabled = false;
+          }
+        }
+
+        approve.addEventListener('click', () => review('approve', { slug: slug.value }));
+        decline.addEventListener('click', () => review('decline'));
+        actions.append(slug, approve, decline, said);
+        card.append(h, meta, why, actions);
+        wrap.appendChild(card);
+      }
+    }
+
     function render(data) {
       SLOT_NAMES = Object.fromEntries((data.slots || []).map(s => [s.id, s.label]));
       renderSlots(data.slots || []);
@@ -154,18 +250,10 @@
         stats.appendChild(el);
       }
 
-      const lt = document.querySelector('#leadsTable tbody');
-      lt.replaceChildren();
-      for (const l of data.leads) {
-        const tr = document.createElement('tr');
-        [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
-         l.decision, l.country, l.language, PATH_NAMES[l.path] || l.path,
-         l.interested_in_group ? 'Yes' : '',
-         l.group_slot === 'propose' ? 'Proposed a time' : (SLOT_NAMES[l.group_slot] || l.group_slot),
-         l.slot_note, l.creator_slug, l.message]
-          .forEach(v => tr.appendChild(cell(v)));
-        lt.appendChild(tr);
-      }
+      renderLeads('#leadsTable tbody', data.leads);
+      renderLeads('#dueTable tbody', dueLeads(data.leads));
+      document.getElementById('dueEmpty').hidden = dueLeads(data.leads).length > 0;
+      renderApplications(data.applications || []);
 
       const gt = document.querySelector('#groupsTable tbody');
       gt.replaceChildren();

@@ -6,6 +6,10 @@ import { makeDb, usingSupabase, emailFromToken } from './db.js';
 
 const VALID_STEPS = new Set(['know_god', 'grow_with_god', 'find_church']);
 const VALID_PATHS = new Set(['join_church', 'start_gathering', 'both', 'not_sure']);
+// Where a person is in the follow-up pipeline.
+const VALID_LEAD_STATUS = new Set([
+  'new', 'contacted', 'following_up', 'in_group', 'connected', 'no_response', 'closed',
+]);
 
 // Preselected online small-group times. Each has a fixed capacity; the API
 // reports how many spots are left so the funnel can show "3 spots left".
@@ -190,21 +194,65 @@ async function readSession(env, token) {
   }
 }
 
-// Returns { ok, email } so the page can greet whoever signed in.
-async function isAdmin(req, url, env) {
+// ---- who is asking -------------------------------------------------------
+// One place decides identity and tier for every request:
+//   admin    full access to everything
+//   creator  their own leads only
+//   pending  applied to join; signed in but nothing to see yet
+async function whoami(req, url, env, db) {
   const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+
+  // A session from this site's own login.
   if (bearer.startsWith('dcs.')) {
     const session = await readSession(env, bearer);
-    // Re-check the account still exists, so removing a login ends its sessions.
-    return session ? { ok: true, email: session.email } : { ok: false };
+    if (!session) return { role: null };
+    const account = await db.adminByEmail(session.email).catch(() => null);
+    if (account) {
+      return {
+        role: account.role || 'admin',
+        email: account.email,
+        name: account.name || null,
+        creator_slug: account.creator_slug || null,
+      };
+    }
+    // Configured through ADMIN_LOGINS rather than the accounts table.
+    return { role: 'admin', email: session.email, creator_slug: null };
   }
+
+  // A Supabase magic-link / social token.
   if (bearer) {
     const email = await emailFromToken(env, bearer);
-    if (email && adminEmails(env).has(email.toLowerCase())) return { ok: true, email };
-    if (email) return { ok: false, email, denied: true };
+    if (email) {
+      if (adminEmails(env).has(email.toLowerCase())) return { role: 'admin', email };
+      const account = await db.adminByEmail(email).catch(() => null);
+      if (account) {
+        return {
+          role: account.role || 'creator', email: account.email,
+          creator_slug: account.creator_slug || null,
+        };
+      }
+      const creator = await db.creatorByEmail(email).catch(() => null);
+      if (creator) return { role: 'creator', email, creator_slug: creator.slug };
+      return { role: null, email, denied: true };
+    }
   }
-  if (adminKeyMatches(req, url, env)) return { ok: true, email: null };
-  return { ok: false };
+
+  // The creator access key issued at signup.
+  const creatorKey = req.headers.get('x-creator-key') || '';
+  if (creatorKey.startsWith('dc_')) {
+    const creator = await db.creatorByKeyHash(await sha256hex(creatorKey)).catch(() => null);
+    if (creator) return { role: 'creator', email: null, creator_slug: creator.slug };
+  }
+
+  if (adminKeyMatches(req, url, env)) return { role: 'admin', email: null };
+  return { role: null };
+}
+
+// Kept for the admin-only routes: same answer, in the old shape.
+async function isAdmin(req, url, env, db) {
+  const me = await whoami(req, url, env, db || makeDb(env));
+  if (me.role === 'admin') return { ok: true, email: me.email };
+  return { ok: false, email: me.email, denied: me.denied || Boolean(me.role) };
 }
 
 export default {
@@ -270,7 +318,7 @@ export default {
         }
         const existing = await db.countAdmins();
         if (existing > 0 || adminLogins(env).size > 0) {
-          const who = await isAdmin(req, url, env);
+          const who = await isAdmin(req, url, env, db);
           if (!who.ok) return json({ error: 'Sign in first to add an account.' }, 401);
         }
         if (await db.adminByEmail(email)) {
@@ -283,6 +331,130 @@ export default {
           await accountSecretFor(env, email)
         );
         return json({ token, email }, 201);
+      }
+
+      // ---- one door for everyone ------------------------------------------
+      // Join the collective: an application plus a pending account, so the
+      // person can sign in and watch for the decision.
+      if (p === '/api/auth/signup' && req.method === 'POST') {
+        const b = await req.json().catch(() => ({}));
+        const email = String(b.email || '').trim().toLowerCase();
+        const password = String(b.password || '');
+        const name = String(b.name || '').trim().slice(0, 100);
+        const why = String(b.why || '').trim().slice(0, 2000);
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          return json({ error: 'Enter a valid email address.' }, 400);
+        }
+        if (password.length < 10) {
+          return json({ error: 'Use a password of at least 10 characters.' }, 400);
+        }
+        if (!name) return json({ error: 'Tell us your name.' }, 400);
+        if (why.length < 20) {
+          return json({ error: 'Tell us a little about why you want to join.' }, 400);
+        }
+        if (await db.adminByEmail(email)) {
+          return json({ error: 'That email already has an account — sign in instead.' }, 409);
+        }
+        await db.insertApplication({
+          email, name, why,
+          handle: String(b.handle || '').trim().slice(0, 60) || null,
+          platform: String(b.platform || '').trim().slice(0, 60) || null,
+          audience: String(b.audience || '').trim().slice(0, 60) || null,
+          topic: String(b.topic || '').trim().slice(0, 60) || null,
+        });
+        await db.insertAdmin(email, await hashPassword(password), 'pending', null, name);
+        const token = await signSession(
+          env,
+          { email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },
+          await accountSecretFor(env, email)
+        );
+        return json({ token, email, role: 'pending' }, 201);
+      }
+
+      // Who am I, and what may I see?
+      if (p === '/api/auth/me' && req.method === 'GET') {
+        const me = await whoami(req, url, env, db);
+        if (!me.role) return json({ error: 'unauthorized' }, 401);
+        return json({
+          email: me.email, name: me.name || null,
+          role: me.role, creator_slug: me.creator_slug || null,
+        });
+      }
+
+      // Applications waiting on a decision.
+      if (p === '/api/admin/applications' && req.method === 'GET') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        return json({ applications: await db.applications() });
+      }
+
+      // Approve or decline one. Approving creates the creator and lifts the
+      // applicant's account to the creator tier.
+      if (p.startsWith('/api/admin/applications/') && req.method === 'POST') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        const [, , , , id, action] = p.split('/');
+        const application = await db.applicationById(Number(id));
+        if (!application) return json({ error: 'not found' }, 404);
+
+        if (action === 'decline') {
+          await db.reviewApplication(application.id, 'declined', who.email);
+          return json({ ok: true, status: 'declined' });
+        }
+        if (action !== 'approve') return json({ error: 'unknown action' }, 400);
+
+        const b = await req.json().catch(() => ({}));
+        const slug = String(b.slug || application.handle || application.name || '')
+          .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+        if (!slug) return json({ error: 'Give the creator a link name.' }, 400);
+        const accessKey = newAccessKey();
+        try {
+          await db.createCreator({
+            slug, name: application.name, email: application.email, mode: 'default',
+            handle: application.handle, topic: application.topic,
+            key_hash: await sha256hex(accessKey),
+            know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
+          });
+        } catch {
+          return json({ error: 'That link name is already taken.' }, 409);
+        }
+        await db.setAccountRole(application.email, 'creator', slug);
+        await db.reviewApplication(application.id, 'approved', who.email);
+        return json({ ok: true, status: 'approved', slug, link: `/c/${slug}`, access_key: accessKey });
+      }
+
+      // ---- CRM: move a lead along and set the next follow-up ---------------
+      if (p.startsWith('/api/leads/') && (req.method === 'PATCH' || req.method === 'POST')) {
+        const id = Number(p.split('/')[3]);
+        const me = await whoami(req, url, env, db);
+        if (!me.role || me.role === 'pending') return json({ error: 'unauthorized' }, 401);
+        const lead = await db.leadById(id);
+        if (!lead) return json({ error: 'not found' }, 404);
+        // A creator may only touch leads that came through their own link.
+        if (me.role !== 'admin' && lead.creator_slug !== me.creator_slug) {
+          return json({ error: 'That lead is not yours.' }, 403);
+        }
+        const b = await req.json().catch(() => ({}));
+        const fields = {};
+        if (b.status !== undefined) {
+          if (!VALID_LEAD_STATUS.has(String(b.status))) {
+            return json({ error: 'unknown status' }, 400);
+          }
+          fields.status = String(b.status);
+          // Moving a lead past "new" is a contact; stamp when it happened.
+          if (fields.status !== 'new') fields.last_contacted_at = new Date().toISOString();
+        }
+        if (b.notes !== undefined) fields.notes = String(b.notes).slice(0, 4000);
+        if (b.next_follow_up !== undefined) {
+          const d = String(b.next_follow_up || '').trim();
+          if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+            return json({ error: 'Use a date like 2026-09-01.' }, 400);
+          }
+          fields.next_follow_up = d || null;
+        }
+        if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
+        await db.updateLead(id, fields);
+        return json({ ok: true, id, ...fields });
       }
 
       if (p === '/api/admin/login' && req.method === 'POST') {
@@ -300,7 +472,7 @@ export default {
           { email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },
           await accountSecretFor(env, email)
         );
-        return json({ token, email });
+        return json({ token, email, role: account ? (account.role || 'admin') : 'admin' });
       }
 
       if (p === '/api/auth/config' && req.method === 'GET') {
@@ -319,30 +491,24 @@ export default {
 
       // A creator's own leads, gated by their access key.
       if (p === '/api/creator/leads' && req.method === 'GET') {
-        let me = null;
-
-        // Preferred: a Supabase magic-link token, verified with Supabase.
-        const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-        if (bearer) {
-          const email = await emailFromToken(env, bearer);
-          if (email) me = await db.creatorByEmail(email);
-          if (email && !me) {
-            return json({ error: 'That email is not registered as a creator yet.' }, 403);
-          }
+        const me = await whoami(req, url, env, db);
+        if (!me.role) return json({ error: 'unauthorized' }, 401);
+        if (me.role === 'pending') {
+          return json({ error: 'Your application is still being reviewed.', role: 'pending' }, 403);
         }
-
-        // Fallback: the access key issued at signup.
-        if (!me) {
-          const key = req.headers.get('x-creator-key') || '';
-          if (key.startsWith('dc_')) me = await db.creatorByKeyHash(await sha256hex(key));
+        // An admin without a creator link of their own has no personal leads.
+        if (!me.creator_slug) {
+          return json({ error: 'This account is not linked to a creator.', role: me.role }, 403);
         }
-
-        if (!me) return json({ error: 'unauthorized' }, 401);
+        const creator = await db.creatorBySlug(me.creator_slug);
+        if (!creator) return json({ error: 'creator not found' }, 404);
         const [leads, counts] = await Promise.all([
-          db.leadsForCreator(me.slug),
-          db.countsForCreator(me.slug),
+          db.leadsForCreator(me.creator_slug),
+          db.countsForCreator(me.creator_slug),
         ]);
-        return json({ creator: me, leads, counts, link: `/c/${me.slug}` });
+        return json({
+          creator, leads, counts, role: me.role, link: `/c/${me.creator_slug}`,
+        });
       }
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
@@ -396,7 +562,7 @@ export default {
       }
 
       if (p === '/api/admin/leads' && req.method === 'GET') {
-        const who = await isAdmin(req, url, env);
+        const who = await isAdmin(req, url, env, db);
         if (!who.ok) {
           return who.denied
             ? json({ error: 'That account does not have database access.' }, 403)
@@ -408,6 +574,8 @@ export default {
           slots: await slotsWithAvailability(db),
           backend: db.backend,
           admin_email: who.email,
+          applications: await db.applications().catch(() => []),
+          accounts: await db.listAdmins().catch(() => []),
         });
       }
 
