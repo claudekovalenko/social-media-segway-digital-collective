@@ -152,10 +152,13 @@ Set `ADMIN_LOGINS` to `email:password` pairs, comma-separated, and the database
 page shows a plain email + password form — no Google, no Supabase, nothing else
 to configure:
 
-```bash
-npx wrangler secret put ADMIN_LOGINS   # you@example.com:your-password
-npx wrangler deploy
-```
+Set it as a **GitHub repo secret** named `ADMIN_LOGINS` (Settings → Secrets and
+variables → Actions → New repository secret), value `you@example.com:your-password`.
+The deploy workflow pushes it to Cloudflare on the next run — no local wrangler.
+
+The workflow syncs these repo secrets the same way, skipping any that are empty:
+`ADMIN_LOGINS`, `ADMIN_KEY`, `ADMIN_EMAILS`, `AUTH_PROVIDERS`, `SUPABASE_URL`,
+`SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`.
 
 A correct sign-in gets a signed token that expires after 12 hours; the Worker
 re-checks its signature on every request, and removing someone from
