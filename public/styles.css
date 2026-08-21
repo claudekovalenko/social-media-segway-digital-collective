@@ -463,3 +463,6 @@ body.wide .wrap { max-width: min(1360px, 94vw); }
   border-color: var(--lime); background: var(--lime); color: var(--lime-ink); font-weight: 600;
 }
 .pick input:focus-visible + span { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+/* Links at the right of the signed-in bar need clear separation. */
+.bar-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }

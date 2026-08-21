@@ -85,11 +85,17 @@ Everyone — you and every creator — signs in at **`/login.html`**. One page, 
 tabs: **Sign in** and **Join the collective**. The account's `role` decides
 what opens next:
 
-| Role | Lands on | Can see |
+Every account reaches the database — the tier decides how much of it:
+
+| Role | Lands on | Their database |
 |---|---|---|
-| `admin` | `/admin.html` | Everything: all leads, applications, creators, group capacity |
-| `creator` | `/dashboard.html` | Only the leads that came through their own link |
-| `pending` | `/dashboard.html` | A note that their application is under review |
+| `admin` | `/admin.html` | The whole thing: all leads, applications, creators, group capacity, and who has access |
+| `creator` | `/dashboard.html` | Their own slice — the people who came through their link |
+| `pending` | `/dashboard.html` | Nothing yet; their application is under review |
+
+Every page's nav carries a single **Sign in** link. There is no separate
+"creator login" and "database" entrance — one door, and the role decides what
+opens.
 
 The very first visit to a fresh site creates the owner account (`admin`).
 After that, further admin accounts can only be added by someone already signed

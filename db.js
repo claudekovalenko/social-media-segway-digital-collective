@@ -200,7 +200,8 @@ function d1Adapter(DB) {
 
     async listAdmins() {
       await this.ensureAdmins();
-      const r = await DB.prepare(`SELECT email, created_at FROM admins ORDER BY created_at ASC`).all();
+      const r = await DB.prepare(
+        `SELECT email, role, creator_slug, created_at FROM admins ORDER BY created_at ASC`).all();
       return r.results;
     },
 

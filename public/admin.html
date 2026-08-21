@@ -17,7 +17,7 @@
   <div class="wrap">
     <nav class="site-nav">
       <a class="brand" href="index.html"><svg class="dc-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="4.4" r="2.6" fill="currentColor"/><circle cx="4.8" cy="17.6" r="2.6" fill="currentColor"/><circle cx="19.2" cy="17.6" r="2.6" fill="currentColor"/><path d="M12 8.6v7.2M8.6 11.6h6.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>Digital Collective</a>
-      <a class="nav-login" href="dashboard.html">Creator login</a>
+      <a class="nav-login" href="login.html">Sign in</a>
     </nav>
     <header class="hero">
       <h1>The <em>database</em></h1>
@@ -62,6 +62,12 @@
         <tbody></tbody>
       </table></div>
 
+      <h3 class="section">Who has access</h3>
+      <div class="table-scroll"><table id="accountsTable">
+        <thead><tr><th>Email</th><th>Tier</th><th>Sees</th><th>Their link</th><th>Since</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+
       <h3 class="section">Creators</h3>
       <div class="table-scroll"><table id="creatorsTable">
         <thead><tr><th>Name</th><th>Link</th><th>Mode</th><th>Created</th></tr></thead>
@@ -71,7 +77,6 @@
 
     <footer>
       <a href="index.html">Digital Collective</a> &middot;
-      <a href="dashboard.html">Creator login</a> &middot;
       <a href="privacy.html">Privacy &amp; Consent</a>
     </footer>
   </div>
@@ -233,6 +238,34 @@
       }
     }
 
+    // Every account and what its tier can reach, so access is visible in one
+    // place rather than implied.
+    const TIER_SEES = {
+      admin: 'The whole database',
+      creator: 'Only their own leads',
+      pending: 'Nothing yet — awaiting review',
+    };
+
+    function renderAccounts(accounts) {
+      const tb = document.querySelector('#accountsTable tbody');
+      tb.replaceChildren();
+      for (const a of accounts) {
+        const tr = document.createElement('tr');
+        const role = a.role || 'admin';
+        const tier = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = role;
+        tier.appendChild(badge);
+        tr.appendChild(cell(a.email));
+        tr.appendChild(tier);
+        tr.appendChild(cell(TIER_SEES[role] || ''));
+        tr.appendChild(cell(a.creator_slug ? `/c/${a.creator_slug}` : ''));
+        tr.appendChild(cell(a.created_at));
+        tb.appendChild(tr);
+      }
+    }
+
     function render(data) {
       SLOT_NAMES = Object.fromEntries((data.slots || []).map(s => [s.id, s.label]));
       renderSlots(data.slots || []);
@@ -254,6 +287,7 @@
       renderLeads('#dueTable tbody', dueLeads(data.leads));
       document.getElementById('dueEmpty').hidden = dueLeads(data.leads).length > 0;
       renderApplications(data.applications || []);
+      renderAccounts(data.accounts || []);
 
       const gt = document.querySelector('#groupsTable tbody');
       gt.replaceChildren();
