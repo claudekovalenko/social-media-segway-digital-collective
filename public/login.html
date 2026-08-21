@@ -25,8 +25,8 @@
       <p class="hero-sub" id="why">Sign in, or apply to join the collective.</p>
     </header>
 
-    <div class="tab-row" id="tabs" hidden>
-      <button type="button" class="tab on" data-tab="signin">Sign in</button>
+    <div class="tab-row" id="tabs">
+      <button type="button" class="tab on" data-tab="signin" id="signinTab">Sign in</button>
       <button type="button" class="tab" data-tab="join">Join the collective</button>
     </div>
 
@@ -200,8 +200,10 @@
       document.getElementById('orRow2').hidden = !(wrap.children.length);
     }
 
+    let hasAccounts = true;
+    let ready = false;
+
     async function setup() {
-      let hasAccounts = true;
       try {
         const [cfg, status] = await Promise.all([
           fetch(API_BASE + '/api/auth/config').then((r) => r.json()),
@@ -215,21 +217,11 @@
         return;
       }
       document.getElementById('loading').hidden = true;
-      // A brand new site has no account yet, so the first visit creates one.
-      document.getElementById('createForm').hidden = hasAccounts;
-      document.getElementById('passwordForm').hidden = !hasAccounts;
-      document.getElementById('realAuth').hidden = !auth.magic_link;
-      document.getElementById('orRow').hidden = !(hasAccounts && auth.magic_link);
-      if (!hasAccounts) {
-        document.getElementById('why').textContent =
-          'No account exists yet. Create the owner account for the database.';
-      }
+      ready = true;
+      // A brand new site has no account yet, so the first tab creates one.
+      if (!hasAccounts) document.getElementById('signinTab').textContent = 'Create account';
       renderProviders();
-
-      // Tabs only make sense once an account exists; a brand new site goes
-      // straight to creating the owner account.
-      document.getElementById('tabs').hidden = !hasAccounts;
-      if (hasAccounts && params.get('join')) showTab('join');
+      showTab(params.get('join') ? 'join' : 'signin');
 
       // Coming back from Google, Apple, or the emailed link.
       const hash = new URLSearchParams(location.hash.slice(1));
@@ -324,15 +316,21 @@
       }
     });
 
+    // Which forms a tab shows. On a site with no account yet, the first tab
+    // creates the owner account instead of signing in.
     function showTab(which) {
+      if (!ready) return;
       const join = which === 'join';
       document.getElementById('joinForm').hidden = !join;
-      document.getElementById('passwordForm').hidden = join;
-      document.getElementById('realAuth').hidden = join || !auth.magic_link;
-      document.getElementById('orRow').hidden = join || !auth.magic_link;
+      document.getElementById('passwordForm').hidden = join || !hasAccounts;
+      document.getElementById('createForm').hidden = join || hasAccounts;
+      document.getElementById('realAuth').hidden = join || !hasAccounts || !auth.magic_link;
+      document.getElementById('orRow').hidden = join || !hasAccounts || !auth.magic_link;
       document.getElementById('why').textContent = join
         ? 'Tell us about your work and why you want to join.'
-        : 'Sign in to your Digital Collective account.';
+        : (hasAccounts
+          ? 'Sign in to your Digital Collective account.'
+          : 'No account exists yet — create the owner account for the database.');
       for (const t of document.querySelectorAll('.tab')) {
         t.classList.toggle('on', t.dataset.tab === which);
       }
