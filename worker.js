@@ -73,6 +73,9 @@ function newAccessKey() {
 // Who is allowed to see the whole database. ADMIN_EMAILS is a comma-separated
 // allow-list checked against a verified Supabase magic-link sign-in; ADMIN_KEY
 // is the shared-secret fallback that works with or without Supabase.
+// An account is identified by an email or a simple username.
+const VALID_IDENTIFIER = /^([^@\s]+@[^@\s]+\.[^@\s]+|[a-z0-9][a-z0-9._-]{2,39})$/;
+
 function adminEmails(env) {
   return new Set(
     String(env.ADMIN_EMAILS || '')
@@ -310,8 +313,8 @@ export default {
         const b = await req.json().catch(() => ({}));
         const email = String(b.email || '').trim().toLowerCase();
         const password = String(b.password || '');
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          return json({ error: 'Enter a valid email address.' }, 400);
+        if (!VALID_IDENTIFIER.test(email)) {
+          return json({ error: 'Use an email address or a username (letters, numbers, . _ -).' }, 400);
         }
         if (password.length < 10) {
           return json({ error: 'Use a password of at least 10 characters.' }, 400);
@@ -322,15 +325,51 @@ export default {
           if (!who.ok) return json({ error: 'Sign in first to add an account.' }, 401);
         }
         if (await db.adminByEmail(email)) {
-          return json({ error: 'That email already has an account.' }, 409);
+          return json({ error: 'That email or username already has an account.' }, 409);
         }
-        await db.insertAdmin(email, await hashPassword(password));
+
+        // The first account owns the database. After that an admin chooses the
+        // tier: another admin, or a creator tied to their own link.
+        const role = existing === 0 ? 'admin'
+          : (['admin', 'creator', 'pending'].includes(b.role) ? b.role : 'admin');
+        let creatorSlug = null;
+        let accessKey = null;
+
+        if (role === 'creator') {
+          creatorSlug = String(b.creator_slug || email.split('@')[0] || '')
+            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+          if (!creatorSlug) return json({ error: 'Give the creator a link name.' }, 400);
+          const already = await db.creatorBySlug(creatorSlug);
+          if (!already) {
+            accessKey = newAccessKey();
+            try {
+              await db.createCreator({
+                slug: creatorSlug, name: String(b.name || email).slice(0, 100), email,
+                mode: 'default', handle: b.handle || null, topic: b.topic || null,
+                key_hash: await sha256hex(accessKey),
+                know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
+              });
+            } catch {
+              return json({ error: 'That link name is already taken.' }, 409);
+            }
+          }
+        }
+
+        await db.insertAdmin(
+          email, await hashPassword(password), role, creatorSlug,
+          String(b.name || '').slice(0, 100) || null
+        );
         const token = await signSession(
           env,
           { email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },
           await accountSecretFor(env, email)
         );
-        return json({ token, email }, 201);
+        return json({
+          token, email, role,
+          creator_slug: creatorSlug,
+          link: creatorSlug ? `/c/${creatorSlug}` : null,
+          access_key: accessKey,
+        }, 201);
       }
 
       // ---- one door for everyone ------------------------------------------

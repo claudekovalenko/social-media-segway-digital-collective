@@ -97,9 +97,14 @@ Every page's nav carries a single **Sign in** link. There is no separate
 "creator login" and "database" entrance — one door, and the role decides what
 opens.
 
-The very first visit to a fresh site creates the owner account (`admin`).
-After that, further admin accounts can only be added by someone already signed
-in. Passwords are PBKDF2-SHA256 with a per-account salt; the session token is
+The very first visit to a fresh site creates the owner account (`admin`). After
+that the first tab does both jobs — **Sign in / Sign up** — and an admin adds
+accounts from **Who has access** in the database view, choosing the tier: another
+admin, or a creator with their own link name (which also creates the creator
+record and their `/c/<slug>` link).
+
+Accounts are identified by an email address *or* a plain username (letters,
+numbers, and `. _ -`). Passwords are PBKDF2-SHA256 with a per-account salt; the session token is
 signed with a key derived from that account's hash, so it can't be forged and
 changing a password ends old sessions.
 

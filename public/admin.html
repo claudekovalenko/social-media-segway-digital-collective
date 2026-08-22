@@ -63,6 +63,20 @@
       </table></div>
 
       <h3 class="section">Who has access</h3>
+      <form class="app-card" id="addAccount">
+        <h4>Add an account</h4>
+        <div class="app-actions">
+          <input name="email" placeholder="email or username" required>
+          <input name="password" type="password" placeholder="password (10+ characters)" required minlength="10">
+          <select name="role">
+            <option value="admin">Admin &mdash; the whole database</option>
+            <option value="creator">Creator &mdash; only their own leads</option>
+          </select>
+          <input name="creator_slug" placeholder="their link name (creators)">
+          <button type="submit" class="btn-small go">Create</button>
+          <span class="crm-saved"></span>
+        </div>
+      </form>
       <div class="table-scroll"><table id="accountsTable">
         <thead><tr><th>Email</th><th>Tier</th><th>Sees</th><th>Their link</th><th>Since</th></tr></thead>
         <tbody></tbody>
@@ -265,6 +279,30 @@
         tb.appendChild(tr);
       }
     }
+
+    document.getElementById('addAccount').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const data = Object.fromEntries(new FormData(f).entries());
+      const said = f.querySelector('.crm-saved');
+      said.textContent = '…';
+      try {
+        const res = await fetch(API_BASE + '/api/admin/accounts', {
+          method: 'POST',
+          headers: { ...(credentials() || {}), 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || 'Could not create that account.');
+        said.textContent = out.link
+          ? `Created · ${out.email} · link ${out.link}`
+          : `Created · ${out.email}`;
+        f.reset();
+        load();   // refresh the access list
+      } catch (err) {
+        said.textContent = err.message;
+      }
+    });
 
     function render(data) {
       SLOT_NAMES = Object.fromEntries((data.slots || []).map(s => [s.id, s.label]));

@@ -32,13 +32,14 @@
 
     <section class="step-card open static">
       <form id="passwordForm" hidden>
-        <label>Email
-          <input name="email" type="email" required placeholder="you@example.com" autocomplete="username">
+        <label>Email or username
+          <input name="email" type="text" required placeholder="you@example.com" autocomplete="username">
         </label>
         <label>Password
           <input name="password" type="password" required autocomplete="current-password">
         </label>
         <button type="submit" id="submitBtn">Sign in</button>
+        <p class="aside-link" id="toCreate">No account yet? <a href="#" id="createLink">Create one</a></p>
         <div class="error"></div>
       </form>
 
@@ -59,8 +60,8 @@
 
       <!-- Shown only until the first account exists. -->
       <form id="createForm" hidden>
-        <label>Email
-          <input name="email" type="email" required placeholder="you@example.com" autocomplete="username">
+        <label>Email or username
+          <input name="email" type="text" required placeholder="you@example.com" autocomplete="username">
         </label>
         <label>Password
           <input name="password" type="password" required autocomplete="new-password" minlength="10">
@@ -69,7 +70,8 @@
           <input name="confirm" type="password" required autocomplete="new-password" minlength="10">
         </label>
         <button type="submit" id="createBtn">Create account</button>
-        <p class="aside-link">At least 10 characters. This is the owner account for the database.</p>
+        <p class="aside-link" id="createNote">At least 10 characters. This is the owner account for the database.</p>
+        <p class="aside-link" id="toSignIn" hidden>Already have one? <a href="#" id="signInLink">Sign in</a></p>
         <div class="error"></div>
       </form>
 
@@ -219,7 +221,8 @@
       document.getElementById('loading').hidden = true;
       ready = true;
       // A brand new site has no account yet, so the first tab creates one.
-      if (!hasAccounts) document.getElementById('signinTab').textContent = 'Create account';
+      document.getElementById('signinTab').textContent = hasAccounts ? 'Sign in / Sign up' : 'Create account';
+      document.getElementById('toCreate').hidden = !hasAccounts;
       renderProviders();
       showTab(params.get('join') ? 'join' : 'signin');
 
@@ -318,23 +321,46 @@
 
     // Which forms a tab shows. On a site with no account yet, the first tab
     // creates the owner account instead of signing in.
+    // The first tab holds both sign in and sign up; `creating` says which of
+    // the two is showing. On a site with no account at all, only sign up makes
+    // sense, so it starts there.
+    let creating = false;
+
     function showTab(which) {
       if (!ready) return;
       const join = which === 'join';
+      const signUp = !hasAccounts || creating;
       document.getElementById('joinForm').hidden = !join;
-      document.getElementById('passwordForm').hidden = join || !hasAccounts;
-      document.getElementById('createForm').hidden = join || hasAccounts;
-      document.getElementById('realAuth').hidden = join || !hasAccounts || !auth.magic_link;
-      document.getElementById('orRow').hidden = join || !hasAccounts || !auth.magic_link;
+      document.getElementById('passwordForm').hidden = join || signUp;
+      document.getElementById('createForm').hidden = join || !signUp;
+      document.getElementById('realAuth').hidden = join || signUp || !auth.magic_link;
+      document.getElementById('orRow').hidden = join || signUp || !auth.magic_link;
+      // The very first account owns the database; later ones need an invite.
+      document.getElementById('createNote').hidden = hasAccounts;
+      document.getElementById('toSignIn').hidden = !hasAccounts;
       document.getElementById('why').textContent = join
         ? 'Tell us about your work and why you want to join.'
-        : (hasAccounts
-          ? 'Sign in to your Digital Collective account.'
-          : 'No account exists yet — create the owner account for the database.');
+        : (signUp
+          ? (hasAccounts
+            ? 'Create your Digital Collective account.'
+            : 'No account exists yet — create the owner account for the database.')
+          : 'Sign in to your Digital Collective account.');
       for (const t of document.querySelectorAll('.tab')) {
         t.classList.toggle('on', t.dataset.tab === which);
       }
     }
+
+    document.getElementById('createLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      creating = true;
+      showTab('signin');
+    });
+
+    document.getElementById('signInLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      creating = false;
+      showTab('signin');
+    });
 
     for (const t of document.querySelectorAll('.tab')) {
       t.addEventListener('click', () => showTab(t.dataset.tab));
