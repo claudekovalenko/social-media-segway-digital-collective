@@ -108,6 +108,24 @@ numbers, and `. _ -`). Passwords are PBKDF2-SHA256 with a per-account salt; the 
 signed with a key derived from that account's hash, so it can't be forged and
 changing a password ends old sessions.
 
+### Everyone new is approved by an admin
+
+Only the very first account — the owner — skips review. Every later sign-up,
+whether it comes from the Join tab or the plain "Create one" link on the
+sign-in tab, lands as `pending`: the account exists and they can sign in, but
+they see nothing until an admin approves them.
+
+An admin approves from **Waiting for approval** at the top of the database view
+and chooses the tier at that moment:
+
+- **as a creator** — gets their own `/c/<slug>` link and sees only its leads
+- **as an admin** — gets the whole database
+
+Tiers stay changeable afterwards: every row in **Who has access** has a tier
+selector, so access can be granted, downgraded, or revoked (set to `pending`)
+at any time. An admin can't remove their own admin access, and only admins can
+change anyone's tier.
+
 ### Joining the collective
 
 The **Join** tab collects name, email, password, handle, platform, audience

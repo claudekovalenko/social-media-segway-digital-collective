@@ -381,21 +381,27 @@ export default {
         const password = String(b.password || '');
         const name = String(b.name || '').trim().slice(0, 100);
         const why = String(b.why || '').trim().slice(0, 2000);
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          return json({ error: 'Enter a valid email address.' }, 400);
+        // `kind` says which form this came from: the full join application,
+        // or a plain account request from the sign-in tab. Either way the
+        // account starts pending until an admin approves it.
+        const kind = b.kind === 'account' ? 'account' : 'application';
+        if (!VALID_IDENTIFIER.test(email)) {
+          return json({ error: 'Use an email address or a username (letters, numbers, . _ -).' }, 400);
         }
         if (password.length < 10) {
           return json({ error: 'Use a password of at least 10 characters.' }, 400);
         }
-        if (!name) return json({ error: 'Tell us your name.' }, 400);
-        if (why.length < 20) {
-          return json({ error: 'Tell us a little about why you want to join.' }, 400);
+        if (kind === 'application') {
+          if (!name) return json({ error: 'Tell us your name.' }, 400);
+          if (why.length < 20) {
+            return json({ error: 'Tell us a little about why you want to join.' }, 400);
+          }
         }
         if (await db.adminByEmail(email)) {
           return json({ error: 'That email already has an account — sign in instead.' }, 409);
         }
         await db.insertApplication({
-          email, name, why,
+          email, name: name || email, why: why || '(asked for an account from the sign-in page)',
           handle: String(b.handle || '').trim().slice(0, 60) || null,
           platform: String(b.platform || '').trim().slice(0, 200) || null,
           audience: String(b.audience || '').trim().slice(0, 60) || null,
@@ -443,23 +449,76 @@ export default {
         if (action !== 'approve') return json({ error: 'unknown action' }, 400);
 
         const b = await req.json().catch(() => ({}));
-        const slug = String(b.slug || application.handle || application.name || '')
-          .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+        const asRole = b.role === 'admin' ? 'admin' : 'creator';
+
+        // Approving as an admin grants the whole database and needs no link.
+        if (asRole === 'admin') {
+          await db.setAccountRole(application.email, 'admin', null);
+          await db.reviewApplication(application.id, 'approved', who.email);
+          return json({ ok: true, status: 'approved', role: 'admin' });
+        }
+
+        const slug = String(b.slug || application.handle || application.email || '')
+          .split('@')[0].toLowerCase().trim().replace(/^@/, '')
+          .replace(/[^a-z0-9-]/g, '-').slice(0, 40);
         if (!slug) return json({ error: 'Give the creator a link name.' }, 400);
-        const accessKey = newAccessKey();
-        try {
-          await db.createCreator({
-            slug, name: application.name, email: application.email, mode: 'default',
-            handle: application.handle, topic: application.topic,
-            key_hash: await sha256hex(accessKey),
-            know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
-          });
-        } catch {
-          return json({ error: 'That link name is already taken.' }, 409);
+        let accessKey = null;
+        if (!(await db.creatorBySlug(slug))) {
+          accessKey = newAccessKey();
+          try {
+            await db.createCreator({
+              slug, name: application.name, email: application.email, mode: 'default',
+              handle: application.handle, topic: application.topic,
+              key_hash: await sha256hex(accessKey),
+              know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
+            });
+          } catch {
+            return json({ error: 'That link name is already taken.' }, 409);
+          }
         }
         await db.setAccountRole(application.email, 'creator', slug);
         await db.reviewApplication(application.id, 'approved', who.email);
-        return json({ ok: true, status: 'approved', slug, link: `/c/${slug}`, access_key: accessKey });
+        return json({
+          ok: true, status: 'approved', role: 'creator', slug,
+          link: `/c/${slug}`, access_key: accessKey,
+        });
+      }
+
+      // Change an existing account's tier. Admins only, and an admin can't
+      // strip their own access by accident.
+      if (p === '/api/admin/accounts/role' && req.method === 'POST') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        const b = await req.json().catch(() => ({}));
+        const email = String(b.email || '').trim().toLowerCase();
+        const role = ['admin', 'creator', 'pending'].includes(b.role) ? b.role : null;
+        if (!role) return json({ error: 'unknown tier' }, 400);
+        if (who.email && email === who.email.toLowerCase() && role !== 'admin') {
+          return json({ error: "You can't remove your own admin access." }, 400);
+        }
+        const account = await db.adminByEmail(email);
+        if (!account) return json({ error: 'not found' }, 404);
+
+        let slug = account.creator_slug || null;
+        if (role === 'creator') {
+          slug = String(b.creator_slug || slug || email.split('@')[0] || '')
+            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+          if (!slug) return json({ error: 'Give them a link name.' }, 400);
+          if (!(await db.creatorBySlug(slug))) {
+            try {
+              await db.createCreator({
+                slug, name: account.name || email, email, mode: 'default',
+                handle: null, topic: null, key_hash: await sha256hex(newAccessKey()),
+                know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
+              });
+            } catch {
+              return json({ error: 'That link name is already taken.' }, 409);
+            }
+          }
+        }
+        if (role !== 'creator') slug = null;
+        await db.setAccountRole(email, role, slug);
+        return json({ ok: true, email, role, creator_slug: slug });
       }
 
       // ---- CRM: move a lead along and set the next follow-up ---------------

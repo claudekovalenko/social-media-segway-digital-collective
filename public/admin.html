@@ -33,9 +33,9 @@
       </div>
       <div class="stat-row" id="stats"></div>
 
-      <h3 class="section">Applications to join</h3>
+      <h3 class="section">Waiting for approval</h3>
       <div id="applications"></div>
-      <p class="dir-empty" id="appsEmpty" hidden>No applications waiting.</p>
+      <p class="dir-empty" id="appsEmpty" hidden>Nobody is waiting for approval.</p>
 
       <h3 class="section">Follow-ups due</h3>
       <div class="table-scroll"><table id="dueTable">
@@ -211,9 +211,26 @@
 
         const actions = document.createElement('div');
         actions.className = 'app-actions';
+
+        // What they're being approved as: a creator with their own link, or
+        // another admin with the whole database.
+        const asRole = document.createElement('select');
+        for (const [value, label] of [
+          ['creator', 'as a creator — their own leads'],
+          ['admin', 'as an admin — the whole database'],
+        ]) {
+          const o = document.createElement('option');
+          o.value = value;
+          o.textContent = label;
+          asRole.appendChild(o);
+        }
         const slug = document.createElement('input');
         slug.placeholder = 'link name, e.g. sam-rivera';
-        slug.value = (a.handle || a.name || '').toLowerCase().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-');
+        // Suggest a link name from their handle, or the local part of their
+        // email — never the domain, which reads as 'name-gmail-com'.
+        slug.value = String(a.handle || a.name || a.email || '')
+          .split('@')[0].toLowerCase().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-');
+        asRole.addEventListener('change', () => { slug.hidden = asRole.value === 'admin'; });
         const approve = document.createElement('button');
         approve.className = 'btn-small go';
         approve.textContent = 'Approve';
@@ -234,9 +251,11 @@
             });
             const out = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(out.error || 'That did not work.');
-            said.textContent = action === 'approve'
-              ? `Approved · link /c/${out.slug} · access key ${out.access_key}`
-              : 'Declined';
+            said.textContent = action !== 'approve' ? 'Declined'
+              : (out.role === 'admin'
+                ? 'Approved as an admin — full database access'
+                : `Approved as a creator · link /c/${out.slug}`
+                  + (out.access_key ? ` · access key ${out.access_key}` : ''));
             card.classList.add('done');
           } catch (err) {
             said.textContent = err.message;
@@ -244,9 +263,10 @@
           }
         }
 
-        approve.addEventListener('click', () => review('approve', { slug: slug.value }));
+        approve.addEventListener('click', () =>
+          review('approve', { role: asRole.value, slug: slug.value }));
         decline.addEventListener('click', () => review('decline'));
-        actions.append(slug, approve, decline, said);
+        actions.append(asRole, slug, approve, decline, said);
         card.append(h, meta, why, actions);
         wrap.appendChild(card);
       }
@@ -266,11 +286,44 @@
       for (const a of accounts) {
         const tr = document.createElement('tr');
         const role = a.role || 'admin';
+
+        // The tier is editable here, so access can be granted or taken back
+        // without touching the database by hand.
         const tier = document.createElement('td');
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = role;
-        tier.appendChild(badge);
+        const wrap = document.createElement('div');
+        wrap.className = 'crm-cell';
+        const sel = document.createElement('select');
+        for (const [value, label] of Object.entries({
+          admin: 'Admin', creator: 'Creator', pending: 'Pending',
+        })) {
+          const o = document.createElement('option');
+          o.value = value;
+          o.textContent = label;
+          if (role === value) o.selected = true;
+          sel.appendChild(o);
+        }
+        const mark = document.createElement('span');
+        mark.className = 'crm-saved';
+        sel.addEventListener('change', async () => {
+          mark.textContent = '…';
+          try {
+            const res = await fetch(API_BASE + '/api/admin/accounts/role', {
+              method: 'POST',
+              headers: { ...(credentials() || {}), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: a.email, role: sel.value }),
+            });
+            const out = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(out.error || 'That did not work.');
+            mark.textContent = '✓';
+            load();
+          } catch (err) {
+            mark.textContent = err.message;
+            sel.value = role;
+          }
+        });
+        wrap.append(sel, mark);
+        tier.appendChild(wrap);
+
         tr.appendChild(cell(a.email));
         tr.appendChild(tier);
         tr.appendChild(cell(TIER_SEES[role] || ''));

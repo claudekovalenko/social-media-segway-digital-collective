@@ -71,6 +71,7 @@
         </label>
         <button type="submit" id="createBtn">Create account</button>
         <p class="aside-link" id="createNote">At least 10 characters. This is the owner account for the database.</p>
+        <p class="aside-link" id="approvalNote" hidden>New accounts are reviewed by an admin before they can see anything.</p>
         <p class="aside-link" id="toSignIn" hidden>Already have one? <a href="#" id="signInLink">Sign in</a></p>
         <div class="error"></div>
       </form>
@@ -297,14 +298,20 @@
       }
       btn.disabled = true;
       try {
-        const res = await fetch(API_BASE + '/api/admin/accounts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: data.get('email').trim(),
-            password: data.get('password'),
-          }),
-        });
+        // The very first account owns the database. Every later sign-up is a
+        // request: the account is created, but an admin decides what it can see.
+        const res = await fetch(
+          API_BASE + (hasAccounts ? '/api/auth/signup' : '/api/admin/accounts'),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: data.get('email').trim(),
+              password: data.get('password'),
+              kind: 'account',
+            }),
+          }
+        );
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || 'Could not create the account.');
@@ -337,6 +344,7 @@
       document.getElementById('orRow').hidden = join || signUp || !auth.magic_link;
       // The very first account owns the database; later ones need an invite.
       document.getElementById('createNote').hidden = hasAccounts;
+      document.getElementById('approvalNote').hidden = !hasAccounts;
       document.getElementById('toSignIn').hidden = !hasAccounts;
       document.getElementById('why').textContent = join
         ? 'Tell us about your work and why you want to join.'
