@@ -121,6 +121,11 @@ and chooses the tier at that moment:
 - **as a creator** — gets their own `/c/<slug>` link and sees only its leads
 - **as an admin** — gets the whole database
 
+If someone forgets their password, an admin sets a new one from the same
+**Who has access** row — there is no self-service reset, and only admins can do
+it. Sign-in says which half is wrong: an unknown email offers the sign-up form
+instead of a dead end, a bad password says so.
+
 Tiers stay changeable afterwards: every row in **Who has access** has a tier
 selector, so access can be granted, downgraded, or revoked (set to `pending`)
 at any time. An admin can't remove their own admin access, and only admins can

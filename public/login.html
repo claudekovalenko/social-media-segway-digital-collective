@@ -257,6 +257,13 @@
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
+          // No account yet? Drop them straight into the sign-up form.
+          if (body.no_account) {
+            creating = true;
+            showTab('signin');
+            document.getElementById('createForm').querySelector('input[name=email]').value =
+              data.get('email').trim();
+          }
           throw new Error(body.error || 'Email or password is incorrect.');
         }
         const body = await res.json();

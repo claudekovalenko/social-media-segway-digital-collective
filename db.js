@@ -153,6 +153,12 @@ function d1Adapter(DB) {
         .bind(email, passHash, role, creatorSlug, name).run();
     },
 
+    async setAccountPassword(email, passHash) {
+      await this.ensureAdmins();
+      await DB.prepare(`UPDATE admins SET pass_hash = ? WHERE email = lower(?)`)
+        .bind(passHash, email).run();
+    },
+
     async setAccountRole(email, role, creatorSlug) {
       await this.ensureAdmins();
       await DB.prepare(`UPDATE admins SET role = ?, creator_slug = ? WHERE email = lower(?)`)
@@ -343,6 +349,13 @@ function supabaseAdapter(url, serviceKey) {
           email: email.toLowerCase(), pass_hash: passHash, role,
           creator_slug: creatorSlug, name,
         }),
+      });
+    },
+
+    async setAccountPassword(email, passHash) {
+      await rest(`admins?email=eq.${encodeURIComponent(email.toLowerCase())}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ pass_hash: passHash }),
       });
     },
 

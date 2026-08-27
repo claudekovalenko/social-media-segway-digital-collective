@@ -492,6 +492,23 @@ export default {
         });
       }
 
+      // Set a new password for an account. Admins only — this is how a
+      // forgotten password gets fixed without touching the database.
+      if (p === '/api/admin/accounts/password' && req.method === 'POST') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        const b = await req.json().catch(() => ({}));
+        const email = String(b.email || '').trim().toLowerCase();
+        const password = String(b.password || '');
+        if (password.length < 10) {
+          return json({ error: 'Use a password of at least 10 characters.' }, 400);
+        }
+        const account = await db.adminByEmail(email);
+        if (!account) return json({ error: 'not found' }, 404);
+        await db.setAccountPassword(email, await hashPassword(password));
+        return json({ ok: true, email });
+      }
+
       // Change an existing account's tier. Admins only, and an admin can't
       // strip their own access by accident.
       if (p === '/api/admin/accounts/role' && req.method === 'POST') {
@@ -569,10 +586,17 @@ export default {
         const password = String(b.password || '');
         // Accounts created on the site come first; ADMIN_LOGINS still works.
         const account = await db.adminByEmail(email).catch(() => null);
+        const configured = adminLogins(env).get(email);
+        if (!account && !configured) {
+          return json({
+            error: 'No account exists for that email yet — use Sign up to create one.',
+            no_account: true,
+          }, 401);
+        }
         const ok = account
           ? await passwordMatches(password, account.pass_hash)
-          : sameString(password, adminLogins(env).get(email) || '');
-        if (!ok) return json({ error: 'Email or password is incorrect.' }, 401);
+          : sameString(password, configured);
+        if (!ok) return json({ error: 'That password is incorrect.' }, 401);
         const token = await signSession(
           env,
           { email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },

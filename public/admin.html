@@ -78,7 +78,7 @@
         </div>
       </form>
       <div class="table-scroll"><table id="accountsTable">
-        <thead><tr><th>Email</th><th>Tier</th><th>Sees</th><th>Their link</th><th>Since</th></tr></thead>
+        <thead><tr><th>Email</th><th>Tier</th><th>Sees</th><th>Their link</th><th>Since</th><th>Reset password</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
@@ -331,6 +331,39 @@
         tr.appendChild(cell(TIER_SEES[role] || ''));
         tr.appendChild(cell(a.creator_slug ? `/c/${a.creator_slug}` : ''));
         tr.appendChild(cell(a.created_at));
+
+        const reset = document.createElement('td');
+        const resetWrap = document.createElement('div');
+        resetWrap.className = 'crm-cell';
+        const pw = document.createElement('input');
+        pw.type = 'password';
+        pw.placeholder = 'new password';
+        const go = document.createElement('button');
+        go.type = 'button';
+        go.className = 'btn-small';
+        go.textContent = 'Set';
+        const done = document.createElement('span');
+        done.className = 'crm-saved';
+        go.addEventListener('click', async () => {
+          done.textContent = '…';
+          try {
+            const res = await fetch(API_BASE + '/api/admin/accounts/password', {
+              method: 'POST',
+              headers: { ...(credentials() || {}), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: a.email, password: pw.value }),
+            });
+            const out = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(out.error || 'That did not work.');
+            done.textContent = 'Password set';
+            pw.value = '';
+          } catch (err) {
+            done.textContent = err.message;
+          }
+        });
+        resetWrap.append(pw, go, done);
+        reset.appendChild(resetWrap);
+        tr.appendChild(reset);
+
         tb.appendChild(tr);
       }
     }
