@@ -223,6 +223,9 @@ h3.section { margin: 28px 0 6px; font-weight: 600; font-size: 1rem; }
 .step-card.open.static, body.wide .step-card.open { padding: 22px 20px; }
 .step-card.static form { gap: 14px; }
 .step-card.static label { display: grid; gap: 6px; line-height: 1.35; }
+/* ...except a checkbox row, which stays on one line with its text. */
+.step-card.static label.check { display: flex; gap: 10px; align-items: flex-start; }
+.step-card.static label.check input { width: auto; flex: none; }
 .custom-fields { display: grid; gap: 14px; margin-top: 2px; }
 body.wide .step-card .step-body, .step-card.static .step-body { display: block; }
 
@@ -466,3 +469,7 @@ body.wide .wrap { max-width: min(1360px, 94vw); }
 
 /* Links at the right of the signed-in bar need clear separation. */
 .bar-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+/* The endorsement clause reads as a quiet aside, not a headline. */
+.note-block { border-top: 1px solid var(--edge); padding-top: 22px; }
+.note-block .land-copy { color: var(--text-dim); font-size: 0.92rem; }

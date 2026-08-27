@@ -132,6 +132,7 @@ create table if not exists applications (
   audience text,
   topic text,
   why text,
+  agreed_at timestamptz,
   status text not null default 'pending' check (status in ('pending','approved','declined')),
   reviewed_by text,
   reviewed_at timestamptz,

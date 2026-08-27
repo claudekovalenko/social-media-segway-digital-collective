@@ -203,8 +203,10 @@
         h.textContent = a.name || a.email;
         const meta = document.createElement('p');
         meta.className = 'app-meta';
-        meta.textContent = [a.email, a.handle, a.platform, a.audience, a.topic]
-          .filter(Boolean).join(' · ');
+        meta.textContent = [
+          a.email, a.handle, a.platform, a.audience, a.topic,
+          a.agreed_at ? 'signed the statement of faith ' + a.agreed_at.slice(0, 10) : null,
+        ].filter(Boolean).join(' · ');
         const why = document.createElement('p');
         why.className = 'app-why';
         why.textContent = a.why || '';

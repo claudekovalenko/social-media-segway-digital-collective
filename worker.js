@@ -396,6 +396,13 @@ export default {
           if (why.length < 20) {
             return json({ error: 'Tell us a little about why you want to join.' }, 400);
           }
+          // Both agreements are the terms of being listed, so they're checked
+          // here rather than trusted to the page.
+          if (!b.agreed || !b.understood) {
+            return json({
+              error: 'Please agree to the statement of faith and the content terms.',
+            }, 400);
+          }
         }
         if (await db.adminByEmail(email)) {
           return json({ error: 'That email already has an account — sign in instead.' }, 409);
@@ -406,6 +413,7 @@ export default {
           platform: String(b.platform || '').trim().slice(0, 200) || null,
           audience: String(b.audience || '').trim().slice(0, 60) || null,
           topic: String(b.topic || '').trim().slice(0, 60) || null,
+          agreed: kind === 'application',
         });
         await db.insertAdmin(email, await hashPassword(password), 'pending', null, name);
         const token = await signSession(

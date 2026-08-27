@@ -126,6 +126,22 @@ selector, so access can be granted, downgraded, or revoked (set to `pending`)
 at any time. An admin can't remove their own admin access, and only admins can
 change anyone's tier.
 
+### What the collective does and doesn't endorse
+
+The statement of faith carries a clause saying plainly that Digital Collective
+is a hub, not a broadcaster: creators sign the statement, but their content is
+not vetted, and listing someone is not an endorsement of their teaching. It
+encourages people to be Bereans (Acts 17:11), to test everything against
+Scripture, and to take what they're learning to a trusted local pastor —
+everything here being a first step toward in-person community, not a
+substitute for it. A short version appears on the home page and above the
+creator directory.
+
+Applicants must tick two boxes to apply: agreement with the statement of faith,
+and acknowledgement of those content terms. Both are checked server-side, and
+the moment of agreement is stored on the application as `agreed_at` and shown
+to the reviewing admin.
+
 ### Joining the collective
 
 The **Join** tab collects name, email, password, handle, platform, audience

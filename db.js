@@ -123,6 +123,7 @@ function d1Adapter(DB) {
         ['admins', 'role', "TEXT NOT NULL DEFAULT 'admin'"],
         ['admins', 'creator_slug', 'TEXT'],
         ['admins', 'name', 'TEXT'],
+        ['applications', 'agreed_at', 'TEXT'],
         ['leads', 'status', "TEXT NOT NULL DEFAULT 'new'"],
         ['leads', 'notes', 'TEXT'],
         ['leads', 'next_follow_up', 'TEXT'],
@@ -161,9 +162,10 @@ function d1Adapter(DB) {
     async insertApplication(a) {
       await this.ensureAdmins();
       const r = await DB.prepare(
-        `INSERT INTO applications (email, name, handle, platform, audience, topic, why)
-         VALUES (lower(?), ?, ?, ?, ?, ?, ?)`)
-        .bind(a.email, a.name, a.handle, a.platform, a.audience, a.topic, a.why).run();
+        `INSERT INTO applications (email, name, handle, platform, audience, topic, why, agreed_at)
+         VALUES (lower(?), ?, ?, ?, ?, ?, ?, ?)`)
+        .bind(a.email, a.name, a.handle, a.platform, a.audience, a.topic, a.why,
+          a.agreed ? new Date().toISOString() : null).run();
       return r.meta.last_row_id;
     },
 
@@ -356,10 +358,14 @@ function supabaseAdapter(url, serviceKey) {
     },
 
     async insertApplication(a) {
+      const { agreed, ...rest_ } = a;
       const rows = await rest('applications', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ ...a, email: a.email.toLowerCase() }),
+        body: JSON.stringify({
+          ...rest_, email: a.email.toLowerCase(),
+          agreed_at: agreed ? new Date().toISOString() : null,
+        }),
       });
       return first(rows)?.id;
     },

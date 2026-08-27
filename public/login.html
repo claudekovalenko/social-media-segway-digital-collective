@@ -119,8 +119,16 @@
           <textarea name="why" rows="4" required minlength="20"
             placeholder="What you&rsquo;re building, and what you hope Digital Collective helps you do."></textarea>
         </label>
+        <label class="check">
+          <input type="checkbox" name="agreed" required>
+          <span>I have read the <a href="beliefs.html" target="_blank">statement of faith</a> and I agree to teach in agreement with it, including the inerrancy and final authority of Scripture.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="understood" required>
+          <span>I understand Digital Collective is a hub, not a broadcaster: my content is my own responsibility, it isn&rsquo;t vetted or endorsed by the collective, and its purpose is to point people toward healthy local church community.</span>
+        </label>
         <button type="submit" id="joinBtn">Send application</button>
-        <p class="aside-link">Creators in the collective hold to our <a href="beliefs.html">statement of faith</a>. You&rsquo;ll get an account right away and your link once you&rsquo;re approved.</p>
+        <p class="aside-link">You&rsquo;ll get an account right away and your link once an admin approves you.</p>
         <div class="success" id="applied">Application sent. We&rsquo;ll be in touch — you can sign in any time to check.</div>
         <div class="error"></div>
       </form>
@@ -381,6 +389,9 @@
       const data = Object.fromEntries(form.entries());
       // Checkboxes: every ticked platform, not just the last one.
       data.platform = form.getAll('platform').join(', ');
+      // Checkboxes arrive as 'on'; send them as real booleans.
+      data.agreed = form.get('agreed') === 'on';
+      data.understood = form.get('understood') === 'on';
       const error = f.querySelector('.error');
       const btn = document.getElementById('joinBtn');
       error.style.display = 'none';
