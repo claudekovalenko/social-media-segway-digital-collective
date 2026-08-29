@@ -172,8 +172,11 @@ Gather Locally sends people. Anything left blank falls back to the collective
 defaults in `DEFAULT_LINKS` at the top of `worker.js` — change the URLs there
 and every creator who hasn't overridden them follows.
 
-Gather Locally defaults to our partner, **Visitor Center**, shown as a button
-above the form on the journey page.
+The defaults themselves are editable from **Collective defaults** at the top of
+the database view — no deploy needed. Until the Gather Locally link is filled
+in, the step explains what happens next instead of showing a dead button; the
+moment an admin saves a URL, the button appears on every creator's page at
+once. `DEFAULT_LINKS` in `worker.js` is only the fallback for anything unset.
 
 Scheduled online small-group times were removed: the steps now just ask whether
 someone wants to be connected with others, and that flag lands in the database

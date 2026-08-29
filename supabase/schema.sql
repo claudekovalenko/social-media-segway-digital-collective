@@ -151,3 +151,12 @@ create index if not exists leads_follow_up_idx on leads (next_follow_up);
 create index if not exists leads_status_idx on leads (status);
 
 alter table creators add column if not exists gather_url text;
+
+-- Collective-wide defaults an admin can edit from the database page.
+create table if not exists settings (
+  key text primary key,
+  value text,
+  updated_at timestamptz not null default now()
+);
+
+alter table settings enable row level security;

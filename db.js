@@ -105,6 +105,12 @@ function d1Adapter(DB) {
              created_at TEXT NOT NULL DEFAULT (datetime('now'))
            )`),
         DB.prepare(
+          `CREATE TABLE IF NOT EXISTS settings (
+             key TEXT PRIMARY KEY,
+             value TEXT,
+             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+           )`),
+        DB.prepare(
           `CREATE TABLE IF NOT EXISTS applications (
              id INTEGER PRIMARY KEY AUTOINCREMENT,
              email TEXT NOT NULL,
@@ -154,6 +160,20 @@ function d1Adapter(DB) {
       await DB.prepare(
         `INSERT INTO admins (email, pass_hash, role, creator_slug, name) VALUES (lower(?), ?, ?, ?, ?)`)
         .bind(email, passHash, role, creatorSlug, name).run();
+    },
+
+    async settings() {
+      await this.ensureAdmins();
+      const r = await DB.prepare(`SELECT key, value FROM settings`).all();
+      return Object.fromEntries((r.results || []).map((x) => [x.key, x.value]));
+    },
+
+    async setSetting(key, value) {
+      await this.ensureAdmins();
+      await DB.prepare(
+        `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`)
+        .bind(key, value).run();
     },
 
     async updateCreatorLinks(slug, fields) {
@@ -360,6 +380,19 @@ function supabaseAdapter(url, serviceKey) {
           email: email.toLowerCase(), pass_hash: passHash, role,
           creator_slug: creatorSlug, name,
         }),
+      });
+    },
+
+    async settings() {
+      const rows = await rest('settings?select=key,value');
+      return Object.fromEntries(rows.map((x) => [x.key, x.value]));
+    },
+
+    async setSetting(key, value) {
+      await rest('settings', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ key, value, updated_at: new Date().toISOString() }),
       });
     },
 

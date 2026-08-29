@@ -19,8 +19,8 @@ const DEFAULT_CONTENT = {
   know_god_video_url: '',    // gospel video
   grow_course_url: '',       // discipleship course
   find_church_video_url: '', // "how to find a church" training
-  gather_url: 'https://visitorcenter.com',
-  gather_label: 'Finding a church is handled by our partner, Visitor Center.',
+  gather_url: '',            // set under "Collective defaults" in the database
+  gather_label: '',
 };
 
 const PLACEHOLDER_KEYS = { know_god: 'vid1', grow_with_god: 'vid2', find_church: 'vid3' };
@@ -54,9 +54,14 @@ async function loadCreator() {
   let creator = { slug: 'default', name: null, mode: 'default', defaults: DEFAULT_CONTENT };
   try {
     const res = await fetch(`${API_BASE}/api/creators/${encodeURIComponent(creatorSlug)}`);
-    // An unknown slug still needs the collective's defaults, so keep them.
-    if (res.ok) creator = { defaults: DEFAULT_CONTENT, ...(await res.json()) };
-  } catch { /* fall back to defaults */ }
+    if (res.ok) {
+      creator = { defaults: DEFAULT_CONTENT, ...(await res.json()) };
+    } else {
+      // Unknown slug: the page still needs the collective's own defaults.
+      const fallbackRes = await fetch(`${API_BASE}/api/defaults`);
+      if (fallbackRes.ok) creator.defaults = (await fallbackRes.json()).defaults;
+    }
+  } catch { /* fall back to the built-in blanks */ }
 
   if (creator.name && creator.slug !== 'default') {
     const badge = document.getElementById('creatorBadge');
@@ -240,12 +245,17 @@ applyLanguage();
 function showGatherLink(url, label) {
   const link = document.getElementById('gatherLink');
   const note = document.getElementById('partnerNote');
-  if (!link || !url) return;
-  link.href = url;
-  link.hidden = false;
-  if (note && label) {
-    note.textContent = label;
-    note.hidden = false;
+  const help = document.getElementById('gatherHelp');
+  if (!link) return;
+  if (url) {
+    link.href = url;
+    link.hidden = false;
+    // With a directory to send people to, the explanation is redundant.
+    if (help) help.hidden = true;
+    if (note && label) {
+      note.textContent = label;
+      note.hidden = false;
+    }
   }
 }
 

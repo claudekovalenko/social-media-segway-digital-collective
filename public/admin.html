@@ -33,6 +33,30 @@
       </div>
       <div class="stat-row" id="stats"></div>
 
+      <h3 class="section">Collective defaults</h3>
+      <form class="app-card" id="defaults">
+        <p class="app-meta">What every creator&rsquo;s page shows unless they set their own. Fill the Gather Locally link in when the partner directory is ready &mdash; it goes live everywhere at once.</p>
+        <label>Know God &mdash; video
+          <input name="know_god_video_url" type="url" placeholder="https://…">
+        </label>
+        <label>Grow with God &mdash; course
+          <input name="grow_course_url" type="url" placeholder="https://…">
+        </label>
+        <label>Gather Locally &mdash; video
+          <input name="find_church_video_url" type="url" placeholder="https://…">
+        </label>
+        <label>Gather Locally &mdash; where to send people
+          <input name="gather_url" type="url" placeholder="https://… (leave blank until it's ready)">
+        </label>
+        <label>Gather Locally &mdash; note under the form
+          <input name="gather_label" type="text" maxlength="200">
+        </label>
+        <div class="app-actions">
+          <button type="submit" class="btn-small go">Save defaults</button>
+          <span class="crm-saved"></span>
+        </div>
+      </form>
+
       <h3 class="section">Waiting for approval</h3>
       <div id="applications"></div>
       <p class="dir-empty" id="appsEmpty" hidden>Nobody is waiting for approval.</p>
@@ -372,6 +396,25 @@
       }
     });
 
+    document.getElementById('defaults').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const said = f.querySelector('.crm-saved');
+      said.textContent = '…';
+      try {
+        const res = await fetch(API_BASE + '/api/admin/settings', {
+          method: 'POST',
+          headers: { ...(credentials() || {}), 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(f).entries())),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || 'Could not save those defaults.');
+        said.textContent = 'Saved — live on every page';
+      } catch (err) {
+        said.textContent = err.message;
+      }
+    });
+
     function render(data) {
       const stats = document.getElementById('stats');
       stats.replaceChildren();
@@ -390,6 +433,11 @@
       renderLeads('#leadsTable tbody', data.leads);
       renderLeads('#dueTable tbody', dueLeads(data.leads));
       document.getElementById('dueEmpty').hidden = dueLeads(data.leads).length > 0;
+      const dform = document.getElementById('defaults');
+      for (const [key, value] of Object.entries(data.defaults || {})) {
+        if (dform.elements[key]) dform.elements[key].value = value || '';
+      }
+
       renderApplications(data.applications || []);
       renderAccounts(data.accounts || []);
 

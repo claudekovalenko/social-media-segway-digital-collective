@@ -482,3 +482,10 @@ body.wide .wrap { max-width: min(1360px, 94vw); }
   font-weight: 700; font-size: 0.95rem;
 }
 .partner-link:hover { color: var(--lime-ink); filter: brightness(1.06); }
+
+/* Stands in for the church directory until its link is set. */
+.gather-help {
+  border: 1px solid var(--edge); border-radius: 18px;
+  padding: 14px 16px; margin-bottom: 14px;
+}
+.gather-help p { margin: 0; color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }

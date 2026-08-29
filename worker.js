@@ -20,13 +20,25 @@ const VALID_LEAD_STATUS = new Set([
 // An admin may edit a specific creator's links by naming the slug.
 const b_slug = (b) => (b && typeof b.slug === 'string' ? b.slug : null);
 
+// Fallbacks in code. Anything an admin saves under "Collective defaults" in
+// the database view wins over these, so the links can be filled in later
+// without a deploy.
 const DEFAULT_LINKS = {
   know_god_video_url: '',    // gospel video
   grow_course_url: '',       // discipleship course
   find_church_video_url: '', // "how to find a church" training
-  gather_url: 'https://visitorcenter.com',
+  gather_url: '',            // where Gather Locally sends people
   gather_label: 'Finding a church is handled by our partner, Visitor Center.',
 };
+
+const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
+
+async function defaultLinks(db) {
+  const saved = await db.settings().catch(() => ({}));
+  const out = { ...DEFAULT_LINKS };
+  for (const key of SETTING_KEYS) if (saved[key]) out[key] = saved[key];
+  return out;
+}
 
 // Allow the GitHub Pages copy of the front-end to call this API.
 const CORS = {
@@ -474,6 +486,23 @@ export default {
         });
       }
 
+      // Collective-wide defaults, editable by an admin.
+      if (p === '/api/admin/settings' && req.method === 'POST') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        const b = await req.json().catch(() => ({}));
+        for (const key of SETTING_KEYS) {
+          if (b[key] === undefined) continue;
+          const value = String(b[key] || '').trim().slice(0, 500);
+          // gather_label is prose; the rest must be real links.
+          if (value && key.endsWith('_url') && !/^https?:\/\//i.test(value)) {
+            return json({ error: 'Links must start with http:// or https://' }, 400);
+          }
+          await db.setSetting(key, value);
+        }
+        return json({ ok: true, defaults: await defaultLinks(db) });
+      }
+
       // Set a new password for an account. Admins only — this is how a
       // forgotten password gets fixed without touching the database.
       if (p === '/api/admin/accounts/password' && req.method === 'POST') {
@@ -646,14 +675,20 @@ export default {
         ]);
         return json({
           creator, leads, counts, role: me.role,
-          link: `/c/${me.creator_slug}`, defaults: DEFAULT_LINKS,
+          link: `/c/${me.creator_slug}`, defaults: await defaultLinks(db),
         });
+      }
+
+      // The collective's defaults on their own, for a page whose creator slug
+      // doesn't resolve.
+      if (p === '/api/defaults' && req.method === 'GET') {
+        return json({ defaults: await defaultLinks(db) });
       }
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
         const row = await db.creatorBySlug(p.split('/')[3]);
         if (!row) return json({ error: 'creator not found' }, 404);
-        return json({ ...row, defaults: DEFAULT_LINKS });
+        return json({ ...row, defaults: await defaultLinks(db) });
       }
 
       if (p === '/api/leads' && req.method === 'POST') {
@@ -697,6 +732,7 @@ export default {
           ...all,
           backend: db.backend,
           admin_email: who.email,
+          defaults: await defaultLinks(db),
           applications: await db.applications().catch(() => []),
           accounts: await db.listAdmins().catch(() => []),
         });

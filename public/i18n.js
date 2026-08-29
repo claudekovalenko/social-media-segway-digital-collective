@@ -21,6 +21,7 @@ const I18N = {
     group2: 'Walk through it with others, not alone',
     group3: 'Connect me with others near me who want to gather',
     gather_cta: 'Find a church near you',
+    gather_help: 'Tell us your city below and how you\u2019d like to gather. We\u2019ll point you to healthy churches near you and, where we can, put you in touch with someone local.',
     pick_time: 'Pick a time', choose_time: 'Choose a meeting time',
     propose: 'None of these — propose a time',
     propose_placeholder: 'What time works for you?',
