@@ -164,6 +164,21 @@ A creator's leads are filtered server-side by their own slug — the API never
 returns another creator's leads, so it isn't something the page could leak. The
 same rule covers edits: a creator updating a lead that isn't theirs gets a 403.
 
+### Links each creator controls
+
+Every creator sets their own links from **Your links** on their dashboard: the
+Know God video, the Grow with God course, the Gather Locally video, and where
+Gather Locally sends people. Anything left blank falls back to the collective
+defaults in `DEFAULT_LINKS` at the top of `worker.js` — change the URLs there
+and every creator who hasn't overridden them follows.
+
+Gather Locally defaults to our partner, **Visitor Center**, shown as a button
+above the form on the journey page.
+
+Scheduled online small-group times were removed: the steps now just ask whether
+someone wants to be connected with others, and that flag lands in the database
+for follow-up.
+
 ### Follow-ups
 
 Every lead carries `status`, `notes`, `next_follow_up` and `last_contacted_at`.

@@ -473,3 +473,12 @@ body.wide .wrap { max-width: min(1360px, 94vw); }
 /* The endorsement clause reads as a quiet aside, not a headline. */
 .note-block { border-top: 1px solid var(--edge); padding-top: 22px; }
 .note-block .land-copy { color: var(--text-dim); font-size: 0.92rem; }
+
+/* The outbound partner link on Gather Locally. */
+.partner-link {
+  display: block; text-align: center; margin-bottom: 14px;
+  padding: 14px 20px; border-radius: 999px;
+  background: var(--lime); color: var(--lime-ink);
+  font-weight: 700; font-size: 0.95rem;
+}
+.partner-link:hover { color: var(--lime-ink); filter: brightness(1.06); }

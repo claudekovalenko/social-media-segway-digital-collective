@@ -149,3 +149,5 @@ alter table leads add column if not exists last_contacted_at timestamptz;
 
 create index if not exists leads_follow_up_idx on leads (next_follow_up);
 create index if not exists leads_status_idx on leads (status);
+
+alter table creators add column if not exists gather_url text;

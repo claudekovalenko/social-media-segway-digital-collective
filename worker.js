@@ -15,36 +15,18 @@ const VALID_LEAD_STATUS = new Set([
 // reports how many spots are left so the funnel can show "3 spots left".
 // know_god  -> for people just starting out
 // grow_with_god -> for people going through discipleship
-const GROUP_CAPACITY = 10;
-// `reserved` is how many of the ten seats are already spoken for before any
-// funnel signups, so a brand-new group still shows realistic availability.
-// Times span several zones so people in different regions have a fit.
-const SLOTS = [
-  { id: 'kg-tue-19', step: 'know_god', day: 'tue', time: '7:00 PM', tz: 'PT', reserved: 4 },
-  { id: 'kg-thu-12', step: 'know_god', day: 'thu', time: '12:00 PM', tz: 'CT', reserved: 6 },
-  { id: 'kg-sun-17', step: 'know_god', day: 'sun', time: '5:00 PM', tz: 'CT', reserved: 1 },
-  { id: 'gw-mon-20', step: 'grow_with_god', day: 'mon', time: '8:00 PM', tz: 'CT', reserved: 5 },
-  { id: 'gw-wed-18', step: 'grow_with_god', day: 'wed', time: '6:30 PM', tz: 'PT', reserved: 7 },
-  { id: 'gw-sat-10', step: 'grow_with_god', day: 'sat', time: '10:00 AM', tz: 'CT', reserved: 2 },
-];
-const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
-// People who can't make any listed time can propose their own; those have no
-// capacity of their own and carry a free-text note about what suits them.
-const PROPOSED = 'propose';
+// What every creator's page shows unless they set their own link. Gather
+// Locally points at our partner for finding a local church.
+// An admin may edit a specific creator's links by naming the slug.
+const b_slug = (b) => (b && typeof b.slug === 'string' ? b.slug : null);
 
-// Slots with live remaining counts, straight from whichever database is active.
-const DAY_NAMES = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
-
-async function slotsWithAvailability(db) {
-  const counts = await db.slotCounts();
-  return SLOTS.map((s) => ({
-    ...s,
-    // A plain English label for places that don't translate, like the database view.
-    label: `${DAY_NAMES[s.day] || s.day} ${s.time} ${s.tz}`,
-    capacity: GROUP_CAPACITY,
-    remaining: Math.max(0, GROUP_CAPACITY - s.reserved - (counts[s.id] || 0)),
-  }));
-}
+const DEFAULT_LINKS = {
+  know_god_video_url: '',    // gospel video
+  grow_course_url: '',       // discipleship course
+  find_church_video_url: '', // "how to find a church" training
+  gather_url: 'https://visitorcenter.com',
+  gather_label: 'Finding a church is handled by our partner, Visitor Center.',
+};
 
 // Allow the GitHub Pages copy of the front-end to call this API.
 const CORS = {
@@ -546,6 +528,32 @@ export default {
         return json({ ok: true, email, role, creator_slug: slug });
       }
 
+      // A creator sets the links their own page uses. Blank means "use the
+      // collective's default", so clearing a field is a real action.
+      if (p === '/api/creator/links' && (req.method === 'POST' || req.method === 'PATCH')) {
+        const me = await whoami(req, url, env, db);
+        if (me.role !== 'creator' && me.role !== 'admin') {
+          return json({ error: 'unauthorized' }, 401);
+        }
+        const slug = me.role === 'admin' && b_slug(await req.clone().json().catch(() => ({})))
+          ? b_slug(await req.clone().json().catch(() => ({})))
+          : me.creator_slug;
+        if (!slug) return json({ error: 'This account has no creator link.' }, 400);
+        const b = await req.json().catch(() => ({}));
+        const fields = {};
+        for (const key of ['know_god_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {
+          if (b[key] === undefined) continue;
+          const value = String(b[key] || '').trim().slice(0, 500);
+          if (value && !/^https?:\/\//i.test(value)) {
+            return json({ error: 'Links must start with http:// or https://' }, 400);
+          }
+          fields[key] = value || null;
+        }
+        if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
+        await db.updateCreatorLinks(slug, fields);
+        return json({ ok: true, slug, ...fields });
+      }
+
       // ---- CRM: move a lead along and set the next follow-up ---------------
       if (p.startsWith('/api/leads/') && (req.method === 'PATCH' || req.method === 'POST')) {
         const id = Number(p.split('/')[3]);
@@ -637,18 +645,15 @@ export default {
           db.countsForCreator(me.creator_slug),
         ]);
         return json({
-          creator, leads, counts, role: me.role, link: `/c/${me.creator_slug}`,
+          creator, leads, counts, role: me.role,
+          link: `/c/${me.creator_slug}`, defaults: DEFAULT_LINKS,
         });
       }
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
         const row = await db.creatorBySlug(p.split('/')[3]);
         if (!row) return json({ error: 'creator not found' }, 404);
-        return json(row);
-      }
-
-      if (p === '/api/slots' && req.method === 'GET') {
-        return json({ slots: await slotsWithAvailability(db) });
+        return json({ ...row, defaults: DEFAULT_LINKS });
       }
 
       if (p === '/api/leads' && req.method === 'POST') {
@@ -660,21 +665,10 @@ export default {
         if (!name || !/.+@.+\..+/.test(email)) return json({ error: 'name and a valid email are required' }, 400);
         const interested = b.interested_in_group ? 1 : 0;
         const creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
-        const slot = SLOT_IDS.has(b.group_slot) || b.group_slot === PROPOSED ? b.group_slot : null;
         const path = VALID_PATHS.has(b.path) ? b.path : null;
         const country = String(b.country || '').slice(0, 8) || null;
         const language = String(b.language || '').slice(0, 8) || null;
-        const slotNote = slot === PROPOSED ? (String(b.slot_note || '').slice(0, 200) || null) : null;
         if (!b.consent) return json({ error: 'consent is required' }, 400);
-
-        // Don't oversubscribe a group: re-check the slot right before writing.
-        if (interested && slot && slot !== PROPOSED) {
-          const live = await slotsWithAvailability(db);
-          const chosen = live.find((s) => s.id === slot);
-          if (!chosen || chosen.remaining <= 0) {
-            return json({ error: 'That group just filled up — please pick another time.' }, 409);
-          }
-        }
 
         const leadId = await db.insertLead({
           step, name, email,
@@ -682,11 +676,11 @@ export default {
           city: String(b.city || '').slice(0, 100) || null,
           message: String(b.message || '').slice(0, 2000) || null,
           decision: String(b.decision || '').slice(0, 40) || null,
-          interested_in_group: interested, group_slot: slot, slot_note: slotNote,
+          interested_in_group: interested, group_slot: null, slot_note: null,
           path, country, language, creator_slug: creatorSlug,
         });
         if (interested) {
-          await db.insertGroupSignup({ lead_id: leadId, creator_slug: creatorSlug, slot });
+          await db.insertGroupSignup({ lead_id: leadId, creator_slug: creatorSlug, slot: null });
         }
         return json({ ok: true }, 201);
       }
@@ -701,7 +695,6 @@ export default {
         const all = await db.everything();
         return json({
           ...all,
-          slots: await slotsWithAvailability(db),
           backend: db.backend,
           admin_email: who.email,
           applications: await db.applications().catch(() => []),

@@ -29,9 +29,11 @@ function d1Adapter(DB) {
         c.know_god_video_url, c.grow_course_url, c.find_church_video_url).run();
     },
 
-    creatorBySlug(slug) {
+    async creatorBySlug(slug) {
+      await this.ensureAdmins();
       return DB.prepare(
-        `SELECT slug, name, mode, know_god_video_url, grow_course_url, find_church_video_url
+        `SELECT slug, name, mode, know_god_video_url, grow_course_url,
+                find_church_video_url, gather_url
          FROM creators WHERE slug = ?`).bind(slug).first();
     },
 
@@ -124,6 +126,7 @@ function d1Adapter(DB) {
         ['admins', 'creator_slug', 'TEXT'],
         ['admins', 'name', 'TEXT'],
         ['applications', 'agreed_at', 'TEXT'],
+        ['creators', 'gather_url', 'TEXT'],
         ['leads', 'status', "TEXT NOT NULL DEFAULT 'new'"],
         ['leads', 'notes', 'TEXT'],
         ['leads', 'next_follow_up', 'TEXT'],
@@ -151,6 +154,14 @@ function d1Adapter(DB) {
       await DB.prepare(
         `INSERT INTO admins (email, pass_hash, role, creator_slug, name) VALUES (lower(?), ?, ?, ?, ?)`)
         .bind(email, passHash, role, creatorSlug, name).run();
+    },
+
+    async updateCreatorLinks(slug, fields) {
+      await this.ensureAdmins();
+      const cols = Object.keys(fields);
+      await DB.prepare(
+        `UPDATE creators SET ${cols.map((c) => `${c} = ?`).join(', ')} WHERE slug = ?`)
+        .bind(...cols.map((c) => fields[c]), slug).run();
     },
 
     async setAccountPassword(email, passHash) {
@@ -266,7 +277,7 @@ function supabaseAdapter(url, serviceKey) {
     async creatorBySlug(slug) {
       return first(await rest(
         `creators?slug=eq.${encodeURIComponent(slug)}` +
-        `&select=slug,name,mode,know_god_video_url,grow_course_url,find_church_video_url&limit=1`));
+        `&select=slug,name,mode,know_god_video_url,grow_course_url,find_church_video_url,gather_url&limit=1`));
     },
 
     async creatorByKeyHash(hash) {
@@ -349,6 +360,13 @@ function supabaseAdapter(url, serviceKey) {
           email: email.toLowerCase(), pass_hash: passHash, role,
           creator_slug: creatorSlug, name,
         }),
+      });
+    },
+
+    async updateCreatorLinks(slug, fields) {
+      await rest(`creators?slug=eq.${encodeURIComponent(slug)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(fields),
       });
     },
 

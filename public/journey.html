@@ -69,15 +69,7 @@
                 <option value="questions" data-i18n="decision_questions">I have questions</option>
                 <option value="exploring" data-i18n="decision_exploring">Just exploring</option>
               </select>
-              <label class="check"><input type="checkbox" name="interested_in_group" data-reveal="slots-know_god"><span data-i18n="group1">Join an <strong>online small group</strong> &mdash; meet others starting out, from anywhere</span></label>
-              <div class="slot-picker" id="slots-know_god" hidden>
-                <span class="slot-label" data-i18n="pick_time">Pick a time</span>
-                <select name="group_slot" data-slots="know_god" aria-label="Online group time">
-                  <option value="" disabled selected>Loading times&hellip;</option>
-                </select>
-                <input name="slot_note" class="slot-note" maxlength="200" hidden
-                       placeholder="What time works for you?" data-i18n-placeholder="propose_placeholder" aria-label="Your preferred time">
-              </div>
+              <label class="check"><input type="checkbox" name="interested_in_group"><span data-i18n="group1">Connect me with others who are starting out too</span></label>
               <label class="check consent"><input type="checkbox" name="consent" required><span class="consent-text">I agree to be contacted about my next step and accept the <a href="privacy.html" target="_blank">Privacy &amp; Consent terms</a>.</span></label>
               <button type="submit" data-i18n="btn1">I took this step</button>
               <div class="success" data-i18n="ok1">Welcome to the family. We'll be in touch soon.</div>
@@ -102,16 +94,8 @@
             <form data-step="grow_with_god">
               <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
               <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
-              <label class="check"><input type="checkbox" name="interested_in_group" data-reveal="slots-grow_with_god"><span data-i18n="group2">Go through it in an <strong>online discipleship group</strong> &mdash; weekly, with others</span></label>
+              <label class="check"><input type="checkbox" name="interested_in_group"><span data-i18n="group2">Walk through it with others, not alone</span></label>
               <p class="aside-link"><a href="creators.html" data-i18n="explore_creators">Explore creators in the collective &rarr;</a></p>
-              <div class="slot-picker" id="slots-grow_with_god" hidden>
-                <span class="slot-label" data-i18n="pick_time">Pick a time</span>
-                <select name="group_slot" data-slots="grow_with_god" aria-label="Online discipleship group time">
-                  <option value="" disabled selected>Loading times&hellip;</option>
-                </select>
-                <input name="slot_note" class="slot-note" maxlength="200" hidden
-                       placeholder="What time works for you?" data-i18n-placeholder="propose_placeholder" aria-label="Your preferred time">
-              </div>
               <label class="check consent"><input type="checkbox" name="consent" required><span class="consent-text">I agree to be contacted about my next step and accept the <a href="privacy.html" target="_blank">Privacy &amp; Consent terms</a>.</span></label>
               <button type="submit" data-i18n="btn2">Start the course</button>
               <div class="success" data-i18n="ok2">You're in. Check your email for the first lesson.</div>
@@ -133,6 +117,9 @@
         <div class="step-body">
           <div class="step-inner">
             <div id="video-find_church"></div>
+            <a class="partner-link" id="gatherLink" href="#" target="_blank" rel="noopener" hidden>
+              <span data-i18n="gather_cta">Find a church near you</span>
+            </a>
             <form data-step="find_church">
               <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
               <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
@@ -147,7 +134,7 @@
               <label class="check"><input type="checkbox" name="interested_in_group"><span data-i18n="group3">Connect me with others near me who want to gather</span></label>
               <label class="check consent"><input type="checkbox" name="consent" required><span class="consent-text">I agree to be contacted about my next step and accept the <a href="privacy.html" target="_blank">Privacy &amp; Consent terms</a>.</span></label>
               <button type="submit" data-i18n="btn3">Count me in</button>
-              <p class="aside-link partner-note">In partnership with local outreach tools like Visitor Reach.</p>
+              <p class="aside-link partner-note" id="partnerNote" hidden></p>
               <div class="success" data-i18n="ok3">Got it &mdash; we'll be in touch about your next gathering.</div>
               <div class="error"></div>
             </form>

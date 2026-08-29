@@ -13,11 +13,14 @@ const params = new URLSearchParams(location.search);
 const creatorSlug = params.get('creator') || localStorage.getItem('creator') || 'default';
 localStorage.setItem('creator', creatorSlug);
 
-// Default (platform-provided) content used when a creator hasn't supplied their own.
+// Used only if the API can't be reached; the server sends these as `defaults`
+// on every creator config, and that copy is the one to change.
 const DEFAULT_CONTENT = {
-  know_god_video_url: '',   // set to the gospel series embed URL when ready
-  grow_course_url: '',      // discipleship course embed/link
-  find_church_video_url: '',// "how to find a church" training video
+  know_god_video_url: '',    // gospel video
+  grow_course_url: '',       // discipleship course
+  find_church_video_url: '', // "how to find a church" training
+  gather_url: 'https://visitorcenter.com',
+  gather_label: 'Finding a church is handled by our partner, Visitor Center.',
 };
 
 const PLACEHOLDER_KEYS = { know_god: 'vid1', grow_with_god: 'vid2', find_church: 'vid3' };
@@ -48,10 +51,11 @@ function embed(containerId, url, placeholderText) {
 }
 
 async function loadCreator() {
-  let creator = { slug: 'default', name: null, mode: 'default' };
+  let creator = { slug: 'default', name: null, mode: 'default', defaults: DEFAULT_CONTENT };
   try {
     const res = await fetch(`${API_BASE}/api/creators/${encodeURIComponent(creatorSlug)}`);
-    if (res.ok) creator = await res.json();
+    // An unknown slug still needs the collective's defaults, so keep them.
+    if (res.ok) creator = { defaults: DEFAULT_CONTENT, ...(await res.json()) };
   } catch { /* fall back to defaults */ }
 
   if (creator.name && creator.slug !== 'default') {
@@ -61,10 +65,16 @@ async function loadCreator() {
   }
 
   // Custom mode uses the creator's own videos; default mode uses platform content.
-  const src = creator.mode === 'custom' ? creator : DEFAULT_CONTENT;
-  embed('video-know_god', src.know_god_video_url || DEFAULT_CONTENT.know_god_video_url, t('vid1'));
-  embed('video-grow_with_god', src.grow_course_url || DEFAULT_CONTENT.grow_course_url, t('vid2'));
-  embed('video-find_church', src.find_church_video_url || DEFAULT_CONTENT.find_church_video_url, t('vid3'));
+  // A creator's own links win; anything they leave blank falls back to the
+  // collective's defaults, which the API sends as `defaults`.
+  const fallback = creator.defaults || DEFAULT_CONTENT;
+  embed('video-know_god', creator.know_god_video_url || fallback.know_god_video_url, t('vid1'));
+  embed('video-grow_with_god', creator.grow_course_url || fallback.grow_course_url, t('vid2'));
+  embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
+  showGatherLink(
+    creator.gather_url || fallback.gather_url,
+    creator.gather_url ? null : (fallback.gather_label || null)
+  );
 }
 loadCreator();
 
@@ -142,7 +152,6 @@ function applyLanguage() {
     const text = t(el.dataset.i18nPlaceholder);
     if (text) el.placeholder = text;
   });
-  loadSlots();      // meeting times carry translated day names
   refreshVideoPlaceholders();
 }
 
@@ -225,83 +234,20 @@ function setupLocale() {
 setupLocale();
 applyLanguage();
 
-// ---- online small-group times -------------------------------------------
-// Mirrors the server's list so the picker still works if the API is
-// unreachable; live counts from /api/slots replace these when available.
-const FALLBACK_SLOTS = [
-  { id: 'kg-tue-19', step: 'know_god', day: 'tue', time: '7:00 PM', tz: 'PT', capacity: 10, remaining: 6 },
-  { id: 'kg-thu-12', step: 'know_god', day: 'thu', time: '12:00 PM', tz: 'CT', capacity: 10, remaining: 4 },
-  { id: 'kg-sun-17', step: 'know_god', day: 'sun', time: '5:00 PM', tz: 'CT', capacity: 10, remaining: 9 },
-  { id: 'gw-mon-20', step: 'grow_with_god', day: 'mon', time: '8:00 PM', tz: 'CT', capacity: 10, remaining: 5 },
-  { id: 'gw-wed-18', step: 'grow_with_god', day: 'wed', time: '6:30 PM', tz: 'PT', capacity: 10, remaining: 3 },
-  { id: 'gw-sat-10', step: 'grow_with_god', day: 'sat', time: '10:00 AM', tz: 'CT', capacity: 10, remaining: 8 },
-];
-
-// Times are defined server-side with a fixed capacity; the API reports how
-// many spots are left, so people can see a group filling up.
-async function loadSlots() {
-  const selects = document.querySelectorAll('select[data-slots]');
-  if (!selects.length) return;
-  let slots = FALLBACK_SLOTS;
-  try {
-    const res = await fetch(API_BASE + '/api/slots');
-    if (res.ok) {
-      const live = (await res.json()).slots;
-      if (live && live.length) slots = live;
-    }
-  } catch { /* keep the built-in list */ }
-
-  for (const select of selects) {
-    const picker = select.closest('.slot-picker');
-    const mine = slots.filter((s) => s.step === select.dataset.slots);
-    if (!mine.length) continue;
-    const previous = select.value;
-    select.replaceChildren();
-    const prompt = document.createElement('option');
-    prompt.value = '';
-    prompt.disabled = true;
-    prompt.selected = true;
-    prompt.textContent = t('choose_time');
-    select.appendChild(prompt);
-    for (const slot of mine) {
-      const opt = document.createElement('option');
-      opt.value = slot.id;
-      opt.disabled = slot.remaining <= 0;
-      const when = slot.label || `${t(slot.day)} · ${slot.time} ${slot.tz}`;
-      opt.textContent = slot.remaining > 0
-        ? `${when} — ${t('spots', { n: slot.remaining, total: slot.capacity })}`
-        : `${when} — ${t('full')}`;
-      select.appendChild(opt);
-    }
-    const propose = document.createElement('option');
-    propose.value = 'propose';
-    propose.textContent = t('propose');
-    select.appendChild(propose);
-    if (previous) select.value = previous;
+// ---- the Gather Locally link --------------------------------------------
+// One outbound link for finding a church. A creator can point this anywhere;
+// otherwise everyone gets the collective's default partner.
+function showGatherLink(url, label) {
+  const link = document.getElementById('gatherLink');
+  const note = document.getElementById('partnerNote');
+  if (!link || !url) return;
+  link.href = url;
+  link.hidden = false;
+  if (note && label) {
+    note.textContent = label;
+    note.hidden = false;
   }
 }
-loadSlots();
-
-// Choosing "propose a time" swaps the list for a free-text box.
-document.querySelectorAll('select[data-slots]').forEach((select) => {
-  const note = select.parentElement.querySelector('.slot-note');
-  if (!note) return;
-  select.addEventListener('change', () => {
-    note.hidden = select.value !== 'propose';
-    note.required = select.value === 'propose';
-    if (!note.hidden) note.focus();
-  });
-});
-
-// Checking the small-group box reveals that group's time picker.
-document.querySelectorAll('input[data-reveal]').forEach((box) => {
-  const picker = document.getElementById(box.dataset.reveal);
-  if (!picker) return;
-  box.addEventListener('change', () => {
-    picker.hidden = !box.checked;
-    picker.querySelector('select').required = box.checked;
-  });
-});
 
 // Toggle a step open/closed when its header area is clicked.
 // Clicks inside the expanded body (video, form fields) never collapse it.
@@ -361,7 +307,6 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
       success.style.display = 'block';
       form.querySelector('button').disabled = true;
       remember(data);  // save typing on the next step
-      loadSlots();     // spots just changed
     } catch (err) {
       error.textContent = err.message;
       error.style.display = 'block';
