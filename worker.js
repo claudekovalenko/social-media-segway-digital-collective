@@ -28,7 +28,7 @@ const DEFAULT_LINKS = {
   grow_course_url: '',       // discipleship course
   find_church_video_url: '', // "how to find a church" training
   gather_url: '',            // where Gather Locally sends people
-  gather_label: 'Finding a church is handled by our partner, Visitor Center.',
+  gather_label: 'In partnership with Visitor Reach — helping people find a church home.',
 };
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
