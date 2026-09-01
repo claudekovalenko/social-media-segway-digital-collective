@@ -316,6 +316,8 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
       if (!res.ok) throw new Error(body.error || t('err'));
       success.style.display = 'block';
       form.querySelector('button').disabled = true;
+      // Tick the step off, so the three numbers read as progress.
+      form.closest('.step-card').classList.add('done');
       remember(data);  // save typing on the next step
     } catch (err) {
       error.textContent = err.message;
