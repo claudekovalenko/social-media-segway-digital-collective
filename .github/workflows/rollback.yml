@@ -1,0 +1,29 @@
+name: Roll back to a version
+
+# Run from the Actions tab: pick this workflow, press "Run workflow", and type
+# the version branch to restore (e.g. versions/v1.0). It deploys that exact
+# code to the live Worker without touching the main branch's history.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to deploy (a branch like versions/v1.0, or any commit)"
+        required: true
+        default: "versions/v1.0"
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy that version
+        run: npx --yes wrangler@4 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: "830375f1830fccce2dac031f42817b3d"

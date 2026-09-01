@@ -79,6 +79,15 @@ ADMIN_KEY=your-secret npm start
 
 Data is stored in `data/funnel.db` (SQLite). Set `PORT`, `DB_PATH`, and `ADMIN_KEY` via environment variables.
 
+## Versions and rolling back
+
+Stable states live on `versions/*` branches — `versions/v1.0` is the first.
+To roll the live site back: GitHub → **Actions → Roll back to a version →
+Run workflow**, type the version branch, run. It deploys that exact code to
+the Worker without rewriting any history; pushing to the main branch again
+rolls forward. Ask for a new version branch to be cut whenever the site is in
+a state worth keeping.
+
 ## Accounts, tiers, and the CRM
 
 Everyone — you and every creator — signs in at **`/login.html`**. One page, two

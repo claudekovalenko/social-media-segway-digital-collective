@@ -670,3 +670,52 @@ body.journey .overline { color: rgba(197, 240, 76, 0.75); }
   body .tab-row, body .topic-filter, body .directory,
   body .prose-body, body #dash, body #pending, body footer { animation: none; }
 }
+
+
+/* ------------------------------------------------------------------
+   Sophistication pass: the same simplicity, finished.
+   ------------------------------------------------------------------ */
+
+/* Below-the-fold content rises in as you reach it (reveal.js). */
+.reveal { opacity: 0; transform: translateY(16px); }
+.reveal.in {
+  opacity: 1; transform: none;
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+}
+
+/* Type: tighter display, wider small caps, one clear scale. */
+.hero h1 { letter-spacing: -0.035em; }
+.land-title { font-size: 1.35rem; letter-spacing: -0.02em; }
+body.landing .hero-sub, body.journey .hero-sub { max-width: 34ch; }
+
+/* Inline links earn a drawn underline instead of a colour blink. */
+.land-copy a, .prose-body a, .aside-link a {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px; background-position: 0 100%; background-repeat: no-repeat;
+  transition: background-size var(--motion) var(--ease), color var(--motion) var(--ease);
+}
+.land-copy a:hover, .prose-body a:hover, .aside-link a:hover { background-size: 100% 1px; }
+
+/* Primary actions lift a hair on hover; everything else stays still. */
+.btn-primary:hover, button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.btn-primary, button { transition: filter var(--motion) var(--ease),
+  transform var(--motion) var(--ease); }
+
+/* Directory rows respond like objects, not text. */
+.dir-row { transition: border-color var(--motion) var(--ease), transform var(--motion) var(--ease); }
+a.dir-row:hover { border-color: var(--lime); transform: translateX(3px); }
+
+/* The nav settles into the page instead of floating over it. */
+.site-nav { padding-top: 6px; padding-bottom: 22px; }
+.brand { letter-spacing: -0.01em; }
+
+/* Footers recede further. */
+footer { color: #5c5c58; }
+footer a { color: #6e6e6a; }
+footer a:hover { color: var(--text); }
+
+/* Keyboard focus is visible and matches the accent. */
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 4px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
