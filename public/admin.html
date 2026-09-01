@@ -21,7 +21,7 @@
     </nav>
     <header class="hero">
       <h1>The <em>database</em></h1>
-      <p class="hero-sub">Everything collected across every creator&rsquo;s link &mdash; leads, group signups, and creators.</p>
+      <p class="hero-sub">Everyone who has come through a creator&rsquo;s link, and where each one is.</p>
     </header>
 
     <p class="dir-empty" id="loadError" hidden>Could not reach the server. Refresh to try again.</p>
@@ -33,7 +33,8 @@
       </div>
       <div class="stat-row" id="stats"></div>
 
-      <h3 class="section">Collective defaults</h3>
+      <details class="fold">
+      <summary class="section">Collective defaults</summary>
       <form class="app-card" id="defaults">
         <p class="app-meta">What every creator&rsquo;s page shows unless they set their own. Fill the Gather Locally link in when the partner directory is ready &mdash; it goes live everywhere at once.</p>
         <label>Know God &mdash; video
@@ -57,35 +58,32 @@
         </div>
       </form>
 
+      </details>
+
       <h3 class="section">Waiting for approval</h3>
       <div id="applications"></div>
       <p class="dir-empty" id="appsEmpty" hidden>Nobody is waiting for approval.</p>
 
       <h3 class="section">Follow-ups due</h3>
       <div class="table-scroll"><table id="dueTable">
-        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th><th>Creator</th><th>Message</th></tr></thead>
+        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>Name</th><th>Email</th><th>Step</th><th>City</th><th>Creator</th><th>When</th></tr></thead>
         <tbody></tbody>
       </table></div>
       <p class="dir-empty" id="dueEmpty" hidden>Nothing due in the next few days.</p>
 
       <h3 class="section">Leads</h3>
       <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th><th>Creator</th><th>Message</th></tr></thead>
+        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>Name</th><th>Email</th><th>Step</th><th>City</th><th>Creator</th><th>When</th></tr></thead>
         <tbody></tbody>
       </table></div>
 
-      <h3 class="section">Asked to be connected with others</h3>
-      <div class="table-scroll"><table id="groupsTable">
-        <thead><tr><th>When</th><th>Name</th><th>Email</th><th>City</th><th>Proposed</th><th>Creator</th><th>Status</th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-
-      <h3 class="section">Who has access</h3>
+      <details class="fold">
+      <summary class="section">Who has access</summary>
       <form class="app-card" id="addAccount">
         <h4>Add an account</h4>
         <div class="app-actions">
           <input name="email" placeholder="email or username" required>
-          <input name="password" type="password" placeholder="password (10+ characters)" required minlength="10">
+          <input name="password" type="password" placeholder="password (6+ characters)" required minlength="6">
           <select name="role">
             <option value="admin">Admin &mdash; the whole database</option>
             <option value="creator">Creator &mdash; only their own leads</option>
@@ -96,15 +94,11 @@
         </div>
       </form>
       <div class="table-scroll"><table id="accountsTable">
-        <thead><tr><th>Email</th><th>Tier</th><th>Sees</th><th>Their link</th><th>Since</th><th>Reset password</th></tr></thead>
+        <thead><tr><th>Email</th><th>Tier</th><th>Their link</th><th>Reset password</th></tr></thead>
         <tbody></tbody>
       </table></div>
+      </details>
 
-      <h3 class="section">Creators</h3>
-      <div class="table-scroll"><table id="creatorsTable">
-        <thead><tr><th>Name</th><th>Link</th><th>Mode</th><th>Created</th></tr></thead>
-        <tbody></tbody>
-      </table></div>
     </div>
 
     <footer>
@@ -184,9 +178,8 @@
         tr.appendChild(statusCell(l, save));
         tr.appendChild(followUpCell(l, save));
         tr.appendChild(notesCell(l, save));
-        [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
-         l.country, PATH_NAMES[l.path] || l.path,
-         l.creator_slug, l.message]
+        [l.name, l.email, STEP_NAMES[l.step] || l.step, l.city, l.creator_slug,
+         (l.created_at || '').slice(0, 10)]
           .forEach(v => tr.appendChild(cell(v)));
         tb.appendChild(tr);
       }
@@ -299,6 +292,7 @@
         const wrap = document.createElement('div');
         wrap.className = 'crm-cell';
         const sel = document.createElement('select');
+        sel.title = TIER_SEES[role] || '';
         for (const [value, label] of Object.entries({
           admin: 'Admin', creator: 'Creator', pending: 'Pending',
         })) {
@@ -332,9 +326,7 @@
 
         tr.appendChild(cell(a.email));
         tr.appendChild(tier);
-        tr.appendChild(cell(TIER_SEES[role] || ''));
         tr.appendChild(cell(a.creator_slug ? `/c/${a.creator_slug}` : ''));
-        tr.appendChild(cell(a.created_at));
 
         const reset = document.createElement('td');
         const resetWrap = document.createElement('div');
@@ -441,23 +433,6 @@
       renderApplications(data.applications || []);
       renderAccounts(data.accounts || []);
 
-      const gt = document.querySelector('#groupsTable tbody');
-      gt.replaceChildren();
-      for (const g of data.group_signups) {
-        const tr = document.createElement('tr');
-        [g.created_at, g.name, g.email, g.city,
-         g.creator_slug, g.status]
-          .forEach(v => tr.appendChild(cell(v)));
-        gt.appendChild(tr);
-      }
-
-      const ct = document.querySelector('#creatorsTable tbody');
-      ct.replaceChildren();
-      for (const c of data.creators) {
-        const tr = document.createElement('tr');
-        [c.name, `/c/${c.slug}`, c.mode, c.created_at].forEach(v => tr.appendChild(cell(v)));
-        ct.appendChild(tr);
-      }
     }
     load();
   </script>

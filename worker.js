@@ -95,6 +95,10 @@ function adminKeyMatches(req, url, env) {
 // kept in the browser, and the Worker re-verifies its signature every request.
 const SESSION_HOURS = 12;
 
+// Deliberately low so simple accounts can be set up quickly; anything holding
+// real people's contact details deserves far more than the minimum.
+const MIN_PASSWORD = 6;
+
 // Passwords are stored as PBKDF2-SHA256 with a random salt — never in the clear.
 const PBKDF2_ROUNDS = 100000;
 
@@ -310,8 +314,8 @@ export default {
         if (!VALID_IDENTIFIER.test(email)) {
           return json({ error: 'Use an email address or a username (letters, numbers, . _ -).' }, 400);
         }
-        if (password.length < 10) {
-          return json({ error: 'Use a password of at least 10 characters.' }, 400);
+        if (password.length < MIN_PASSWORD) {
+          return json({ error: `Use a password of at least ${MIN_PASSWORD} characters.` }, 400);
         }
         const existing = await db.countAdmins();
         if (existing > 0 || adminLogins(env).size > 0) {
@@ -382,8 +386,8 @@ export default {
         if (!VALID_IDENTIFIER.test(email)) {
           return json({ error: 'Use an email address or a username (letters, numbers, . _ -).' }, 400);
         }
-        if (password.length < 10) {
-          return json({ error: 'Use a password of at least 10 characters.' }, 400);
+        if (password.length < MIN_PASSWORD) {
+          return json({ error: `Use a password of at least ${MIN_PASSWORD} characters.` }, 400);
         }
         if (kind === 'application') {
           if (!name) return json({ error: 'Tell us your name.' }, 400);
@@ -511,8 +515,8 @@ export default {
         const b = await req.json().catch(() => ({}));
         const email = String(b.email || '').trim().toLowerCase();
         const password = String(b.password || '');
-        if (password.length < 10) {
-          return json({ error: 'Use a password of at least 10 characters.' }, 400);
+        if (password.length < MIN_PASSWORD) {
+          return json({ error: `Use a password of at least ${MIN_PASSWORD} characters.` }, 400);
         }
         const account = await db.adminByEmail(email);
         if (!account) return json({ error: 'not found' }, 404);
