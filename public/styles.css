@@ -587,14 +587,18 @@ body.wide .hero h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); }
    4. a bigger, lighter hero with room to breathe
    ------------------------------------------------------------------ */
 
-/* 1 — arrival */
+/* 1 — arrival: the page draws itself, top to bottom, a beat apart. */
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: none; }
 }
 body.journey .hero,
 body.journey .step-card,
-body.journey footer {
+body.journey footer,
+body.landing .site-nav,
+body.landing .hero,
+body.landing .land-section,
+body.landing footer {
   /* `backwards` only styles the wait before the animation starts, so the
      dimming rule below can own opacity once the entrance is over. */
   animation: rise 0.55s var(--ease) backwards;
@@ -603,6 +607,13 @@ body.journey .step-card:nth-child(1) { animation-delay: 0.15s; }
 body.journey .step-card:nth-child(2) { animation-delay: 0.27s; }
 body.journey .step-card:nth-child(3) { animation-delay: 0.39s; }
 body.journey footer { animation-delay: 0.55s; }
+
+body.landing .hero { animation-delay: 0.1s; }
+body.landing .land-section:nth-of-type(1) { animation-delay: 0.24s; }
+body.landing .land-section:nth-of-type(2) { animation-delay: 0.36s; }
+body.landing .land-section:nth-of-type(3) { animation-delay: 0.48s; }
+body.landing .land-section:nth-of-type(4) { animation-delay: 0.58s; }
+body.landing footer { animation-delay: 0.68s; }
 
 /* 2 — the path lights up behind you */
 .step-card + .step-card::before { transition: background var(--motion) var(--ease); }
@@ -629,5 +640,7 @@ body.journey .overline { color: rgba(197, 240, 76, 0.75); }
 
 /* Anyone who asks for less motion gets a still page. */
 @media (prefers-reduced-motion: reduce) {
-  body.journey .hero, body.journey .step-card, body.journey footer { animation: none; }
+  body.journey .hero, body.journey .step-card, body.journey footer,
+  body.landing .site-nav, body.landing .hero,
+  body.landing .land-section, body.landing footer { animation: none; }
 }
