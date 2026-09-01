@@ -721,23 +721,35 @@ footer a:hover { color: var(--text); }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
 
 
-/* The three steps, across: small bubbles joined by hairlines. */
+/* The three steps, across: numbered circles joined by a line, labels beneath. */
 .bubble-row {
-  display: flex; align-items: center; justify-content: center;
-  gap: 0; margin: 8px 0 10px;
+  display: flex; align-items: flex-start; justify-content: center;
+  margin: 10px 0 12px;
 }
 .bubble {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 16px; border: 1px solid var(--edge-lit); border-radius: 999px;
-  font-size: 0.82rem; font-weight: 600; color: var(--text); white-space: nowrap;
-  transition: border-color var(--motion) var(--ease);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  flex: 0 0 auto; text-align: center;
 }
-.bubble b { font-size: 0.68rem; color: var(--lime); letter-spacing: 0.06em; }
-.bubble:hover { border-color: var(--lime); }
-.bubble-join { flex: 0 1 34px; height: 1px; background: var(--edge-lit); min-width: 8px; }
+.bubble b {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--edge-lit); color: var(--lime);
+  font-size: 1.05rem; font-weight: 600;
+  transition: border-color var(--motion) var(--ease), background var(--motion) var(--ease);
+}
+.bubble:hover b { border-color: var(--lime); }
+.bubble > span {
+  font-size: 0.8rem; font-weight: 600; color: var(--text);
+  max-width: 9ch; line-height: 1.25;
+}
+/* The line meets the circles at their middles. */
+.bubble-join {
+  flex: 1 1 24px; max-width: 56px; height: 1px;
+  background: var(--edge-lit); margin-top: 26px;
+}
 .bubble-caption { text-align: center; font-size: 0.85rem; }
 
 @media (max-width: 430px) {
-  .bubble { padding: 9px 12px; font-size: 0.76rem; gap: 6px; }
-  .bubble-join { min-width: 5px; }
+  .bubble b { width: 46px; height: 46px; font-size: 0.95rem; }
+  .bubble-join { margin-top: 23px; }
 }
