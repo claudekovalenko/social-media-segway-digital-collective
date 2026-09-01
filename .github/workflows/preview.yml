@@ -1,0 +1,23 @@
+name: Deploy design preview
+
+# This branch publishes to a SEPARATE Worker (faith-journey-preview), so the
+# suggested design can be viewed live next to the real site.
+
+on:
+  push:
+    branches: [claude/design-preview]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy
+        run: npx --yes wrangler@4 deploy --name faith-journey-preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: "830375f1830fccce2dac031f42817b3d"
