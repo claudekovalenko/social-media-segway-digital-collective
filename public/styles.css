@@ -8,8 +8,9 @@
   --edge-lit: #333333;
   --text: #f6f6f4;
   --text-dim: #8f8f8b;
-  --lime: #c5f04c;
-  --lime-ink: #131602;
+  /* Accent. Historically named --lime; the value is the design decision. */
+  --lime: #ff3b30;
+  --lime-ink: #ffffff;
   --ok: #a7dcae;
   --err: #e0a0a0;
   /* one duration and one easing for every transition on the page */
@@ -33,7 +34,7 @@ body {
 .glow {
   position: fixed; inset: -20% -40% auto;
   height: 55vh; pointer-events: none; z-index: 0;
-  background: radial-gradient(ellipse 55% 60% at 50% 0%, rgba(197, 240, 76, 0.05), transparent 70%);
+  background: radial-gradient(ellipse 55% 60% at 50% 0%, rgba(255, 59, 48, 0.06), transparent 70%);
 }
 .wrap { position: relative; z-index: 1; max-width: 420px; margin: 0 auto; padding: 24px 28px 56px; }
 
@@ -117,7 +118,7 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 }
 .step-card:hover .step-icon, .step-card.open .step-icon { border-color: var(--lime); color: var(--lime); }
 /* A finished step keeps its icon lit. */
-.step-card.done .step-icon { border-color: var(--lime); color: var(--lime); background: rgba(197, 240, 76, 0.08); }
+.step-card.done .step-icon { border-color: var(--lime); color: var(--lime); background: rgba(255, 59, 48, 0.10); }
 .step-card h2 {
   flex: 1; text-align: center;
   font-size: 0.98rem; font-weight: 600; letter-spacing: -0.01em;
@@ -644,12 +645,12 @@ body.wide footer { animation-delay: 0.38s; }
 /* 2 — the path lights up behind you */
 .step-card + .step-card::before { transition: background var(--motion) var(--ease); }
 .step-card.done + .step-card::before { background: var(--lime); }
-.step-card.done { border-color: rgba(197, 240, 76, 0.45); }
+.step-card.done { border-color: rgba(255, 59, 48, 0.45); }
 
 /* 3 — focus on the open step */
 .step-card.open {
-  border-color: rgba(197, 240, 76, 0.55);
-  box-shadow: 0 0 90px rgba(197, 240, 76, 0.07), 0 0 0 1px rgba(197, 240, 76, 0.06);
+  border-color: rgba(255, 59, 48, 0.55);
+  box-shadow: 0 0 90px rgba(255, 59, 48, 0.07), 0 0 0 1px rgba(255, 59, 48, 0.06);
 }
 body.journey:has(.step-card.open) .step-card:not(.open) { opacity: 0.55; }
 body.journey .step-card { transition: border-color var(--motion) var(--ease),
@@ -662,7 +663,7 @@ body.journey .hero h1 {
   font-weight: 500; letter-spacing: -0.03em; line-height: 1.04;
 }
 body.journey .hero { margin: 26px 0 34px; }
-body.journey .overline { color: rgba(197, 240, 76, 0.75); }
+body.journey .overline { color: rgba(255, 59, 48, 0.8); }
 
 /* Anyone who asks for less motion gets a still page. */
 @media (prefers-reduced-motion: reduce) {
@@ -719,3 +720,25 @@ footer a:hover { color: var(--text); }
 /* Keyboard focus is visible and matches the accent. */
 :focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 4px; }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+
+
+/* The three steps, across: small bubbles joined by hairlines. */
+.bubble-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; margin: 8px 0 10px;
+}
+.bubble {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border: 1px solid var(--edge-lit); border-radius: 999px;
+  font-size: 0.82rem; font-weight: 600; color: var(--text); white-space: nowrap;
+  transition: border-color var(--motion) var(--ease);
+}
+.bubble b { font-size: 0.68rem; color: var(--lime); letter-spacing: 0.06em; }
+.bubble:hover { border-color: var(--lime); }
+.bubble-join { flex: 0 1 34px; height: 1px; background: var(--edge-lit); min-width: 8px; }
+.bubble-caption { text-align: center; font-size: 0.85rem; }
+
+@media (max-width: 430px) {
+  .bubble { padding: 9px 12px; font-size: 0.76rem; gap: 6px; }
+  .bubble-join { min-width: 5px; }
+}
