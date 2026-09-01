@@ -779,6 +779,10 @@ body::before {
 .bubble b {
   background: rgba(255, 255, 255, 0.028);
   border-color: rgba(255, 255, 255, 0.09);
+}
+/* Blur stays only on things that never change size — animating an element's
+   height under backdrop-filter repaints the whole card and looks broken. */
+.bubble b, .dir-row {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -837,3 +841,19 @@ input:focus, select:focus, textarea:focus {
 
 /* Tables in the data views pick up the same glass. */
 .table-scroll { border-top-color: rgba(255, 255, 255, 0.1); }
+
+
+/* ---- dropdowns, made native to the glass ---- */
+select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%238f8f8b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 42px;
+}
+/* The opened list can't be glass (it's OS chrome), but it can match the page. */
+select option {
+  background-color: #161616;
+  color: var(--text);
+}
+[dir="rtl"] select { background-position: left 16px center; padding-right: 16px; padding-left: 42px; }
