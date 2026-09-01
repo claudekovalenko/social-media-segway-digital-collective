@@ -598,7 +598,21 @@ body.journey footer,
 body.landing .site-nav,
 body.landing .hero,
 body.landing .land-section,
-body.landing footer {
+body.landing .step-card,
+body.landing .tab-row,
+body.landing .topic-filter,
+body.landing .directory,
+body.landing footer,
+body.prose .site-nav,
+body.prose .hero,
+body.prose .prose-body,
+body.prose footer,
+body.wide .site-nav,
+body.wide .hero,
+body.wide #dash,
+body.wide #pending,
+body.wide .step-card,
+body.wide footer {
   /* `backwards` only styles the wait before the animation starts, so the
      dimming rule below can own opacity once the entrance is over. */
   animation: rise 0.55s var(--ease) backwards;
@@ -609,11 +623,23 @@ body.journey .step-card:nth-child(3) { animation-delay: 0.39s; }
 body.journey footer { animation-delay: 0.55s; }
 
 body.landing .hero { animation-delay: 0.1s; }
+body.landing .tab-row { animation-delay: 0.2s; }
+body.landing .step-card { animation-delay: 0.3s; }
+body.landing .topic-filter { animation-delay: 0.24s; }
+body.landing .directory { animation-delay: 0.34s; }
 body.landing .land-section:nth-of-type(1) { animation-delay: 0.24s; }
 body.landing .land-section:nth-of-type(2) { animation-delay: 0.36s; }
 body.landing .land-section:nth-of-type(3) { animation-delay: 0.48s; }
 body.landing .land-section:nth-of-type(4) { animation-delay: 0.58s; }
 body.landing footer { animation-delay: 0.68s; }
+
+body.prose .hero { animation-delay: 0.1s; }
+body.prose .prose-body { animation-delay: 0.24s; }
+body.prose footer { animation-delay: 0.4s; }
+
+body.wide .hero { animation-delay: 0.1s; }
+body.wide #dash, body.wide #pending, body.wide .step-card { animation-delay: 0.22s; }
+body.wide footer { animation-delay: 0.38s; }
 
 /* 2 — the path lights up behind you */
 .step-card + .step-card::before { transition: background var(--motion) var(--ease); }
@@ -640,7 +666,7 @@ body.journey .overline { color: rgba(197, 240, 76, 0.75); }
 
 /* Anyone who asks for less motion gets a still page. */
 @media (prefers-reduced-motion: reduce) {
-  body.journey .hero, body.journey .step-card, body.journey footer,
-  body.landing .site-nav, body.landing .hero,
-  body.landing .land-section, body.landing footer { animation: none; }
+  body .site-nav, body .hero, body .step-card, body .land-section,
+  body .tab-row, body .topic-filter, body .directory,
+  body .prose-body, body #dash, body #pending, body footer { animation: none; }
 }
