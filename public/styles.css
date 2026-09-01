@@ -753,3 +753,87 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   .bubble b { width: 46px; height: 46px; font-size: 0.95rem; }
   .bubble-join { margin-top: 23px; }
 }
+
+
+/* ==================================================================
+   GLASS & GLOW — preview direction.
+   Light behaves like light: an aurora behind the page, surfaces of
+   frosted glass, and the accent allowed to bloom instead of sit flat.
+   ================================================================== */
+
+/* The page floats over a slow aurora instead of flat black. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 45% 32% at 18% -4%, rgba(197, 240, 76, 0.10), transparent 65%),
+    radial-gradient(ellipse 50% 38% at 88% 12%, rgba(88, 210, 190, 0.07), transparent 70%),
+    radial-gradient(ellipse 60% 42% at 50% 108%, rgba(197, 240, 76, 0.05), transparent 70%);
+}
+.glow { display: none; }
+
+/* Frosted surfaces: a whisper of white, blurred backdrop, lit top edge. */
+.step-card,
+.dir-row,
+.app-card,
+.gather-help,
+.bubble b {
+  background: rgba(255, 255, 255, 0.028);
+  border-color: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.step-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.step-card:hover { border-color: rgba(197, 240, 76, 0.6); }
+.step-card.open {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+              0 24px 80px rgba(0, 0, 0, 0.5),
+              0 0 90px rgba(197, 240, 76, 0.08);
+}
+
+/* The nav becomes a floating glass bar. */
+.site-nav {
+  position: sticky; top: 10px; z-index: 20;
+  margin: 0 -6px 6px; padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  background: rgba(11, 11, 11, 0.55);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+}
+
+/* The accent blooms. */
+.btn-primary, button[type="submit"], .partner-link {
+  box-shadow: 0 0 0 1px rgba(197, 240, 76, 0.25),
+              0 8px 30px rgba(197, 240, 76, 0.22);
+}
+.btn-primary:hover, button[type="submit"]:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px rgba(197, 240, 76, 0.4),
+              0 10px 44px rgba(197, 240, 76, 0.32);
+}
+.hero em {
+  background: linear-gradient(100deg, var(--lime) 20%, #eaffab 55%, var(--lime) 85%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* Inputs sit in the glass instead of on top of it. */
+input, select, textarea {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--lime);
+  box-shadow: 0 0 24px rgba(197, 240, 76, 0.12);
+}
+
+/* Step circles glow faintly; the rail brightens between them. */
+.bubble b { box-shadow: 0 0 26px rgba(197, 240, 76, 0.1); }
+.bubble-join { background: rgba(255, 255, 255, 0.14); }
+.step-card + .step-card::before { background: rgba(255, 255, 255, 0.12); }
+.step-icon { background: rgba(255, 255, 255, 0.03); }
+
+/* Tables in the data views pick up the same glass. */
+.table-scroll { border-top-color: rgba(255, 255, 255, 0.1); }
