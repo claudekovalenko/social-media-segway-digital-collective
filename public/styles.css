@@ -109,14 +109,15 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
   display: flex; align-items: center; gap: 10px;
   padding: 13px 18px;
 }
-/* A plain number, not a badge: three of them stacked read as a path. */
-.step-no {
-  min-width: 26px; flex-shrink: 0; white-space: nowrap;
-  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
-  color: var(--text-dim); font-variant-numeric: tabular-nums;
-  transition: color var(--motion) var(--ease);
+.step-icon {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid var(--edge-lit); color: var(--text-dim);
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color var(--motion) var(--ease), color var(--motion) var(--ease);
 }
-.step-card:hover .step-no, .step-card.open .step-no { color: var(--lime); }
+.step-card:hover .step-icon, .step-card.open .step-icon { border-color: var(--lime); color: var(--lime); }
+/* A finished step keeps its icon lit. */
+.step-card.done .step-icon { border-color: var(--lime); color: var(--lime); background: rgba(197, 240, 76, 0.08); }
 .step-card h2 {
   flex: 1; text-align: center;
   font-size: 0.98rem; font-weight: 600; letter-spacing: -0.01em;
@@ -572,10 +573,6 @@ body.wide .hero h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); }
   font-size: 0.72rem; font-weight: 600; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px;
 }
-
-/* A finished step keeps its number lit, so the three read as progress. */
-.step-card.done .step-no { color: var(--lime); }
-.step-card.done .step-no::after { content: ' ✓'; letter-spacing: 0; }
 
 /* The placeholder shouldn't dominate the card before a video is set. */
 /* Shorter than a 16:9 frame until a real video is set. */
