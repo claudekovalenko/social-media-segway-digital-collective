@@ -857,3 +857,26 @@ select option {
   color: var(--text);
 }
 [dir="rtl"] select { background-position: left 16px center; padding-right: 16px; padding-left: 42px; }
+
+
+/* ---- film grain: the one thing that stops flat digital black looking flat --- */
+body::after {
+  content: ""; position: fixed; inset: -50%; z-index: 0; pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- the aurora breathes, very slowly ---- */
+@keyframes drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+body::before { animation: drift 26s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+}
+
+/* Content sits above both layers. */
+.wrap { position: relative; z-index: 1; }
