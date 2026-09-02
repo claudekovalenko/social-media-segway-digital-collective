@@ -880,3 +880,110 @@ body::before { animation: drift 26s ease-in-out infinite; }
 
 /* Content sits above both layers. */
 .wrap { position: relative; z-index: 1; }
+
+
+/* ==================================================================
+   Structure pass: a real type scale, shape hierarchy, restrained accent,
+   and the product on the page instead of a description of it.
+   ================================================================== */
+
+/* ---- one type scale, with jumps the eye can actually see ----
+   Written at the same specificity as the older rules it replaces; the
+   stylesheet has layers from many rounds and a bare .hero h1 loses to
+   header.hero h1. */
+:root {
+  --t-xs: 0.78rem;   /* labels, captions */
+  --t-sm: 0.9rem;    /* secondary text */
+  --t-md: 1rem;      /* body */
+  --t-lg: 1.4rem;    /* section titles */
+  --t-xl: clamp(2.4rem, 10vw, 3.4rem);  /* display */
+}
+header.hero h1, .hero h1 { font-size: var(--t-xl); font-weight: 600; letter-spacing: -0.035em; line-height: 1.03; }
+body .hero-sub { font-size: var(--t-md); max-width: 32ch; }
+body .land-title { font-size: var(--t-lg); font-weight: 600; letter-spacing: -0.02em; }
+body .land-copy, body .prose-body p { font-size: var(--t-md); }
+body .overline, body .section, body .bubble > span, body .dir-tag, body .aside-link { font-size: var(--t-xs); }
+body .bubble-caption, body footer, body .app-meta { font-size: var(--t-sm); }
+
+/* ---- shape hierarchy: only actions are pills ---- */
+.step-card, .app-card, .gather-help, .dir-row, .land-section .directory {
+  border-radius: 20px;
+}
+.step-card.open { border-radius: 24px; }
+.btn-primary, .btn-ghost, button, .bubble b, .step-icon, .nav-login, .partner-link,
+.tab, .topic-chip, .dir-tag, .badge, .site-nav { border-radius: 999px; }
+input, select, textarea { border-radius: 12px; }
+
+/* ---- the accent marks one thing: what to do next ---- */
+.land-title { color: var(--text); }
+.dir-tag { color: var(--text-dim); border: 1px solid var(--edge-lit); background: transparent; }
+.aside-link a, .land-copy a, .prose-body a { color: var(--text); }
+.aside-link a:hover, .land-copy a:hover, .prose-body a:hover { color: var(--lime); }
+.see-all a { color: var(--lime); }
+
+/* ---- the phone: the product, shown ---- */
+.device {
+  width: min(232px, 62vw); margin: 30px auto 10px; padding: 9px;
+  border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 0 0 70px rgba(197, 240, 76, 0.05);
+}
+.device-screen {
+  border-radius: 22px; padding: 20px 14px 22px;
+  background: #0d0d0d; border: 1px solid rgba(255, 255, 255, 0.06);
+  display: grid; gap: 7px;
+}
+.device-eyebrow {
+  font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--lime); margin-bottom: 1px;
+}
+.device-title {
+  font-size: 1.15rem; font-weight: 600; letter-spacing: -0.03em;
+  line-height: 1.05; margin-bottom: 9px;
+}
+.device-title em { font-style: normal; color: var(--lime); }
+.device-step {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 11px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.62rem; font-weight: 600; color: var(--text);
+}
+.device-step i {
+  font-style: normal; font-size: 0.52rem; color: var(--text-dim);
+  min-width: 8px;
+}
+.device-caption {
+  text-align: center; font-size: var(--t-xs); color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+/* ---- an empty directory that looks deliberate ---- */
+.dir-empty {
+  border: 1px dashed var(--edge-lit); border-radius: 20px;
+  padding: 22px 18px; text-align: center; color: var(--text-dim);
+  font-size: var(--t-sm);
+}
+.dir-empty a { color: var(--lime); }
+
+
+/* The phone shows a step actually opened — the video, the form, the button —
+   which is the part the three circles below can't show. */
+.device-step.is-open {
+  display: grid; gap: 6px; border-radius: 16px; padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(197, 240, 76, 0.45);
+}
+.device-step.is-open b { font-size: 0.64rem; text-align: center; margin-bottom: 1px; }
+.device-video {
+  height: 42px; border-radius: 9px; border: 1px dashed rgba(255,255,255,0.14);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 0.5rem;
+}
+.device-field {
+  height: 15px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);
+}
+.device-cta {
+  height: 19px; border-radius: 999px; background: var(--lime);
+  color: var(--lime-ink); font-size: 0.5rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
