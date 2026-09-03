@@ -1581,3 +1581,49 @@ body.ig .j-ring i { font-size: 1rem; font-style: normal; font-weight: 700; }
 body.ig .j-meta { display: grid; gap: 1px; flex: 1; min-width: 0; }
 body.ig .j-meta b { font-size: 0.95rem; font-weight: 600; }
 body.ig .j-meta span { font-size: 0.8rem; color: var(--ig-dim); }
+
+/* ==================================================================
+   UMAMI, second helping. The colour used to live in the story strip
+   at the top; with the steps moved down, the page went grey. Put the
+   warmth back where the eye lands: glows behind the phone and the
+   step rings, a wash behind the steps section, and a lit brand.
+   ================================================================== */
+body.ig .phone-frame { overflow: visible; }
+body.ig .phone-frame::after {
+  content: ''; position: absolute; inset: 12% 8% -6% 8%; z-index: -1;
+  border-radius: 40px; filter: blur(38px); pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(240,148,51,0.35), transparent 60%),
+    radial-gradient(ellipse at 80% 70%, rgba(188,24,136,0.35), transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(220,39,67,0.25), transparent 60%);
+}
+body.ig .phone-frame { isolation: isolate; }
+
+body.ig .journey-list { position: relative; }
+body.ig .journey-list::before {
+  content: ''; position: absolute; inset: -30px -40px; z-index: -1;
+  filter: blur(40px); pointer-events: none; opacity: 0.55;
+  background:
+    radial-gradient(ellipse 40% 50% at 10% 20%, rgba(240,148,51,0.35), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 15% 80%, rgba(188,24,136,0.35), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 60% 50%, rgba(220,39,67,0.18), transparent 70%);
+}
+body.ig .j-row { position: relative; isolation: isolate; }
+body.ig .j-ring {
+  width: 50px; height: 50px; border-width: 2.5px;
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 26px rgba(220, 39, 67, 0.45);
+}
+body.ig .j-row:nth-child(1) .j-ring { box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 26px rgba(240,148,51,0.5); }
+body.ig .j-row:nth-child(3) .j-ring { box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 26px rgba(188,24,136,0.5); }
+body.ig .j-row:hover .j-ring { transform: scale(1.05); }
+body.ig .j-ring { transition: transform var(--motion) var(--ease); }
+
+body.ig .coll-ring { box-shadow: 0 0 22px rgba(220, 39, 67, 0.35); }
+body.ig .ig-avatar { box-shadow: 0 0 34px rgba(220, 39, 67, 0.35); }
+
+/* A thin gradient rule under the profile actions, the Instagram flourish. */
+body.ig .ig-actions { position: relative; padding-bottom: 16px; }
+body.ig .ig-actions::after {
+  content: ''; position: absolute; left: 20%; right: 20%; bottom: 0; height: 2px;
+  border-radius: 2px; background: var(--ig-grad); opacity: 0.7; filter: blur(0.4px);
+}
