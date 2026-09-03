@@ -2265,3 +2265,15 @@ body.journey.ig .hero h1 em {
 body.journey.ig .hero-sub { margin-bottom: 0; color: var(--ig-dim); }
 body.journey.ig header.hero::after { display: none; }
 body.journey.ig .steps { margin-top: 18px; }
+
+/* A splash: the warm wash sits a little stronger behind the title on the
+   steps page, and the title carries a faint warm glow. Nothing added. */
+body.journey.ig {
+  background-image:
+    radial-gradient(ellipse 80% 30% at 20% 0%, rgba(240, 148, 51, 0.22), transparent 70%),
+    radial-gradient(ellipse 70% 28% at 85% 6%, rgba(220, 39, 67, 0.20), transparent 70%),
+    radial-gradient(ellipse 60% 24% at 50% 24%, rgba(188, 24, 136, 0.14), transparent 70%);
+}
+body.journey.ig header.hero h1, body.journey.ig .hero h1 {
+  text-shadow: 0 0 40px rgba(240, 148, 51, 0.25), 0 0 80px rgba(220, 39, 67, 0.18);
+}
