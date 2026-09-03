@@ -2255,3 +2255,13 @@ body.journey.ig .steps { margin-top: 6px; }
 /* No brand on the steps page; the flag alone, tucked to the right. */
 body.journey.ig .topbar { justify-content: flex-end; padding: 8px 0 0; margin-bottom: -30px; position: relative; z-index: 6; }
 body.journey.ig header.hero { padding-top: 14px; }
+
+/* Steps page top, simplified: the title alone in white, one short line
+   under it, nothing else. Colour stays with the rings. */
+body.journey.ig header.hero { padding: 16px 0 12px; }
+body.journey.ig .hero h1 em {
+  background: none; color: var(--ig-text); -webkit-text-fill-color: currentColor;
+}
+body.journey.ig .hero-sub { margin-bottom: 0; color: var(--ig-dim); }
+body.journey.ig header.hero::after { display: none; }
+body.journey.ig .steps { margin-top: 18px; }
