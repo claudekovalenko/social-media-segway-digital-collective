@@ -2011,3 +2011,23 @@ body.ig .wrap-narrow label.check {
 }
 body.ig .pick { display: grid; }
 body.ig .pick span { display: block; padding: 9px 12px; border-radius: 10px; font-size: 0.86rem; }
+
+/* The nav stutter: a sticky element with backdrop blur scrolling over
+   large blur-filtered washes is too much to repaint per frame on a
+   phone. The washes drop the filter (the radial gradients are already
+   soft), the nav's blur gets lighter, and the nav is promoted to its
+   own compositor layer. */
+body.ig .wrap::before, body.ig .journey-list::before, body.journey.ig .steps::before,
+body.ig .phone-frame::after, body.ig .wrap-narrow .step-card.static::after {
+  filter: none; opacity: 0.9;
+}
+body.ig .wrap::before {
+  background:
+    radial-gradient(ellipse 60% 50% at 30% 20%, rgba(220, 39, 67, 0.10), transparent 72%),
+    radial-gradient(ellipse 55% 45% at 75% 10%, rgba(240, 148, 51, 0.08), transparent 72%),
+    radial-gradient(ellipse 50% 40% at 50% 60%, rgba(188, 24, 136, 0.07), transparent 72%);
+}
+body.ig .site-nav {
+  -webkit-backdrop-filter: saturate(150%) blur(12px); backdrop-filter: saturate(150%) blur(12px);
+  transform: translateZ(0); will-change: transform; contain: paint;
+}
