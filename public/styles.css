@@ -1762,3 +1762,87 @@ body.ig .wrap::before { width: 100%; left: 0; transform: none; }
 body.ig .journey-list::before, body.journey.ig .steps::before { inset: -30px 0; }
 body.ig .phone-frame::after { inset: 12% 4% -6% 4%; }
 body.ig .wrap { overflow-x: clip; }
+
+/* ==================================================================
+   UMAMI EVERYWHERE — the same material on every page, including the
+   back end: frosted cards, a warm wash under the hero, gradient rings
+   and dots as wayfinding, quiet fields, one blue verb.
+   ================================================================== */
+
+/* Every hero gets the wash; prose and wide pages get a smaller one. */
+body.prose.ig .wrap::before, body.wide.ig .wrap::before { height: 260px; opacity: 0.7; }
+
+/* Cards: login/creator/dashboard forms, admin cards, tables, the gather help. */
+body.ig .step-card.static, body.ig .app-card, body.ig .table-scroll,
+body.ig .fold, body.ig .draft-note, body.ig .locale-panel {
+  background: rgba(24, 24, 24, 0.55); border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  -webkit-backdrop-filter: saturate(140%) blur(16px); backdrop-filter: saturate(140%) blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 22px rgba(0,0,0,0.3);
+}
+body.ig .step-card.static { padding: 18px; }
+body.ig .app-card { padding: 14px 16px; }
+body.ig .table-scroll { padding: 4px 0; overflow-x: auto; }
+body.ig .draft-note { padding: 12px 14px; font-size: 0.82rem; color: var(--ig-dim); }
+
+/* Section headings on the back end and the directory: a gradient dot, a rule. */
+body.ig .section, body.ig .prose-body > h2, body.ig h2.land-title {
+  display: flex; align-items: center; gap: 10px;
+}
+body.ig .section::before, body.ig .prose-body > h2::before {
+  content: ''; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ig-grad); box-shadow: 0 0 14px rgba(220,39,67,0.5);
+}
+body.ig .section::after, body.ig .prose-body > h2::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.18), transparent);
+}
+body.ig .section {
+  font-family: 'Space Grotesk', system-ui, sans-serif; letter-spacing: 0.02em;
+  text-transform: none; font-size: 0.95rem; font-weight: 600; color: var(--ig-text);
+  margin: 26px 0 12px;
+}
+body.ig .prose-body > h2 { margin: 30px 0 10px; font-size: 1.3rem; }
+body.ig .prose-body p, body.ig .prose-body li { color: #c9c9c9; line-height: 1.7; }
+
+/* The directory: rows as frosted profile rows with a gradient ring. */
+body.ig .directory-full .dir-row, body.landing.ig .dir-row {
+  background: rgba(24, 24, 24, 0.55); border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px; padding: 10px 14px; margin: 0 0 8px;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 22px rgba(0,0,0,0.3);
+}
+body.ig .directory-full .dir-row:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+body.ig .topic-chip {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
+  color: var(--ig-text); border-radius: 999px;
+}
+body.ig .topic-chip.on { background: var(--ig-grad); border-color: transparent; color: #fff; }
+
+/* Stats on the back end: value large, in the serif, over a quiet label. */
+body.ig .stat-row { display: flex; gap: 8px; }
+body.ig .stat {
+  flex: 1; padding: 12px 14px; border-radius: 14px;
+  background: rgba(24, 24, 24, 0.55); border: 1px solid rgba(255,255,255,0.10);
+}
+body.ig .stat b { font-family: Fraunces, Georgia, serif; font-size: 1.6rem; color: var(--ig-text); }
+
+/* Tabs, pills and small buttons. */
+body.ig .tab { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: var(--ig-text); border-radius: 999px; }
+body.ig .tab.on { background: var(--ig-text); color: var(--ig-bg); border-color: transparent; }
+body.ig .btn-small { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); color: var(--ig-text); border-radius: 999px; }
+body.ig .btn-small.go { background: var(--ig-blue); border-color: transparent; color: #fff; }
+body.ig .pick span { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: var(--ig-text); }
+body.ig .pick input:checked + span { background: var(--ig-blue); border-color: transparent; color: #fff; }
+body.ig .or-divider { color: var(--ig-dim); }
+body.ig .aside-link a, body.ig .see-all a, body.ig .land-copy a, body.ig .prose-body a { color: #e0f1ff; }
+body.ig .success { color: var(--ig-blue); }
+body.ig .err, body.ig .error { color: #ff7a7a; }
+body.ig .crm-saved { color: var(--ig-blue); }
+
+/* Tables: hairlines, no boxes. */
+body.ig table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+body.ig th { color: var(--ig-dim); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.10); }
+body.ig td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+body.ig tr:last-child td { border-bottom: 0; }
+body.ig .dir-empty { color: var(--ig-dim); font-size: 0.88rem; padding: 8px 2px; }
