@@ -2048,3 +2048,11 @@ body.ig .tab-row .tab.on { background: transparent; box-shadow: none; color: #ff
 body.ig .tab-row .tab { transition: color .3s ease .1s; white-space: nowrap; }
 body.ig .auth-hero .hero-sub { max-width: none; white-space: nowrap; }
 @media (max-width: 380px) { body.ig .auth-hero .hero-sub { white-space: normal; } }
+
+/* The tab thumb keeps its shape: no border, no background, no size change
+   on the tabs themselves in any state; only the thumb moves. */
+body.ig .tab-row .tab, body.ig .tab-row .tab.on, body.ig .tab-row .tab:hover, body.ig .tab-row .tab:focus-visible {
+  border: 0; background: transparent; box-shadow: none; transform: none; outline-offset: -2px;
+  padding: 10px 12px; font-size: 0.9rem;
+}
+body.ig .tab-row::before { will-change: transform; }

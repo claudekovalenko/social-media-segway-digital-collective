@@ -349,8 +349,27 @@
     // sense, so it starts there.
     let creating = false;
 
+    // Animate the card's height between the two tabs' contents so the page
+    // below glides instead of jumping.
+    function glideHeight(card, change) {
+      const h0 = card.offsetHeight;
+      change();
+      const h1 = card.offsetHeight;
+      if (h0 === h1) return;
+      card.style.overflow = 'hidden';
+      card.style.height = h0 + 'px';
+      void card.offsetHeight;
+      card.style.transition = 'height .42s cubic-bezier(.22,.8,.18,1)';
+      card.style.height = h1 + 'px';
+      card.addEventListener('transitionend', () => {
+        card.style.height = ''; card.style.transition = ''; card.style.overflow = '';
+      }, { once: true });
+    }
+
     function showTab(which) {
       if (!ready) return;
+      const card = document.querySelector('.step-card.static');
+      if (card && !card.dataset.gliding) { glideHeight(card, () => { card.dataset.gliding = '1'; showTab(which); delete card.dataset.gliding; }); return; }
       const join = which === 'join';
       const signUp = !hasAccounts || creating;
       document.getElementById('joinForm').hidden = !join;
