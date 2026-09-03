@@ -1,32 +1,46 @@
 // Service worker: network-first, so a fresh deploy shows up on the very next
 // open instead of one load later. The cache is a fallback for slow or absent
 // connections, not the default source.
-const CACHE_VERSION = 'v79';
+const CACHE_VERSION = 'v80';
 const CACHE_NAME = `faith-journey-${CACHE_VERSION}`;
 const NETWORK_TIMEOUT = 2500;
+// Clean URLs, not the .html paths: the Worker answers /journey.html with a
+// 307 to /journey, and a redirected response cannot be cached.
 const SHELL = [
   './',
-  'index.html',
-  'journey.html',
-  'creator.html',
-  'creators.html',
-  'dashboard.html',
-  'login.html',
-  'crm.js',
-  'reveal.js',
-  'admin.html',
-  'beliefs.html',
-  'privacy.html',
+  'journey',
+  'creators',
+  'login',
+  'dashboard',
+  'admin',
+  'creator',
+  'beliefs',
+  'privacy',
   'styles.css',
   'app.js',
   'i18n.js',
+  'crm.js',
+  'reveal.js',
   'manifest.webmanifest',
   'icons/icon-192.png',
   'icons/icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // Cache each file on its own and swallow individual failures. cache.addAll
+  // is atomic: one redirect or 404 rejects the whole install, the worker never
+  // activates, stale caches are never cleared, and the installed app quietly
+  // serves a mismatched mixture of old and new files.
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(SHELL.map(async (url) => {
+      try {
+        const res = await fetch(url, { redirect: 'follow', cache: 'reload' });
+        if (res.ok) await cache.put(url, res);
+      } catch { /* a missing asset must not break the install */ }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (e) => {
@@ -64,7 +78,7 @@ self.addEventListener('fetch', (e) => {
 
   e.respondWith(
     fromNetwork(e.request).catch(() =>
-      caches.match(e.request).then((cached) => cached || caches.match('index.html'))
+      caches.match(e.request).then((cached) => cached || caches.match('./'))
     )
   );
 });
