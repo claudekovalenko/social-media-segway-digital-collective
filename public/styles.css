@@ -1726,3 +1726,30 @@ body.ig .land-section::before { display: none; }
 body.ig .sec-kicker.plain span {
   width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 14px rgba(220,39,67,0.5);
 }
+
+/* Older layers recolour the ring and card on hover/open/done (the old
+   accent, now white), which turned the gradient ring white on tap.
+   Pin every state on the steps page. */
+body.journey.ig .step-card .step-icon,
+body.journey.ig .step-card:hover .step-icon,
+body.journey.ig .step-card.open .step-icon,
+body.journey.ig .step-card.done .step-icon {
+  border-color: transparent; color: var(--ig-text);
+  background:
+    linear-gradient(var(--ig-bg), var(--ig-bg)) padding-box,
+    var(--ig-grad) border-box;
+}
+body.journey.ig .step-card,
+body.journey.ig .step-card:hover,
+body.journey.ig .step-card.open,
+body.journey.ig .step-card.done,
+body.journey.ig .step-card.done + .step-card {
+  border-color: rgba(255,255,255,0.10); opacity: 1;
+}
+body.journey.ig .step-card.open { border-color: rgba(255,255,255,0.2); }
+body.journey.ig .step-card::before, body.journey.ig .step-card::after { display: none; }
+body.journey.ig .step-card.open .step-chevron,
+body.journey.ig .step-card:hover .step-chevron { color: var(--ig-text); }
+body.journey.ig .step-card.done .step-head h2::after { color: var(--ig-blue); }
+body.journey.ig .check input, body.journey.ig input[type="checkbox"] { accent-color: var(--ig-blue); }
+body.journey.ig :focus-visible { outline-color: var(--ig-blue); }
