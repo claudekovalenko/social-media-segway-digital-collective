@@ -1405,3 +1405,16 @@ body.ig .bs-actions span {
 body.ig .bs-note {
   margin-top: 12px; text-align: center; font-size: 11px; color: var(--ig-dim);
 }
+
+/* The steps page keeps the plain sans for everything, as it had before;
+   the serif stays a home-page voice. */
+body.journey.ig h1, body.journey.ig h2, body.journey.ig header.hero h1,
+body.journey.ig .hero h1, body.journey.ig .step-title, body.journey.ig .step-head h2 {
+  font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+body.journey.ig header.hero h1, body.journey.ig .hero h1 {
+  font-size: clamp(1.9rem, 6.5vw, 2.4rem); font-weight: 700; line-height: 1.1;
+}
+body.journey.ig .hero h1 em { font-style: normal; font-weight: 700; }
+body.journey.ig .step-head h2 { font-size: 1rem; font-weight: 600; }
