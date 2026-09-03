@@ -1864,3 +1864,34 @@ body.journey.ig .step-inner { padding: 0; }
 body.journey.ig .step-card.open .step-inner { padding: 0 0 14px; }
 body.journey.ig .step-card, body.journey.ig .step-card.open { border-radius: 16px; }
 body.journey.ig .step-card:hover .step-icon { transform: none; }
+
+/* Opening a step: a longer, softer curve; the contents rise and fade in
+   a beat behind the card; the ring brightens and the chevron turns with
+   the same easing. Closing is quicker and the contents fade out first. */
+body.journey.ig .step-body {
+  transition: grid-template-rows .48s cubic-bezier(.22,.8,.18,1);
+}
+body.journey.ig .step-inner > * {
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .28s ease, transform .28s ease;
+}
+body.journey.ig .step-card.open .step-inner > * {
+  opacity: 1; transform: none;
+  transition: opacity .42s cubic-bezier(.22,.8,.18,1) .14s, transform .48s cubic-bezier(.22,.8,.18,1) .12s;
+}
+body.journey.ig .step-card.open .step-inner > * + * { transition-delay: .2s, .18s; }
+body.journey.ig .step-chevron { transition: transform .48s cubic-bezier(.22,.8,.18,1), color var(--motion); }
+body.journey.ig .step-icon {
+  transition: box-shadow .5s cubic-bezier(.22,.8,.18,1), transform .5s cubic-bezier(.22,.8,.18,1);
+}
+body.journey.ig .step-card.open .step-icon { transform: scale(1.06); }
+body.journey.ig .step-card.open:nth-of-type(1) .step-icon { box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 38px rgba(240,148,51,0.75); }
+body.journey.ig .step-card.open:nth-of-type(2) .step-icon { box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 38px rgba(220,39,67,0.7); }
+body.journey.ig .step-card.open:nth-of-type(3) .step-icon { box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 38px rgba(188,24,136,0.75); }
+body.journey.ig .step-card { transition: border-color .4s ease, background .4s ease, box-shadow .5s ease; }
+body.journey.ig .step-card.open {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 18px 44px rgba(0,0,0,0.5), 0 0 60px rgba(220,39,67,0.08);
+}
+@media (prefers-reduced-motion: reduce) {
+  body.journey.ig .step-inner > *, body.journey.ig .step-card.open .step-inner > * { transition: none; transform: none; opacity: 1; }
+}
