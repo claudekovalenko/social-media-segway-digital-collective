@@ -2031,3 +2031,20 @@ body.ig .site-nav {
   -webkit-backdrop-filter: saturate(150%) blur(12px); backdrop-filter: saturate(150%) blur(12px);
   transform: translateZ(0); will-change: transform; contain: paint;
 }
+
+/* The tab pill slides: one gradient thumb behind the two labels, moved
+   with a transform, so switching glides instead of swapping. */
+body.ig .tab-row { position: relative; isolation: isolate; }
+body.ig .tab-row::before {
+  content: ''; position: absolute; top: 4px; bottom: 4px; left: 4px;
+  width: calc(50% - 6px); border-radius: 999px; z-index: 0;
+  background: var(--ig-grad);
+  box-shadow: 0 6px 18px rgba(220,39,67,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: transform .42s cubic-bezier(.22,.8,.18,1);
+}
+body.ig .tab-row.join::before { transform: translateX(calc(100% + 4px)); }
+body.ig .tab-row .tab { position: relative; z-index: 1; }
+body.ig .tab-row .tab.on { background: transparent; box-shadow: none; color: #fff; }
+body.ig .tab-row .tab { transition: color .3s ease .1s; white-space: nowrap; }
+body.ig .auth-hero .hero-sub { max-width: none; white-space: nowrap; }
+@media (max-width: 380px) { body.ig .auth-hero .hero-sub { white-space: normal; } }

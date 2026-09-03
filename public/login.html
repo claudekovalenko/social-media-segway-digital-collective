@@ -363,15 +363,16 @@
       document.getElementById('approvalNote').hidden = !hasAccounts;
       document.getElementById('toSignIn').hidden = !hasAccounts;
       document.getElementById('why').textContent = join
-        ? 'Tell us about your work and why you want to join.'
+        ? 'Tell us a little about your work.'
         : (signUp
           ? (hasAccounts
-            ? 'Create your Digital Collective account.'
+            ? 'Create your account.'
             : 'No account exists yet — create the owner account for the database.')
-          : 'Sign in to your Digital Collective account.');
+          : 'Sign in to your account.');
       for (const t of document.querySelectorAll('.tab')) {
         t.classList.toggle('on', t.dataset.tab === which);
       }
+      document.getElementById('tabs').classList.toggle('join', which === 'join');
     }
 
     document.getElementById('createLink').addEventListener('click', (e) => {
