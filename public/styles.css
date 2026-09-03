@@ -1418,3 +1418,9 @@ body.journey.ig header.hero h1, body.journey.ig .hero h1 {
 }
 body.journey.ig .hero h1 em { font-style: normal; font-weight: 700; }
 body.journey.ig .step-head h2 { font-size: 1rem; font-weight: 600; }
+
+/* The ring is a z-index:-1 pseudo-element. Without its own stacking
+   context it falls behind the card once the entrance animation ends —
+   hence the colours that "load, then disappear". Isolate every ringed thing. */
+body.ig .step-icon, body.ig .bubble b, body.ig .dir-av,
+body.ig .bs-avatar, body.ig .ig-avatar, body.ig .ig-ring { isolation: isolate; }
