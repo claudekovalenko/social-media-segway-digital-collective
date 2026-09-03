@@ -2228,3 +2228,26 @@ body.journey.ig .hero h1 em {
   color: transparent; -webkit-text-fill-color: transparent;
 }
 @media (min-width: 900px) { body.journey.ig header.hero { padding: 26px 0 22px; } }
+
+/* Steps page title block: brand and flag on one tight row, the title
+   right beneath, three gradient pips as the overline, a gradient rule
+   under the subtitle. */
+body.journey.ig .topbar { padding: 10px 0 0; }
+body.journey.ig header.hero { padding: 10px 0 14px; position: relative; }
+body.journey.ig .hero-pips { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+body.journey.ig .pips { display: inline-flex; gap: 4px; }
+body.journey.ig .pips i {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--ig-grad);
+  box-shadow: 0 0 10px rgba(220,39,67,0.5);
+}
+body.journey.ig .pips i:nth-child(2) { opacity: 0.7; }
+body.journey.ig .pips i:nth-child(3) { opacity: 0.45; }
+body.journey.ig header.hero h1, body.journey.ig .hero h1 { margin-bottom: 6px; }
+body.journey.ig .hero-sub { font-size: 0.9rem; max-width: none; margin-bottom: 14px; }
+body.journey.ig header.hero::after {
+  content: ''; display: block; width: 88px; height: 2px; border-radius: 2px;
+  background: var(--ig-grad); opacity: 0.8;
+}
+body.journey.ig .creator-badge { margin-top: 12px; }
+body.journey.ig .steps { margin-top: 6px; }
+@media (min-width: 900px) { body.journey.ig header.hero { padding: 18px 0 18px; } }
