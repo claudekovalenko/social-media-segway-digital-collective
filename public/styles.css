@@ -2203,3 +2203,28 @@ body.ig #joinCta .sec-kicker { margin-bottom: 6px; }
 body.ig .cta-row { display: flex; gap: 8px; margin-top: 14px; }
 body.ig .cta-row .btn-primary, body.ig .cta-row .btn-ghost { flex: 1; text-align: center; padding: 11px 14px; font-size: 0.9rem; }
 body.landing.ig footer { font-size: 0.78rem; }
+
+/* Steps page top: the brand on the left, the language badge on the
+   right, then the title close under them with the accent on the verb. */
+body.journey.ig .topbar {
+  justify-content: space-between; align-items: center;
+  padding: 14px 0 0;
+}
+body.journey.ig .topbar-brand {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.9rem; font-weight: 600; color: var(--ig-text); text-decoration: none;
+}
+body.journey.ig .topbar-brand .dc-mark { color: var(--ig-text); }
+body.journey.ig .globe { width: 38px; height: 38px; }
+body.journey.ig .locale-panel { top: 46px; }
+body.journey.ig header.hero { padding: 18px 0 16px; }
+body.journey.ig .overline { margin-bottom: 8px; }
+body.journey.ig header.hero h1, body.journey.ig .hero h1 {
+  font-size: clamp(2.1rem, 7.5vw, 2.6rem); line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 8px;
+}
+body.journey.ig .hero h1 em {
+  font-style: normal;
+  background: var(--ig-grad); -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+@media (min-width: 900px) { body.journey.ig header.hero { padding: 26px 0 22px; } }
