@@ -1202,3 +1202,144 @@ body.ig .dir-empty {
 }
 body.ig .note-block { border-top: 0; padding-top: 18px; }
 body.ig footer { border-top: 0; padding-top: 22px; text-align: center; }
+
+
+/* ==================================================================
+   EDITORIAL — light, warm, printed.
+   The neon-on-black palette reads as crypto/gaming; this reads as a
+   publisher or a foundation. Paper ground, ink text, one deep green
+   accent, a serif for display and a neutral sans for interface.
+   ================================================================== */
+:root {
+  --p-paper:  #faf8f4;   /* warm paper, never pure white */
+  --p-raised: #ffffff;
+  --p-line:   #e5e0d8;
+  --p-ink:    #17150f;
+  --p-muted:  #6d6759;
+  --p-green:  #2f5d4f;   /* deep, planted — growth, not neon */
+  --p-green-d:#24483d;
+}
+
+body {
+  background: var(--p-paper); color: var(--p-ink);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-size: 16px; line-height: 1.6;
+}
+body::before, body::after, .glow { display: none !important; }
+
+/* Display type is the serif; everything functional stays sans. */
+h1, h2, h3, .land-title, .hero h1, header.hero h1, .device-title, .ig-name {
+  font-family: Fraunces, Georgia, serif;
+  font-weight: 600; letter-spacing: -0.015em; color: var(--p-ink);
+}
+header.hero h1, .hero h1 {
+  font-size: clamp(2.1rem, 7.5vw, 3rem); line-height: 1.12; font-weight: 600;
+}
+.hero h1 em {
+  font-style: italic; font-weight: 600; color: var(--p-green);
+  background: none; -webkit-text-fill-color: currentColor;
+}
+.hero-sub, .land-copy, p { color: var(--p-muted); }
+.land-title { font-size: 1.28rem; }
+.overline, .section {
+  color: var(--p-muted); letter-spacing: 0.12em; font-weight: 600;
+  font-family: Inter, sans-serif;
+}
+
+/* Surfaces: white cards on paper, hairline borders, a whisper of shadow. */
+.step-card, .app-card, .dir-row, .gather-help, .device, .table-scroll {
+  background: var(--p-raised); border: 1px solid var(--p-line);
+  border-radius: 16px; box-shadow: 0 1px 2px rgba(23,21,15,0.04);
+  backdrop-filter: none;
+}
+.step-card:hover { border-color: #cfc8bb; }
+.step-card.open {
+  background: var(--p-raised); border-color: #cfc8bb;
+  box-shadow: 0 8px 30px rgba(23, 21, 15, 0.07);
+}
+.step-card + .step-card { margin-top: 12px; }
+.step-card + .step-card::before { display: none; }
+.site-nav {
+  background: rgba(250,248,244,0.9); border: 0;
+  border-bottom: 1px solid var(--p-line); border-radius: 0;
+  margin: 0 -28px 20px; padding: 14px 28px;
+}
+
+/* Actions: solid ink-green, quiet ghost. */
+.btn-primary, button[type="submit"], .partner-link, .device-cta {
+  background: var(--p-green); color: #fff; box-shadow: none;
+  border-radius: 10px; font-weight: 600; font-family: Inter, sans-serif;
+}
+.btn-primary:hover, button[type="submit"]:hover:not(:disabled) {
+  background: var(--p-green-d); transform: none; box-shadow: none;
+}
+.btn-ghost, .nav-login, .tab, button.secondary {
+  background: var(--p-raised); border: 1px solid var(--p-line);
+  color: var(--p-ink); border-radius: 10px; font-weight: 600;
+}
+.tab.on { background: var(--p-ink); color: var(--p-paper); border-color: var(--p-ink); }
+
+/* Fields. */
+input, select, textarea {
+  background: var(--p-raised); border: 1px solid var(--p-line);
+  color: var(--p-ink); border-radius: 10px;
+}
+input::placeholder, textarea::placeholder { color: #9b9486; }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--p-green); box-shadow: 0 0 0 3px rgba(47,93,79,0.12);
+}
+
+/* Step marks and numbers. */
+.step-icon, .bubble b {
+  background: #f1ede5; border: 1px solid var(--p-line); color: var(--p-green);
+}
+.step-icon::before, .bubble b::before { display: none; }
+.step-card:hover .step-icon, .step-card.open .step-icon,
+.step-card.done .step-icon { border-color: var(--p-green); color: var(--p-green); background: #e8f0eb; }
+.bubble-join { background: var(--p-line); }
+
+/* Links: underlined on hover, ink by default. */
+a { color: var(--p-ink); }
+.land-copy a, .prose-body a, .see-all a, .dir-empty a { color: var(--p-green); font-weight: 500; }
+.aside-link, .check.fine { color: var(--p-muted); }
+.check.fine a { color: var(--p-muted); }
+.dir-tag { background: #f1ede5; border: 1px solid var(--p-line); color: var(--p-muted); }
+footer { color: var(--p-muted); border-top: 1px solid var(--p-line); padding-top: 22px; }
+footer a { color: var(--p-muted); }
+
+/* The phone mockup keeps a dark screen — it's a phone. */
+.device { background: #f1ede5; }
+.device-screen { background: #17150f; border-color: #2a2721; }
+.device-screen .device-title { color: #faf8f4; font-family: Fraunces, serif; }
+.device-title em { color: #9ec3b4; }
+.device-eyebrow { color: #9ec3b4; }
+.device-step { border-color: #34302a; color: #faf8f4; }
+.device-step.is-open { background: #201d17; border-color: #4a6b5e; }
+.device-video { border-color: #34302a; color: #7d766a; }
+.device-field { border-color: #34302a; }
+.device-caption { color: var(--p-muted); }
+
+/* Data pages read as documents. */
+th { color: var(--p-muted); }
+th, td { border-bottom-color: var(--p-line); }
+.creator-bar { border-bottom-color: var(--p-line); }
+.stat b { color: var(--p-green); }
+.prose-body h2 { font-family: Fraunces, serif; }
+
+/* Wordmark and small print in the editorial theme. */
+.brand { color: var(--p-ink); }
+.dc-mark { color: var(--p-green); }
+.fine-print { font-size: 0.86rem; color: #857e70; }
+.note-block { border-top-color: var(--p-line); }
+.dir-empty { border-color: var(--p-line); color: var(--p-muted); }
+.bubble > span { color: var(--p-ink); }
+.bubble-caption { color: var(--p-muted); }
+.land-section { border: 0; }
+
+/* These lose to older, more specific rules unless matched exactly. */
+header.hero h1 em, .hero h1 em {
+  color: var(--p-green); font-style: italic;
+  background: none; -webkit-text-fill-color: currentColor;
+}
+.site-nav .brand .dc-mark, .brand .dc-mark, footer .dc-mark { color: var(--p-green); }
+body .step-icon { color: var(--p-green); }
