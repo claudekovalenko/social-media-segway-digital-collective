@@ -987,3 +987,18 @@ input, select, textarea { border-radius: 12px; }
   color: var(--lime-ink); font-size: 0.5rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
+
+
+/* ---- the form, quieted ----
+   Two fields and a button. The consent line is a real checkbox (it's the
+   legal basis for contacting anyone) but it reads as fine print, not as a
+   third question. */
+.step-card form { gap: 9px; }
+.check.fine {
+  font-size: 0.74rem; line-height: 1.4; color: #7a7a76;
+  padding: 2px 2px 0; margin-top: 1px;
+}
+.check.fine input { transform: scale(0.88); margin-top: 2px; }
+.check.fine a { color: #9a9a95; text-decoration: underline; text-underline-offset: 2px; }
+.check.fine a:hover { color: var(--lime); }
+.step-card form button { margin-top: 5px; }
