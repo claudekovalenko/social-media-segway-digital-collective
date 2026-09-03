@@ -2169,3 +2169,37 @@ body.journey.ig .video-placeholder { aspect-ratio: auto; height: 190px; }
 body.journey.ig .video-frame { aspect-ratio: auto; height: 210px; }
 body.journey.ig .step-body { transition: grid-template-rows .42s cubic-bezier(.22,.8,.18,1); }
 body.journey.ig .step-inner { will-change: auto; contain: content; }
+
+/* ---- The creators page ------------------------------------------------ */
+body.ig .directory-full .dir-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px;
+}
+body.ig .directory-full .dir-av {
+  flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 0.95rem; font-weight: 600; color: var(--ig-text);
+  border: 2px solid transparent;
+  background: linear-gradient(#1d1d1d, #1d1d1d) padding-box, var(--ig-grad) border-box;
+  box-shadow: 0 0 16px rgba(220,39,67,0.3);
+}
+body.ig .directory-full .dir-person { display: grid; gap: 1px; flex: 1; min-width: 0; }
+body.ig .directory-full .dir-handle { font-size: 0.92rem; font-weight: 600; }
+body.ig .directory-full .dir-name { font-size: 0.8rem; color: var(--ig-dim); }
+body.ig .directory-full .dir-tag {
+  font-size: 0.72rem; padding: 4px 10px; border-radius: 999px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: var(--ig-dim);
+}
+body.ig .dir-example { opacity: 0.55; }
+body.ig .dir-example .dir-av { background: linear-gradient(#1d1d1d, #1d1d1d) padding-box, linear-gradient(#3a3a3a, #3a3a3a) border-box; box-shadow: none; }
+
+/* Bottom of the page: smaller, quieter, and the CTA as one warm card. */
+body.ig .note-block .land-title, body.ig #joinCta .land-title { font-size: 1.2rem; }
+body.ig .note-block .land-copy, body.ig #joinCta .land-copy { font-size: 0.88rem; line-height: 1.6; }
+body.ig #joinCta {
+  margin-top: 26px; padding: 20px 18px 18px; border-radius: 16px;
+  background: #151515; border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 24px 60px rgba(188,24,136,0.18), 0 8px 24px rgba(240,148,51,0.10), 0 12px 30px rgba(0,0,0,0.45);
+}
+body.ig #joinCta .sec-kicker { margin-bottom: 6px; }
+body.ig .cta-row { display: flex; gap: 8px; margin-top: 14px; }
+body.ig .cta-row .btn-primary, body.ig .cta-row .btn-ghost { flex: 1; text-align: center; padding: 11px 14px; font-size: 0.9rem; }
+body.landing.ig footer { font-size: 0.78rem; }

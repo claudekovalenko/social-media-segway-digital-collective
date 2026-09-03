@@ -23,7 +23,7 @@
 
     <header class="hero">
       <h1>The <em>creators</em></h1>
-      <p class="hero-sub">Everyone building discipleship on their platform &mdash; and what they carry. Tap a creator to walk their journey page.</p>
+      <p class="hero-sub">Everyone building discipleship on their platform. Tap a creator to walk their journey.</p>
     </header>
 
     <div class="topic-filter" id="topicFilter" hidden></div>
@@ -33,13 +33,15 @@
     </div>
 
     <section class="land-section note-block">
+      <p class="sec-kicker plain"><span aria-hidden="true"></span></p>
       <h2 class="land-title">A word about what you'll find here</h2>
-      <p class="land-copy">Digital Collective is a hub, not a broadcaster. Every creator signs our <a href="beliefs.html">statement of faith</a>, but <strong>their content isn't vetted by us</strong>, and being listed here isn't our endorsement of everything they teach. Be a Berean &mdash; test everything against Scripture (Acts 17:11) &mdash; and bring what you're learning to a trusted local pastor. Everything here is a first step toward healthy, in-person community, not a replacement for it.</p>
+      <p class="land-copy">We're a hub, not a broadcaster. Every creator signs our <a href="beliefs.html">statement of faith</a>, but their content isn't vetted or endorsed by us. Test everything against Scripture (Acts 17:11), and bring what you're learning to a local pastor.</p>
     </section>
 
     <section class="land-section" id="joinCta">
+      <p class="sec-kicker plain"><span aria-hidden="true"></span></p>
       <h2 class="land-title">Create with us</h2>
-      <p class="land-copy">If you're making content that points people to Jesus, there's room for you here. You'll get your own link, your own topic tag on this page, and a dashboard of the people responding. Creators in the collective hold to our <a href="beliefs.html">statement of faith</a>, including the inerrancy and final authority of Scripture.</p>
+      <p class="land-copy">Making content that points people to Jesus? You'll get your own link, your topic on this page, and a dashboard of everyone responding.</p>
       <div class="cta-row">
         <a class="btn-primary" href="login.html?join=1">Join the collective</a>
         <a class="btn-ghost" href="beliefs.html">What we believe</a>
@@ -88,6 +90,10 @@
         row.className = 'dir-row' + (c.example ? ' dir-example' : '');
         if (!c.example) row.href = 'journey.html?creator=' + encodeURIComponent(c.slug);
 
+        // An initial in a ring, like a profile row.
+        const av = document.createElement('span');
+        av.className = 'dir-av';
+        av.textContent = ((c.name || c.handle || '?').replace('@', '').trim().charAt(0) || '?').toUpperCase();
         const left = document.createElement('span');
         left.className = 'dir-person';
         const handle = document.createElement('span');
@@ -102,7 +108,7 @@
         tag.className = 'dir-tag';
         tag.textContent = c.topic || 'creator';
 
-        row.append(left, tag);
+        row.append(av, left, tag);
         list.appendChild(row);
       }
     }
