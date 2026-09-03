@@ -1554,3 +1554,13 @@ body.ig .ig-stories { padding-bottom: 6px; }
 body.ig .ig-stories + .land-section, body.ig .land-section:first-of-type {
   margin-top: 12px; padding-top: 20px;
 }
+
+/* The story rings now sit under the sample; give them a section's rhythm. */
+body.ig .ig-stories { padding: 22px 0 6px; margin-top: 14px; position: relative; }
+body.ig .ig-stories::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, #333 20%, #333 80%, transparent);
+}
+body.ig .ig-stories + .land-section { margin-top: 12px; padding-top: 20px; }
+body.ig .ig-actions + .land-section { margin-top: 18px; padding-top: 0; }
+body.ig .ig-actions + .land-section::before { display: none; }
