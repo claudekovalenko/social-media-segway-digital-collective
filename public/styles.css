@@ -1695,3 +1695,28 @@ body.journey.ig .gather-help {
   border-radius: 12px; padding: 12px 14px; font-size: 0.86rem; color: var(--ig-dim);
 }
 body.journey.ig .partner-link { width: 100%; text-align: center; border-radius: 12px; }
+
+/* The nav floats as a pill, inset from the edges, riding down the page. */
+body.ig .site-nav {
+  position: sticky; top: 10px; z-index: 20;
+  margin: 10px 6px 18px; padding: 10px 14px;
+  border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 32px rgba(0,0,0,0.45);
+}
+
+/* Wayfinding: each section opens with a numbered gradient kicker and a
+   larger title, so the eye can find the stops on the way down. */
+body.ig .sec-kicker { margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+body.ig .sec-kicker span {
+  display: inline-grid; place-items: center; width: 26px; height: 26px;
+  border-radius: 8px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
+  color: #fff; background: var(--ig-grad);
+  box-shadow: 0 4px 14px rgba(220,39,67,0.35);
+}
+body.ig .sec-kicker::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.18), transparent);
+}
+body.ig .land-title { font-size: 1.5rem; line-height: 1.2; margin-bottom: 8px; }
+body.ig .land-section { margin-top: 30px; padding-top: 26px; }
+body.ig .land-section::before { display: none; }
