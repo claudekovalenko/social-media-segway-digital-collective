@@ -1720,3 +1720,9 @@ body.ig .sec-kicker::after {
 body.ig .land-title { font-size: 1.5rem; line-height: 1.2; margin-bottom: 8px; }
 body.ig .land-section { margin-top: 30px; padding-top: 26px; }
 body.ig .land-section::before { display: none; }
+
+/* Sections that aren't steps keep the kicker rule but trade the number
+   for a small gradient dot, so they still catch the eye without counting. */
+body.ig .sec-kicker.plain span {
+  width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 14px rgba(220,39,67,0.5);
+}
