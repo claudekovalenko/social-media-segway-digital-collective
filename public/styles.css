@@ -2251,3 +2251,7 @@ body.journey.ig header.hero::after {
 body.journey.ig .creator-badge { margin-top: 12px; }
 body.journey.ig .steps { margin-top: 6px; }
 @media (min-width: 900px) { body.journey.ig header.hero { padding: 18px 0 18px; } }
+
+/* No brand on the steps page; the flag alone, tucked to the right. */
+body.journey.ig .topbar { justify-content: flex-end; padding: 8px 0 0; margin-bottom: -30px; position: relative; z-index: 6; }
+body.journey.ig header.hero { padding-top: 14px; }
