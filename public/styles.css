@@ -8,9 +8,9 @@
   --edge-lit: #333333;
   --text: #f6f6f4;
   --text-dim: #8f8f8b;
-  --lime: #c5f04c;
-  --lime-ink: #131602;
-  --ok: #a7dcae;
+  --lime: #f5f5f5;
+  --lime-ink: #0a0a0a;
+  --ok: #0095f6;
   --err: #e0a0a0;
   /* one duration and one easing for every transition on the page */
   --motion: .22s;
@@ -33,7 +33,7 @@ body {
 .glow {
   position: fixed; inset: -20% -40% auto;
   height: 55vh; pointer-events: none; z-index: 0;
-  background: radial-gradient(ellipse 55% 60% at 50% 0%, rgba(197, 240, 76, 0.05), transparent 70%);
+  background: radial-gradient(ellipse 55% 60% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 70%);
 }
 .wrap { position: relative; z-index: 1; max-width: 420px; margin: 0 auto; padding: 24px 28px 56px; }
 
@@ -117,7 +117,7 @@ header.hero h1 em { font-style: normal; color: var(--lime); }
 }
 .step-card:hover .step-icon, .step-card.open .step-icon { border-color: var(--lime); color: var(--lime); }
 /* A finished step keeps its icon lit. */
-.step-card.done .step-icon { border-color: var(--lime); color: var(--lime); background: rgba(197, 240, 76, 0.08); }
+.step-card.done .step-icon { border-color: var(--lime); color: var(--lime); background: rgba(255, 255, 255, 0.08); }
 .step-card h2 {
   flex: 1; text-align: center;
   font-size: 0.98rem; font-weight: 600; letter-spacing: -0.01em;
@@ -644,12 +644,12 @@ body.wide footer { animation-delay: 0.38s; }
 /* 2 — the path lights up behind you */
 .step-card + .step-card::before { transition: background var(--motion) var(--ease); }
 .step-card.done + .step-card::before { background: var(--lime); }
-.step-card.done { border-color: rgba(197, 240, 76, 0.45); }
+.step-card.done { border-color: rgba(255, 255, 255, 0.45); }
 
 /* 3 — focus on the open step */
 .step-card.open {
-  border-color: rgba(197, 240, 76, 0.55);
-  box-shadow: 0 0 90px rgba(197, 240, 76, 0.07), 0 0 0 1px rgba(197, 240, 76, 0.06);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 90px rgba(255, 255, 255, 0.07), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 body.journey:has(.step-card.open) .step-card:not(.open) { opacity: 0.55; }
 body.journey .step-card { transition: border-color var(--motion) var(--ease),
@@ -662,7 +662,7 @@ body.journey .hero h1 {
   font-weight: 500; letter-spacing: -0.03em; line-height: 1.04;
 }
 body.journey .hero { margin: 26px 0 34px; }
-body.journey .overline { color: rgba(197, 240, 76, 0.75); }
+body.journey .overline { color: rgba(255, 255, 255, 0.75); }
 
 /* Anyone who asks for less motion gets a still page. */
 @media (prefers-reduced-motion: reduce) {
@@ -765,9 +765,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 body::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse 45% 32% at 18% -4%, rgba(197, 240, 76, 0.10), transparent 65%),
-    radial-gradient(ellipse 50% 38% at 88% 12%, rgba(88, 210, 190, 0.07), transparent 70%),
-    radial-gradient(ellipse 60% 42% at 50% 108%, rgba(197, 240, 76, 0.05), transparent 70%);
+    radial-gradient(ellipse 45% 32% at 18% -4%, rgba(255, 255, 255, 0.10), transparent 65%),
+    radial-gradient(ellipse 50% 38% at 88% 12%, rgba(255, 255, 255, 0.07), transparent 70%),
+    radial-gradient(ellipse 60% 42% at 50% 108%, rgba(255, 255, 255, 0.05), transparent 70%);
 }
 .glow { display: none; }
 
@@ -789,12 +789,12 @@ body::before {
 .step-card {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
-.step-card:hover { border-color: rgba(197, 240, 76, 0.6); }
+.step-card:hover { border-color: rgba(255, 255, 255, 0.6); }
 .step-card.open {
   background: rgba(255, 255, 255, 0.04);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
               0 24px 80px rgba(0, 0, 0, 0.5),
-              0 0 90px rgba(197, 240, 76, 0.08);
+              0 0 90px rgba(255, 255, 255, 0.08);
 }
 
 /* The nav becomes a floating glass bar. */
@@ -810,15 +810,15 @@ body::before {
 
 /* The accent blooms. */
 .btn-primary, button[type="submit"], .partner-link {
-  box-shadow: 0 0 0 1px rgba(197, 240, 76, 0.25),
-              0 8px 30px rgba(197, 240, 76, 0.22);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25),
+              0 8px 30px rgba(255, 255, 255, 0.22);
 }
 .btn-primary:hover, button[type="submit"]:hover:not(:disabled) {
-  box-shadow: 0 0 0 1px rgba(197, 240, 76, 0.4),
-              0 10px 44px rgba(197, 240, 76, 0.32);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4),
+              0 10px 44px rgba(255, 255, 255, 0.32);
 }
 .hero em {
-  background: linear-gradient(100deg, var(--lime) 20%, #eaffab 55%, var(--lime) 85%);
+  background: linear-gradient(100deg, var(--lime) 20%, #ffffff 55%, var(--lime) 85%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
 }
@@ -830,11 +830,11 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus {
   border-color: var(--lime);
-  box-shadow: 0 0 24px rgba(197, 240, 76, 0.12);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.12);
 }
 
 /* Step circles glow faintly; the rail brightens between them. */
-.bubble b { box-shadow: 0 0 26px rgba(197, 240, 76, 0.1); }
+.bubble b { box-shadow: 0 0 26px rgba(255, 255, 255, 0.1); }
 .bubble-join { background: rgba(255, 255, 255, 0.14); }
 .step-card + .step-card::before { background: rgba(255, 255, 255, 0.12); }
 .step-icon { background: rgba(255, 255, 255, 0.03); }
@@ -926,7 +926,7 @@ input, select, textarea { border-radius: 12px; }
   width: min(232px, 62vw); margin: 30px auto 10px; padding: 9px;
   border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.12);
   background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 0 0 70px rgba(197, 240, 76, 0.05);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 0 0 70px rgba(255, 255, 255, 0.05);
 }
 .device-screen {
   border-radius: 22px; padding: 20px 14px 22px;
@@ -971,7 +971,7 @@ input, select, textarea { border-radius: 12px; }
 .device-step.is-open {
   display: grid; gap: 6px; border-radius: 16px; padding: 10px;
   background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(197, 240, 76, 0.45);
+  border-color: rgba(255, 255, 255, 0.45);
 }
 .device-step.is-open b { font-size: 0.64rem; text-align: center; margin-bottom: 1px; }
 .device-video {
@@ -1203,143 +1203,7 @@ body.ig .dir-empty {
 body.ig .note-block { border-top: 0; padding-top: 18px; }
 body.ig footer { border-top: 0; padding-top: 22px; text-align: center; }
 
-
-/* ==================================================================
-   EDITORIAL — light, warm, printed.
-   The neon-on-black palette reads as crypto/gaming; this reads as a
-   publisher or a foundation. Paper ground, ink text, one deep green
-   accent, a serif for display and a neutral sans for interface.
-   ================================================================== */
-:root {
-  --p-paper:  #faf8f4;   /* warm paper, never pure white */
-  --p-raised: #ffffff;
-  --p-line:   #e5e0d8;
-  --p-ink:    #17150f;
-  --p-muted:  #6d6759;
-  --p-green:  #2f5d4f;   /* deep, planted — growth, not neon */
-  --p-green-d:#24483d;
+/* Secondary note under a section's main claim. */
+body.ig .land-copy.fine-print, .land-copy.fine-print {
+  font-size: 0.82rem; color: var(--ig-dim); margin-top: 8px;
 }
-
-body {
-  background: var(--p-paper); color: var(--p-ink);
-  font-family: Inter, system-ui, -apple-system, sans-serif;
-  font-size: 16px; line-height: 1.6;
-}
-body::before, body::after, .glow { display: none !important; }
-
-/* Display type is the serif; everything functional stays sans. */
-h1, h2, h3, .land-title, .hero h1, header.hero h1, .device-title, .ig-name {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 600; letter-spacing: -0.015em; color: var(--p-ink);
-}
-header.hero h1, .hero h1 {
-  font-size: clamp(2.1rem, 7.5vw, 3rem); line-height: 1.12; font-weight: 600;
-}
-.hero h1 em {
-  font-style: italic; font-weight: 600; color: var(--p-green);
-  background: none; -webkit-text-fill-color: currentColor;
-}
-.hero-sub, .land-copy, p { color: var(--p-muted); }
-.land-title { font-size: 1.28rem; }
-.overline, .section {
-  color: var(--p-muted); letter-spacing: 0.12em; font-weight: 600;
-  font-family: Inter, sans-serif;
-}
-
-/* Surfaces: white cards on paper, hairline borders, a whisper of shadow. */
-.step-card, .app-card, .dir-row, .gather-help, .device, .table-scroll {
-  background: var(--p-raised); border: 1px solid var(--p-line);
-  border-radius: 16px; box-shadow: 0 1px 2px rgba(23,21,15,0.04);
-  backdrop-filter: none;
-}
-.step-card:hover { border-color: #cfc8bb; }
-.step-card.open {
-  background: var(--p-raised); border-color: #cfc8bb;
-  box-shadow: 0 8px 30px rgba(23, 21, 15, 0.07);
-}
-.step-card + .step-card { margin-top: 12px; }
-.step-card + .step-card::before { display: none; }
-.site-nav {
-  background: rgba(250,248,244,0.9); border: 0;
-  border-bottom: 1px solid var(--p-line); border-radius: 0;
-  margin: 0 -28px 20px; padding: 14px 28px;
-}
-
-/* Actions: solid ink-green, quiet ghost. */
-.btn-primary, button[type="submit"], .partner-link, .device-cta {
-  background: var(--p-green); color: #fff; box-shadow: none;
-  border-radius: 10px; font-weight: 600; font-family: Inter, sans-serif;
-}
-.btn-primary:hover, button[type="submit"]:hover:not(:disabled) {
-  background: var(--p-green-d); transform: none; box-shadow: none;
-}
-.btn-ghost, .nav-login, .tab, button.secondary {
-  background: var(--p-raised); border: 1px solid var(--p-line);
-  color: var(--p-ink); border-radius: 10px; font-weight: 600;
-}
-.tab.on { background: var(--p-ink); color: var(--p-paper); border-color: var(--p-ink); }
-
-/* Fields. */
-input, select, textarea {
-  background: var(--p-raised); border: 1px solid var(--p-line);
-  color: var(--p-ink); border-radius: 10px;
-}
-input::placeholder, textarea::placeholder { color: #9b9486; }
-input:focus, select:focus, textarea:focus {
-  border-color: var(--p-green); box-shadow: 0 0 0 3px rgba(47,93,79,0.12);
-}
-
-/* Step marks and numbers. */
-.step-icon, .bubble b {
-  background: #f1ede5; border: 1px solid var(--p-line); color: var(--p-green);
-}
-.step-icon::before, .bubble b::before { display: none; }
-.step-card:hover .step-icon, .step-card.open .step-icon,
-.step-card.done .step-icon { border-color: var(--p-green); color: var(--p-green); background: #e8f0eb; }
-.bubble-join { background: var(--p-line); }
-
-/* Links: underlined on hover, ink by default. */
-a { color: var(--p-ink); }
-.land-copy a, .prose-body a, .see-all a, .dir-empty a { color: var(--p-green); font-weight: 500; }
-.aside-link, .check.fine { color: var(--p-muted); }
-.check.fine a { color: var(--p-muted); }
-.dir-tag { background: #f1ede5; border: 1px solid var(--p-line); color: var(--p-muted); }
-footer { color: var(--p-muted); border-top: 1px solid var(--p-line); padding-top: 22px; }
-footer a { color: var(--p-muted); }
-
-/* The phone mockup keeps a dark screen — it's a phone. */
-.device { background: #f1ede5; }
-.device-screen { background: #17150f; border-color: #2a2721; }
-.device-screen .device-title { color: #faf8f4; font-family: Fraunces, serif; }
-.device-title em { color: #9ec3b4; }
-.device-eyebrow { color: #9ec3b4; }
-.device-step { border-color: #34302a; color: #faf8f4; }
-.device-step.is-open { background: #201d17; border-color: #4a6b5e; }
-.device-video { border-color: #34302a; color: #7d766a; }
-.device-field { border-color: #34302a; }
-.device-caption { color: var(--p-muted); }
-
-/* Data pages read as documents. */
-th { color: var(--p-muted); }
-th, td { border-bottom-color: var(--p-line); }
-.creator-bar { border-bottom-color: var(--p-line); }
-.stat b { color: var(--p-green); }
-.prose-body h2 { font-family: Fraunces, serif; }
-
-/* Wordmark and small print in the editorial theme. */
-.brand { color: var(--p-ink); }
-.dc-mark { color: var(--p-green); }
-.fine-print { font-size: 0.86rem; color: #857e70; }
-.note-block { border-top-color: var(--p-line); }
-.dir-empty { border-color: var(--p-line); color: var(--p-muted); }
-.bubble > span { color: var(--p-ink); }
-.bubble-caption { color: var(--p-muted); }
-.land-section { border: 0; }
-
-/* These lose to older, more specific rules unless matched exactly. */
-header.hero h1 em, .hero h1 em {
-  color: var(--p-green); font-style: italic;
-  background: none; -webkit-text-fill-color: currentColor;
-}
-.site-nav .brand .dc-mark, .brand .dc-mark, footer .dc-mark { color: var(--p-green); }
-body .step-icon { color: var(--p-green); }
