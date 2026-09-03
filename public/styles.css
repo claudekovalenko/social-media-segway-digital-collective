@@ -2283,3 +2283,7 @@ body.journey.ig .step-inner > * + * { margin-top: 12px; }
 body.journey.ig .partner-link { display: block; padding: 12px 18px; font-size: 0.95rem; }
 body.journey.ig .gather-help { margin-top: 12px; }
 body.journey.ig form { margin-top: 12px; }
+
+/* In the sample: the name leads, the bio is small under it. */
+body.ig .phone-frame .bs-name { font-size: 14px; margin-top: 10px; }
+body.ig .phone-frame .bs-bio { font-size: 11px; line-height: 1.45; color: #d0d0d0; margin-top: 2px; }
