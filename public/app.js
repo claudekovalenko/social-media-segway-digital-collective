@@ -51,6 +51,11 @@ function embed(containerId, url, placeholderText) {
 }
 
 async function loadCreator() {
+  // Show the placeholders at once; the network fills in real videos when it
+  // answers, so the first open never shows an empty slot.
+  embed('video-know_god', '', t('vid1'));
+  embed('video-grow_with_god', '', t('vid2'));
+  embed('video-find_church', '', t('vid3'));
   let creator = { slug: 'default', name: null, mode: 'default', defaults: DEFAULT_CONTENT };
   try {
     const res = await fetch(`${API_BASE}/api/creators/${encodeURIComponent(creatorSlug)}`);
