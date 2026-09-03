@@ -1627,3 +1627,71 @@ body.ig .ig-actions::after {
   content: ''; position: absolute; left: 20%; right: 20%; bottom: 0; height: 2px;
   border-radius: 2px; background: var(--ig-grad); opacity: 0.7; filter: blur(0.4px);
 }
+
+/* ==================================================================
+   THE STEPS PAGE, matched to the home page: frosted cards, glowing
+   rings, a warm wash, everything left-aligned and one size smaller.
+   ================================================================== */
+body.journey.ig .wrap::before { height: 360px; opacity: 0.8; }
+body.journey.ig header.hero { padding: 22px 0 18px; }
+body.journey.ig .hero h1 { margin-bottom: 8px; }
+body.journey.ig .hero-sub { font-size: 0.92rem; max-width: 34ch; }
+
+body.journey.ig .steps { position: relative; display: grid; gap: 10px; }
+body.journey.ig .steps::before {
+  content: ''; position: absolute; inset: -30px -40px; z-index: -1;
+  filter: blur(44px); pointer-events: none; opacity: 0.5;
+  background:
+    radial-gradient(ellipse 40% 30% at 8% 10%, rgba(240,148,51,0.35), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 10% 50%, rgba(220,39,67,0.30), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 12% 90%, rgba(188,24,136,0.35), transparent 70%);
+}
+body.journey.ig .step-card {
+  margin: 0; padding: 2px 14px; border-radius: 16px; isolation: isolate;
+  background: rgba(24, 24, 24, 0.55); border: 1px solid rgba(255,255,255,0.10);
+  -webkit-backdrop-filter: saturate(140%) blur(16px); backdrop-filter: saturate(140%) blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 22px rgba(0,0,0,0.3);
+}
+body.journey.ig .step-card + .step-card { margin-top: 0; }
+body.journey.ig .step-card:hover, body.journey.ig .step-card.open {
+  border-color: rgba(255,255,255,0.2); background: rgba(24, 24, 24, 0.7);
+}
+body.journey.ig .step-head { padding: 12px 0; gap: 14px; }
+body.journey.ig .step-head h2 {
+  flex: 1; text-align: left; font-size: 1rem; font-weight: 600; letter-spacing: -0.01em;
+}
+body.journey.ig .step-icon {
+  width: 44px; height: 44px; border-width: 2.5px;
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 24px rgba(220,39,67,0.45);
+}
+body.journey.ig .step-card:nth-of-type(1) .step-icon { box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 24px rgba(240,148,51,0.5); }
+body.journey.ig .step-card:nth-of-type(3) .step-icon { box-shadow: 0 0 0 4px rgba(0,0,0,0.6), 0 0 24px rgba(188,24,136,0.5); }
+body.journey.ig .step-icon svg { width: 18px; height: 18px; }
+body.journey.ig .step-chevron { color: var(--ig-dim); }
+body.journey.ig .step-card.open .step-inner { padding: 0 0 14px; }
+
+/* The video slot: a quiet tile with a play mark, not a dashed box. */
+body.journey.ig .video-placeholder {
+  aspect-ratio: 16/9; min-height: 0; border: 0; border-radius: 12px;
+  background: linear-gradient(160deg, #1a1a1a, #0c0c0c);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  color: var(--ig-dim); font-size: 0.82rem; padding: 14px 18px;
+}
+body.journey.ig .video-frame { border-radius: 12px; }
+
+/* Fields: full width, quiet, one blue verb. */
+body.journey.ig form { gap: 8px; margin-top: 12px; }
+body.journey.ig input, body.journey.ig select, body.journey.ig textarea {
+  padding: 12px 14px; font-size: 0.95rem; border-radius: 12px;
+  background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.10);
+}
+body.journey.ig .check.fine { font-size: 0.74rem; line-height: 1.45; margin: 2px 2px 4px; }
+body.journey.ig .check.fine a { color: var(--ig-dim); }
+body.journey.ig button[type="submit"] {
+  width: 100%; padding: 12px 18px; border-radius: 12px; font-size: 0.95rem;
+}
+body.journey.ig .gather-help {
+  background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 12px 14px; font-size: 0.86rem; color: var(--ig-dim);
+}
+body.journey.ig .partner-link { width: 100%; text-align: center; border-radius: 12px; }
