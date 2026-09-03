@@ -28,8 +28,8 @@ const PLACEHOLDER_KEYS = { know_god: 'vid1', grow_with_god: 'vid2', find_church:
 // Re-label any placeholder that is still showing, after a language change.
 function refreshVideoPlaceholders() {
   for (const [step, key] of Object.entries(PLACEHOLDER_KEYS)) {
-    const el = document.querySelector(`#video-${step} .video-placeholder`);
-    if (el) el.textContent = '▶ ' + t(key);
+    const el = document.querySelector(`#video-${step} .ph-label`);
+    if (el) el.textContent = t(key);
   }
 }
 
@@ -45,7 +45,13 @@ function embed(containerId, url, placeholderText) {
   } else {
     const ph = document.createElement('div');
     ph.className = 'video-placeholder';
-    ph.textContent = '▶ ' + placeholderText;
+    const play = document.createElement('span');
+    play.className = 'play-mark';
+    play.setAttribute('aria-hidden', 'true');
+    const label = document.createElement('span');
+    label.className = 'ph-label';
+    label.textContent = placeholderText;
+    ph.append(play, label);
     el.replaceChildren(ph);
   }
 }
@@ -86,7 +92,6 @@ async function loadCreator() {
     creator.gather_url ? null : (fallback.gather_label || null)
   );
 }
-loadCreator();
 
 // ---- country + language picker ------------------------------------------
 // Stored with each lead so groups can be formed by region and language.
@@ -330,3 +335,6 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     }
   });
 });
+
+// Runs last so every constant above (locale, strings) is initialised first.
+loadCreator();
