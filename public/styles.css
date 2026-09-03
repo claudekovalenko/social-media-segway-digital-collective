@@ -2146,3 +2146,26 @@ body.ig .site-nav {
   background: rgba(12,12,12,0.72);
 }
 body.ig .j-row:hover, body.ig .coll-row:hover, body.ig .directory-full .dir-row:hover { transform: none; }
+
+/* The last two shakes.
+   1. A sticky element inside a clipped container jitters on iOS; the
+      column no longer clips, and the nav goes solid — the blur was the
+      other half of the shake.
+   2. The step contents no longer translate while the card is resizing;
+      they only fade, and the video tile holds a fixed height during
+      the open so nothing re-measures mid-animation. */
+body.ig .wrap { overflow: visible; }
+html, body { overflow-x: clip; }
+body.ig .site-nav {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  background: rgba(14, 14, 14, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 32px rgba(0,0,0,0.45);
+}
+body.journey.ig .step-inner > *, body.journey.ig .step-card.open .step-inner > * {
+  transform: none; transition-property: opacity;
+}
+body.journey.ig .step-card.open .step-icon { transform: none; }
+body.journey.ig .video-placeholder { aspect-ratio: auto; height: 190px; }
+body.journey.ig .video-frame { aspect-ratio: auto; height: 210px; }
+body.journey.ig .step-body { transition: grid-template-rows .42s cubic-bezier(.22,.8,.18,1); }
+body.journey.ig .step-inner { will-change: auto; contain: content; }
