@@ -1895,3 +1895,47 @@ body.journey.ig .step-card.open {
 @media (prefers-reduced-motion: reduce) {
   body.journey.ig .step-inner > *, body.journey.ig .step-card.open .step-inner > * { transition: none; transform: none; opacity: 1; }
 }
+
+/* ==================================================================
+   DESKTOP. The phone column stays the design; on a wide screen the
+   home page splits into a sticky profile on the left and the sections
+   on the right, the steps page and prose take a wider measure, and
+   the back end uses the room it already had.
+   ================================================================== */
+@media (min-width: 900px) {
+  body.ig .wrap { max-width: 1040px; padding: 0 32px 80px; }
+  body.ig .site-nav { margin: 14px 0 26px; }
+  body.home.ig .wrap > .ig-side + .ig-main { min-width: 0; }
+  body.home.ig .wrap {
+    display: grid; grid-template-columns: 360px minmax(0, 1fr);
+    column-gap: 64px; align-items: start;
+  }
+  body.home.ig .site-nav { grid-column: 1 / -1; }
+  body.home.ig .ig-side { position: sticky; top: 90px; grid-column: 1; }
+  body.home.ig .ig-main { grid-column: 2; }
+  body.home.ig .ig-main > .land-section:first-child { margin-top: 0; padding-top: 0; }
+  body.landing.ig .ig-actions { padding-bottom: 20px; }
+  body.landing.ig .land-title { font-size: 1.7rem; }
+  body.landing.ig .phone-frame { width: 72%; max-width: 340px; margin-left: 0; }
+  body.landing.ig .journey-list { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  body.landing.ig .j-row { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
+  body.landing.ig .j-row .coll-go { display: none; }
+  body.home.ig .wrap::before { height: 520px; }
+  body.home.ig footer { grid-column: 1 / -1; }
+
+  body.journey.ig .wrap { max-width: 640px; }
+  body.journey.ig header.hero { padding: 36px 0 26px; }
+  body.journey.ig .hero h1 { font-size: 2.6rem; }
+  body.journey.ig .step-head { padding: 16px 4px; }
+  body.journey.ig .step-card { padding: 2px 18px; }
+
+  body.prose.ig .wrap { max-width: 720px; }
+  body.prose.ig .prose-body p, body.prose.ig .prose-body li { font-size: 1.02rem; }
+
+  body.wide.ig .wrap { max-width: min(1360px, 94vw); }
+  body.wide.ig .stat-row { max-width: 640px; }
+  body.ig .wrap-narrow { max-width: 520px; }
+}
+@media (min-width: 1200px) {
+  body.home.ig .wrap { grid-template-columns: 400px minmax(0, 1fr); column-gap: 88px; }
+}
