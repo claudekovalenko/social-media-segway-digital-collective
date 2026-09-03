@@ -1002,3 +1002,111 @@ input, select, textarea { border-radius: 12px; }
 .check.fine a { color: #9a9a95; text-decoration: underline; text-underline-offset: 2px; }
 .check.fine a:hover { color: var(--lime); }
 .step-card form button { margin-top: 5px; }
+
+
+/* ==================================================================
+   INSTAGRAM DIRECTION
+   What actually makes Instagram look like Instagram:
+   1. near-black, not black — #000 with lifted surfaces at #121212/#1c1c1c
+   2. the gradient reserved for one thing: the ring around an avatar
+   3. hairline separators instead of cards; content sits directly on the page
+   4. a compact, tight-tracked UI font — nothing decorative
+   5. dense but airy: 12–14px UI text, generous line height
+   ================================================================== */
+
+:root {
+  --ig-bg: #000000;
+  --ig-surface: #121212;
+  --ig-surface-2: #1c1c1e;
+  --ig-line: #262626;
+  --ig-text: #f5f5f5;
+  --ig-dim: #a8a8a8;
+  --ig-blue: #0095f6;            /* the action colour — one job only */
+  --ig-grad: linear-gradient(45deg, #f09433, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888);
+}
+
+body.ig { background: var(--ig-bg); color: var(--ig-text); }
+body.ig::before,
+body.ig::after { display: none; }          /* no aurora, no grain — IG is flat */
+body.ig .glow { display: none; }
+
+/* Type: compact, tight, unfussy. */
+body.ig { font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif; }
+body.ig .hero h1, body.ig header.hero h1 {
+  font-size: clamp(1.9rem, 8vw, 2.5rem); font-weight: 700;
+  letter-spacing: -0.045em; line-height: 1.08;
+}
+body.ig .hero h1 em { color: var(--ig-text); font-style: normal; -webkit-text-fill-color: initial; background: none; }
+body.ig .hero-sub { color: var(--ig-dim); font-size: 0.94rem; }
+body.ig .land-title { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+body.ig .overline { color: var(--ig-dim); font-size: 0.68rem; }
+
+/* Surfaces: hairlines, not cards. */
+body.ig .step-card, body.ig .app-card, body.ig .dir-row, body.ig .gather-help {
+  background: transparent; border: 0; border-radius: 0;
+  border-bottom: 1px solid var(--ig-line);
+  backdrop-filter: none; box-shadow: none;
+}
+body.ig .step-card.open { background: transparent; box-shadow: none; }
+body.ig .step-card + .step-card { margin-top: 0; }
+body.ig .step-card + .step-card::before { display: none; }
+body.ig .step-head { padding: 15px 2px; }
+body.ig .step-card.open .step-inner { padding: 0 2px 20px; }
+body.ig .site-nav {
+  background: rgba(0,0,0,0.85); border: 0; border-bottom: 1px solid var(--ig-line);
+  border-radius: 0; margin: 0 -28px 14px; padding: 12px 28px;
+}
+body.ig .table-scroll { border-top-color: var(--ig-line); }
+
+/* The gradient does one job: the ring. */
+body.ig .step-icon, body.ig .bubble b {
+  background: var(--ig-bg); border: 0; position: relative;
+  color: var(--ig-text);
+}
+body.ig .step-icon::before, body.ig .bubble b::before {
+  content: ""; position: absolute; inset: -2px; border-radius: 50%;
+  background: var(--ig-grad); z-index: -1;
+}
+body.ig .step-icon { box-shadow: 0 0 0 2px var(--ig-bg) inset; }
+body.ig .bubble b { color: var(--ig-text); box-shadow: 0 0 0 3px var(--ig-bg) inset; }
+body.ig .bubble-join { background: var(--ig-line); }
+
+/* Actions: Instagram blue, flat, no glow. */
+body.ig .btn-primary, body.ig button[type="submit"], body.ig .partner-link,
+body.ig .device-cta {
+  background: var(--ig-blue); color: #fff; box-shadow: none;
+  border-radius: 10px; font-weight: 600; letter-spacing: -0.01em;
+}
+body.ig .btn-primary:hover, body.ig button[type="submit"]:hover:not(:disabled) {
+  background: #1877f2; transform: none; box-shadow: none;
+}
+body.ig .btn-ghost, body.ig .nav-login, body.ig .tab {
+  background: var(--ig-surface-2); border: 0; color: var(--ig-text);
+  border-radius: 10px; font-weight: 600;
+}
+body.ig .tab.on { background: var(--ig-text); color: #000; }
+
+/* Fields: filled, soft-cornered, no outline until focus. */
+body.ig input, body.ig select, body.ig textarea {
+  background: var(--ig-surface); border: 1px solid var(--ig-line);
+  border-radius: 10px; color: var(--ig-text); font-size: 0.94rem;
+}
+body.ig input::placeholder, body.ig textarea::placeholder { color: #737373; }
+body.ig input:focus, body.ig select:focus, body.ig textarea:focus {
+  border-color: #4a4a4a; box-shadow: none;
+}
+
+/* Links and accents. */
+body.ig a { color: var(--ig-text); }
+body.ig .see-all a, body.ig .dir-empty a, body.ig .aside-link a:hover { color: var(--ig-blue); }
+body.ig .dir-tag {
+  background: var(--ig-surface-2); border: 0; color: var(--ig-dim);
+  border-radius: 6px; font-size: 0.7rem;
+}
+body.ig .device { border-color: var(--ig-line); background: var(--ig-surface); }
+body.ig .device-screen { background: #000; border-color: var(--ig-line); }
+body.ig .device-eyebrow { color: var(--ig-dim); }
+body.ig .device-title em { color: var(--ig-text); }
+body.ig .device-step { border-color: var(--ig-line); }
+body.ig .check.fine { color: #737373; }
+body.ig footer { color: #737373; border-top: 1px solid var(--ig-line); padding-top: 20px; }
