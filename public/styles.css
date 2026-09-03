@@ -1332,3 +1332,76 @@ body.ig .btn-ghost, body.ig .nav-login {
   border-radius: 10px; font-weight: 600;
 }
 body.ig .btn-ghost:hover, body.ig .nav-login:hover { background: var(--ig-line); }
+
+/* ---- Steps page: quieter, smaller, nothing lights up on tap ---------- */
+body.ig .step-card { padding: 4px 16px; border-radius: 14px; }
+body.ig .step-head { padding: 12px 0; gap: 12px; }
+body.ig .step-head h2 { font-size: 1.02rem; }
+body.ig .step-icon { width: 34px; height: 34px; }
+body.ig .step-card.open .step-inner { padding: 0 0 16px; }
+body.ig .step-card.open,
+body.ig .step-card:hover,
+body.ig .step-card.done { box-shadow: none; border-color: var(--ig-line); }
+body.ig .step-card.open { border-radius: 14px; background: var(--ig-surface); }
+body.journey.ig:has(.step-card.open) .step-card:not(.open) { opacity: 1; }
+body.ig .step-card:hover .step-icon,
+body.ig .step-card.open .step-icon { color: var(--ig-text); }
+body.ig button[type="submit"], body.ig .partner-link {
+  padding: 11px 18px; font-size: 0.92rem;
+}
+
+/* ---- Profile stats: value over label, three even columns ------------- */
+body.ig .ig-stats { gap: 0; justify-content: stretch; }
+body.ig .ig-stats span {
+  flex: 1; display: grid; justify-items: center; gap: 1px;
+  font-size: 12px; color: var(--ig-dim); line-height: 1.2;
+}
+body.ig .ig-stats b {
+  font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ---- The sample bio: a creator's profile with the link in place ------ */
+body.ig .bio-sample {
+  margin-top: 16px; padding: 18px 18px 14px;
+  background: var(--ig-surface); border: 1px solid var(--ig-line);
+  border-radius: 16px; font-size: 13px;
+}
+body.ig .bs-top { display: flex; align-items: center; gap: 18px; }
+body.ig .bs-avatar {
+  flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%;
+  display: grid; place-items: center; position: relative;
+  background: var(--ig-surface-2); color: var(--ig-text);
+  font-family: Fraunces, Georgia, serif; font-size: 1.1rem; font-weight: 600;
+}
+body.ig .bs-avatar::before {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  background: var(--ig-grad); z-index: -1;
+}
+body.ig .bs-avatar::after {
+  content: ''; position: absolute; inset: -1px; border-radius: 50%;
+  border: 2px solid var(--ig-surface);
+}
+body.ig .bs-stats { display: flex; flex: 1; }
+body.ig .bs-stats span {
+  flex: 1; display: grid; justify-items: center; gap: 1px;
+  font-size: 12px; color: var(--ig-dim);
+}
+body.ig .bs-stats b { font-size: 15px; font-weight: 600; color: var(--ig-text); }
+body.ig .bs-name { margin-top: 12px; font-weight: 600; font-size: 14px; }
+body.ig .bs-cat { color: var(--ig-dim); }
+body.ig .bs-bio { margin-top: 4px; line-height: 1.45; }
+body.ig .bs-link {
+  margin-top: 6px; display: inline-flex; align-items: center; gap: 5px;
+  color: #e0f1ff; background: rgba(0, 149, 246, 0.14);
+  border: 1px solid rgba(0, 149, 246, 0.45); border-radius: 8px;
+  padding: 5px 9px; font-weight: 600;
+}
+body.ig .bs-actions { display: flex; gap: 6px; margin-top: 12px; }
+body.ig .bs-actions span {
+  flex: 1; text-align: center; padding: 7px; border-radius: 8px;
+  background: var(--ig-surface-2); font-weight: 600; font-size: 13px;
+}
+body.ig .bs-note {
+  margin-top: 12px; text-align: center; font-size: 11px; color: var(--ig-dim);
+}
