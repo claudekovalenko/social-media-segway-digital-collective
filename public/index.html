@@ -57,12 +57,8 @@
 
     <section class="land-section">
       <h2 class="land-title">The collective</h2>
-      <p class="land-copy">Creators in the collective, and what they carry &mdash; <a href="creators.html">see them all</a>.</p>
-      <div id="directory" class="directory">
-        <p class="dir-empty">No creators yet &mdash; the collective is just forming.
-          <a href="login.html?join=1">Be the first.</a></p>
-      </div>
-      <p class="land-copy see-all"><a href="creators.html">All creators &amp; topics &rarr;</a></p>
+      <div id="directory" class="directory"></div>
+      <a class="ig-btn-wide" href="creators.html">See all creators</a>
     </section>
 
     <section class="land-section">
@@ -88,20 +84,27 @@
         const res = await fetch(API_BASE + '/api/directory');
         if (!res.ok) return;
         const { creators } = await res.json();
-        if (!creators || !creators.length) return;
         const wrap = document.getElementById('directory');
+        if (!creators || !creators.length) return;
         wrap.replaceChildren();
         for (const c of creators.slice(0, 4)) {
           const row = document.createElement('a');
           row.className = 'dir-row';
           row.href = 'journey.html?creator=' + encodeURIComponent(c.slug);
-          const handle = document.createElement('span');
-          handle.className = 'dir-handle';
-          handle.textContent = c.handle.startsWith('@') ? c.handle : '@' + c.handle;
+          const name = c.handle.startsWith('@') ? c.handle : '@' + c.handle;
+          // An initial in a ring, the way a profile row reads on Instagram.
+          const av = document.createElement('span');
+          av.className = 'dir-av';
+          av.textContent = name.replace('@', '').charAt(0).toUpperCase();
+          const meta = document.createElement('span');
+          meta.className = 'dir-meta';
+          const handle = document.createElement('b');
+          handle.textContent = name;
           const tag = document.createElement('span');
           tag.className = 'dir-tag';
           tag.textContent = c.topic || 'creator';
-          row.append(handle, tag);
+          meta.append(handle, tag);
+          row.append(av, meta);
           wrap.appendChild(row);
         }
       } catch { /* directory is decorative on the landing page */ }

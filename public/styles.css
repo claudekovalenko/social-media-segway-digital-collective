@@ -1207,3 +1207,40 @@ body.ig footer { border-top: 0; padding-top: 22px; text-align: center; }
 body.ig .land-copy.fine-print, .land-copy.fine-print {
   font-size: 0.82rem; color: var(--ig-dim); margin-top: 8px;
 }
+
+/* ------------------------------------------------------------------
+   The collective, as a list of profiles rather than a pitch.
+   Hairline rows, an initial in a story ring, one wide button beneath.
+   ------------------------------------------------------------------ */
+body.ig .directory { display: block; margin: 4px 0 14px; }
+body.ig .directory .dir-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border: 0; border-radius: 0; background: none;
+  border-bottom: 1px solid var(--ig-line);
+}
+body.ig .directory .dir-row:last-child { border-bottom: 0; }
+body.ig a.dir-row:hover { transform: none; border-color: transparent; }
+body.ig .dir-av {
+  flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center; position: relative;
+  background: var(--ig-surface); color: var(--ig-text);
+  font-size: 0.95rem; font-weight: 600;
+}
+body.ig .dir-av::before {
+  content: ''; position: absolute; inset: -2px; border-radius: 50%;
+  background: var(--ig-grad); z-index: -1;
+}
+body.ig .dir-meta { display: grid; gap: 1px; min-width: 0; }
+body.ig .dir-meta b { font-size: 0.88rem; font-weight: 600; }
+body.ig .dir-tag {
+  font-size: 0.8rem; color: var(--ig-dim);
+  background: none; border: 0; padding: 0;
+}
+body.ig .ig-btn-wide {
+  display: block; width: 100%; text-align: center; text-decoration: none;
+  padding: 9px 16px; border-radius: 8px;
+  background: var(--ig-surface-2); color: var(--ig-text);
+  font-size: 0.87rem; font-weight: 600;
+  transition: background var(--motion) var(--ease);
+}
+body.ig .ig-btn-wide:hover { background: var(--ig-line); }
