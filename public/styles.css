@@ -2277,3 +2277,9 @@ body.journey.ig {
 body.journey.ig header.hero h1, body.journey.ig .hero h1 {
   text-shadow: 0 0 40px rgba(240, 148, 51, 0.25), 0 0 80px rgba(220, 39, 67, 0.18);
 }
+
+/* Room between the video box and what follows it in step three. */
+body.journey.ig .step-inner > * + * { margin-top: 12px; }
+body.journey.ig .partner-link { display: block; padding: 12px 18px; font-size: 0.95rem; }
+body.journey.ig .gather-help { margin-top: 12px; }
+body.journey.ig form { margin-top: 12px; }
