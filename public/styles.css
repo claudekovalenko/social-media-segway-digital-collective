@@ -1846,3 +1846,21 @@ body.ig th { color: var(--ig-dim); font-weight: 600; font-size: 0.72rem; letter-
 body.ig td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 body.ig tr:last-child td { border-bottom: 0; }
 body.ig .dir-empty { color: var(--ig-dim); font-size: 0.88rem; padding: 8px 2px; }
+
+/* The shiver: a backdrop blur repainting every frame while the card's
+   height animates. Step cards get a solid-ish surface instead of blur;
+   the frost stays on things that never resize. The open transition
+   also moves to a single eased curve with the inner padding held
+   constant, so nothing jumps at the end. */
+body.journey.ig .step-card {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  background: rgba(22, 22, 22, 0.92);
+  transition: border-color var(--motion) var(--ease), background var(--motion) var(--ease);
+  will-change: auto; transform: none;
+}
+body.journey.ig .step-card:hover, body.journey.ig .step-card.open { background: rgba(26, 26, 26, 0.96); transform: none; }
+body.journey.ig .step-body { transition: grid-template-rows .3s cubic-bezier(.2,.7,.2,1); }
+body.journey.ig .step-inner { padding: 0; }
+body.journey.ig .step-card.open .step-inner { padding: 0 0 14px; }
+body.journey.ig .step-card, body.journey.ig .step-card.open { border-radius: 16px; }
+body.journey.ig .step-card:hover .step-icon { transform: none; }
