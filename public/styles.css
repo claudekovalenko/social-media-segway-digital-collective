@@ -1528,3 +1528,29 @@ body.ig .ig-ring.is-new, body.ig .bubble.is-new b {
 }
 body.ig .ig-avatar { border-width: 3px; }
 body.ig .bs-avatar { border-width: 2.5px; }
+
+/* Frosted glass, sprinkled: the floating nav, the phone, the collective row. */
+body.ig .site-nav {
+  background: rgba(10, 10, 10, 0.55);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  backdrop-filter: saturate(160%) blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03), 0 10px 30px rgba(0,0,0,0.35);
+}
+body.ig .phone-frame, body.ig .coll-row, body.ig .phone-tag {
+  background: rgba(24, 24, 24, 0.55);
+  -webkit-backdrop-filter: saturate(140%) blur(16px);
+  backdrop-filter: saturate(140%) blur(16px);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+body.ig .phone-frame .bio-sample { background: rgba(0,0,0,0.55); border-color: rgba(255,255,255,0.06); }
+body.ig .btn-ghost, body.ig .nav-login {
+  background: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+
+/* Close the gap between the story rings and the first section. */
+body.ig .ig-stories { padding-bottom: 6px; }
+body.ig .ig-stories + .land-section, body.ig .land-section:first-of-type {
+  margin-top: 12px; padding-top: 20px;
+}
