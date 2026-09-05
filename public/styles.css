@@ -2292,3 +2292,199 @@ body.ig .phone-frame .bs-bio { font-size: 11px; line-height: 1.45; color: #d0d0d
 body.ig .phone-frame .bs-name { font-size: 13px; }
 body.ig .phone-frame .bs-bio { font-size: 10px; line-height: 1.4; color: #bdbdbd; }
 body.ig .phone-frame .bs-link { font-size: 10px; margin-top: 5px; }
+
+/* ==================================================================
+   THE JESUS PEOPLE NETWORK — the palette and voice from the project
+   proposal: ink, ivory, terracotta, gold, sage. Editorial, warm,
+   direct. A light theme that replaces the Instagram-dark layer on
+   pages carrying body.jpn. Serif display, Inter for interface, a
+   strong 01/02/03 hierarchy, and calm creator pages.
+   ================================================================== */
+:root {
+  --ink:#181817; --ivory:#F5F0E7; --terracotta:#A9533C; --gold:#B28B46; --sage:#69705E;
+  --ivory-2:#EDE6D9; --ivory-3:#FBF8F2; --ink-2:#3a3935; --ink-3:#6b6962; --line:#DCD3C3;
+}
+body.jpn {
+  background: var(--ivory); color: var(--ink);
+  background-image:
+    radial-gradient(ellipse 70% 30% at 20% 0%, rgba(169,83,60,0.10), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 85% 4%, rgba(178,139,70,0.12), transparent 70%);
+  background-repeat: no-repeat; background-size: 100% 800px;
+  font-family: Inter, system-ui, -apple-system, sans-serif; line-height: 1.6;
+}
+body.jpn::before, body.jpn::after, body.jpn .glow { display: none !important; }
+body.jpn ::selection { background: var(--terracotta); color: #fff; }
+body.jpn .wrap { max-width: 520px; padding: 0 20px 72px; }
+body.jpn .wrap::before { display: none; }
+
+/* Type */
+body.jpn h1, body.jpn h2, body.jpn .land-title, body.jpn .hero h1, body.jpn header.hero h1,
+body.jpn .step-head h2, body.jpn .auth-hero h1 {
+  font-family: Fraunces, Georgia, serif; font-weight: 600; letter-spacing: -0.02em; color: var(--ink);
+}
+body.jpn header.hero h1, body.jpn .hero h1 {
+  font-size: clamp(2.1rem, 8vw, 3rem); line-height: 1.06; margin-bottom: 14px;
+  background: none; -webkit-text-fill-color: initial; text-shadow: none;
+}
+body.jpn .hero h1 em { font-style: italic; color: var(--terracotta); background: none; -webkit-text-fill-color: currentColor; }
+body.jpn .hero-sub, body.jpn .land-copy, body.jpn p { color: var(--ink-2); }
+body.jpn .hero-sub { font-size: 1.02rem; max-width: 38ch; }
+body.jpn .overline { color: var(--terracotta); letter-spacing: 0.14em; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 12px; }
+body.jpn .land-title { font-size: 1.6rem; line-height: 1.2; margin-bottom: 8px; }
+body.jpn .land-section { margin-top: 44px; padding-top: 0; border: 0; }
+body.jpn .land-section::before { display: none; }
+body.jpn .fine-print { font-size: 0.82rem; color: var(--ink-3); margin-top: 12px; }
+
+/* Nav */
+body.jpn .site-nav {
+  position: sticky; top: 10px; z-index: 20; margin: 12px 0 28px; padding: 10px 14px;
+  border-radius: 999px; background: rgba(245,240,231,0.92); border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(24,24,23,0.08); backdrop-filter: none;
+}
+body.jpn .brand, body.jpn .brand .dc-mark { color: var(--ink); }
+body.jpn .nav-login { background: var(--ink); color: var(--ivory); border: 0; padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: 0.85rem; }
+
+/* Kickers: 01 / 02 / 03 in terracotta */
+body.jpn .sec-kicker span { background: var(--terracotta); box-shadow: none; border-radius: 6px; }
+body.jpn .sec-kicker.plain span { background: var(--gold); width: 10px; height: 10px; }
+body.jpn .sec-kicker::after { background: linear-gradient(90deg, var(--line), transparent); }
+
+/* Hero extras */
+body.jpn .jpn-hero { padding: 8px 0 4px; }
+body.jpn .cta-row { display: flex; gap: 8px; margin-top: 18px; }
+body.jpn .cta-row .btn-primary, body.jpn .cta-row .btn-ghost { flex: 1; text-align: center; }
+body.jpn .hero-url {
+  margin-top: 16px; display: inline-flex; align-items: baseline; gap: 0; font-size: 0.9rem;
+  padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--line); color: var(--ink-3);
+}
+body.jpn .hero-url b { color: var(--ink); }
+
+/* Buttons: ink primary, quiet ghost, terracotta as the accent — never all three */
+body.jpn .btn-primary, body.jpn button[type="submit"], body.jpn .partner-link, body.jpn .ig-btn-wide {
+  background: var(--ink); color: var(--ivory); border: 0; border-radius: 12px; font-weight: 600;
+  box-shadow: 0 8px 22px rgba(24,24,23,0.18); font-family: Inter, sans-serif;
+}
+body.jpn .btn-primary:hover, body.jpn button[type="submit"]:hover:not(:disabled) { background: var(--terracotta); color: #fff; }
+body.jpn .btn-ghost, body.jpn .tab, body.jpn .btn-small, body.jpn .coll-row, body.jpn .ig-btn-wide {
+  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 12px; font-weight: 600; box-shadow: none;
+}
+body.jpn .ig-btn-wide { color: var(--ink); }
+
+/* Rows and cards: white on ivory, hairline, a whisper of shadow */
+body.jpn .j-row, body.jpn .coll-row, body.jpn .step-card, body.jpn .step-card.static, body.jpn .app-card,
+body.jpn .table-scroll, body.jpn .fold, body.jpn .phone-frame, body.jpn .dir-row, body.jpn .draft-note,
+body.jpn .locale-panel, body.jpn .stat, body.jpn #joinCta, body.jpn .gather-help {
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.06);
+  backdrop-filter: none; color: var(--ink);
+}
+body.jpn .journey-list { display: grid; gap: 10px; margin: 16px 0 0; }
+body.jpn .j-row { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; text-decoration: none; }
+body.jpn .j-num { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; font-weight: 600; color: var(--terracotta); line-height: 1; min-width: 34px; }
+body.jpn .j-meta b { display: block; font-size: 1rem; margin-bottom: 2px; }
+body.jpn .j-meta span { font-size: 0.86rem; color: var(--ink-3); }
+
+body.jpn .how-list { list-style: none; counter-reset: how; margin: 14px 0 0; padding: 0; display: grid; gap: 0; }
+body.jpn .how-list li {
+  counter-increment: how; display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--line); align-items: baseline;
+}
+body.jpn .how-list li::before {
+  content: counter(how, decimal-leading-zero); font-family: Fraunces, Georgia, serif;
+  color: var(--gold); font-weight: 600; font-size: 1.05rem;
+}
+body.jpn .how-list li:last-child { border-bottom: 0; }
+body.jpn .how-list b { display: block; font-size: 0.98rem; }
+body.jpn .how-list span { font-size: 0.86rem; color: var(--ink-3); }
+body.jpn .commit-list { margin: 12px 0 0; padding-left: 18px; display: grid; gap: 8px; font-size: 0.95rem; color: var(--ink-2); }
+body.jpn .commit-list li::marker { color: var(--terracotta); }
+body.jpn .faq { border-bottom: 1px solid var(--line); padding: 12px 0; }
+body.jpn .faq summary { cursor: pointer; font-weight: 600; font-size: 0.98rem; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+body.jpn .faq summary::after { content: '+'; color: var(--terracotta); font-weight: 600; }
+body.jpn .faq[open] summary::after { content: '–'; }
+body.jpn .faq p { margin: 8px 0 0; font-size: 0.9rem; color: var(--ink-2); }
+body.jpn .jpn-cta { background: var(--ink); color: var(--ivory); border-radius: 20px; padding: 24px 20px; }
+body.jpn .jpn-cta .land-title, body.jpn .jpn-cta .land-copy { color: var(--ivory); }
+body.jpn .jpn-cta .btn-primary { background: var(--terracotta); color: #fff; }
+body.jpn .jpn-cta .btn-ghost { background: transparent; color: var(--ivory); border-color: rgba(245,240,231,0.35); }
+
+/* The phone sample on ivory */
+body.jpn .phone-frame { background: var(--ink); border-color: var(--ink); width: 78%; max-width: 330px; margin: 18px auto 0; padding: 10px; border-radius: 30px; box-shadow: 0 30px 60px rgba(24,24,23,0.25); }
+body.jpn .phone-frame .bio-sample { background: #000; color: #f5f5f5; border: 0; }
+body.jpn .phone-frame .bio-sample p, body.jpn .phone-frame .bs-name { color: #f5f5f5; }
+body.jpn .phone-frame .bs-bio { color: #bdbdbd; }
+body.jpn .phone-tag { background: var(--terracotta); color: #fff; border: 0; }
+body.jpn .bs-link { background: rgba(169,83,60,0.22); border-color: rgba(169,83,60,0.6); color: #ffd9cf; }
+body.jpn .bs-actions span { background: #262626; color: #f5f5f5; }
+body.jpn .bs-avatar { background: linear-gradient(#111,#111) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box; border: 2.5px solid transparent; color: #fff; }
+
+/* Steps page on ivory */
+body.jpn.journey { background-image: radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.12), transparent 70%); }
+body.jpn.journey .hero h1 { text-shadow: none; }
+body.jpn.journey .step-card { padding: 2px 16px; }
+body.jpn.journey .step-card.open { border-color: var(--ink); box-shadow: 0 18px 44px rgba(24,24,23,0.12); background: #fff; }
+body.jpn.journey .step-card:hover { border-color: #c8bfae; background: #fff; }
+body.jpn .step-icon, body.jpn .bubble b, body.jpn .dir-av, body.jpn .coll-ring, body.jpn .auth-mark, body.jpn .ig-avatar {
+  border: 2px solid transparent; color: var(--ink); box-shadow: none;
+  background: linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box;
+}
+body.jpn.journey .step-card.open .step-icon { background: linear-gradient(var(--terracotta),var(--terracotta)) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box; color: #fff; }
+body.jpn .step-head h2 { color: var(--ink); font-size: 1.15rem; }
+body.jpn .step-chevron { color: var(--ink-3); }
+body.jpn .video-placeholder { background: var(--ivory-2); border: 1px solid var(--line); color: var(--ink-3); box-shadow: none; }
+body.jpn .play-mark { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box; box-shadow: none; }
+body.jpn .play-mark::before { border-left-color: var(--terracotta); }
+body.jpn input, body.jpn select, body.jpn textarea {
+  background: #fff; border: 1px solid var(--line); color: var(--ink); border-radius: 12px;
+}
+body.jpn input::placeholder, body.jpn textarea::placeholder { color: #9a958a; }
+body.jpn input:focus, body.jpn select:focus, body.jpn textarea:focus { border-color: var(--terracotta); outline: none; }
+body.jpn .check input, body.jpn input[type="checkbox"] { accent-color: var(--terracotta); }
+body.jpn .check.fine, body.jpn .check.fine a { color: var(--ink-3); }
+body.jpn .globe { border-color: var(--line); color: var(--ink-2); background: #fff; }
+body.jpn footer, body.jpn footer a { color: var(--ink-3); }
+body.jpn .success { color: var(--sage); } body.jpn .error, body.jpn .err { color: var(--terracotta); }
+
+/* Sign in */
+body.jpn .auth-hero h1 { font-size: 2rem; }
+body.jpn .tab-row { background: #fff; border: 1px solid var(--line); }
+body.jpn .tab-row::before { background: var(--ink); box-shadow: none; }
+body.jpn .tab-row .tab { color: var(--ink-3); }
+body.jpn .tab-row .tab.on { color: var(--ivory); }
+body.jpn .wrap-narrow label { color: var(--ink-3); }
+body.jpn .wrap-narrow::after { display: none; }
+body.jpn .pick span { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+body.jpn .pick input:checked + span { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+
+/* Back end + directory + prose */
+body.jpn .section { color: var(--ink); }
+body.jpn .section::before, body.jpn .prose-body > h2::before { background: var(--terracotta); box-shadow: none; }
+body.jpn .section::after, body.jpn .prose-body > h2::after { background: linear-gradient(90deg, var(--line), transparent); }
+body.jpn .prose-body p, body.jpn .prose-body li { color: var(--ink-2); }
+body.jpn th { color: var(--ink-3); border-color: var(--line); } body.jpn td { border-color: var(--ivory-2); color: var(--ink); }
+body.jpn .stat b { color: var(--ink); }
+body.jpn .topic-chip { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+body.jpn .topic-chip.on { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+body.jpn .directory-full .dir-tag, body.jpn .dir-tag { background: var(--ivory-2); border: 0; color: var(--ink-3); }
+body.jpn .dir-name, body.jpn .directory-full .dir-name { color: var(--ink-3); }
+body.jpn .land-copy a, body.jpn .prose-body a, body.jpn .aside-link a, body.jpn .see-all a { color: var(--terracotta); }
+body.jpn .btn-small.go { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+body.jpn .crm-saved { color: var(--sage); }
+body.jpn .dir-empty, body.jpn .draft-note { color: var(--ink-3); }
+body.jpn .creator-badge { background: #fff; border: 1px solid var(--line); color: var(--ink-2); }
+body.jpn .partner-note { color: var(--ink-3); }
+
+@media (min-width: 900px) {
+  body.jpn .wrap { max-width: 720px; }
+  body.jpn.network .wrap { max-width: 760px; }
+  body.jpn .journey-list { grid-template-columns: repeat(3, 1fr); }
+  body.jpn .j-row { flex-direction: column; gap: 10px; }
+  body.jpn.wide .wrap { max-width: min(1360px, 94vw); }
+}
+body.jpn .sec-kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
+body.jpn .sec-kicker span { display: inline-grid; place-items: center; width: 26px; height: 26px; color: #fff; font-size: 0.7rem; font-weight: 700; }
+body.jpn .sec-kicker::after { content: ''; flex: 1; height: 1px; }
+body.jpn .how-list li { grid-template-columns: 30px 1fr; grid-template-rows: auto auto; }
+body.jpn .how-list li::before { grid-row: 1 / span 2; }
+body.jpn .how-list li b, body.jpn .how-list li span { grid-column: 2; }
+body.jpn .cta-row { flex-direction: row; }

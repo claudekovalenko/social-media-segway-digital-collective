@@ -10,7 +10,7 @@ const API_BASE = location.hostname.endsWith('github.io')
 
 const params = new URLSearchParams(location.search);
 // Remember the creator across visits so the attribution survives navigation.
-const creatorSlug = params.get('creator') || localStorage.getItem('creator') || 'default';
+const creatorSlug = window.CREATOR_SLUG || params.get('creator') || localStorage.getItem('creator') || 'default';
 localStorage.setItem('creator', creatorSlug);
 
 // Used only if the API can't be reached; the server sends these as `defaults`
@@ -338,3 +338,9 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
 
 // Runs last so every constant above (locale, strings) is initialised first.
 loadCreator();
+
+// Deep links: /craigbrown#grow opens that step on arrival.
+(() => {
+  const target = location.hash && document.querySelector(`.step-card${location.hash}`);
+  if (target) { target.classList.add('open'); setTimeout(() => target.scrollIntoView({ block: 'start', behavior: 'smooth' }), 350); }
+})();

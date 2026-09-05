@@ -97,6 +97,14 @@ const SESSION_HOURS = 12;
 
 // Deliberately low so simple accounts can be set up quickly; anything holding
 // real people's contact details deserves far more than the minimum.
+// Paths a vanity creator URL must never shadow, plus names nobody may claim.
+const RESERVED_PATHS = new Set([
+  'index','journey','creators','login','dashboard','admin','creator','beliefs','privacy','terms',
+  'api','c','icons','manifest','sw','styles','app','i18n','crm','reveal','assets','static',
+  'about','join','signin','signup','register','help','support','contact','faq','blog','network',
+  'jesus','god','church','official','staff','team','root','www','mail','info','null','undefined',
+]);
+
 const MIN_PASSWORD = 6;
 
 // Passwords are stored as PBKDF2-SHA256 with a random salt — never in the clear.
@@ -746,6 +754,23 @@ export default {
       if (p.startsWith('/c/')) {
         const slug = p.split('/')[2] || 'default';
         return Response.redirect(new URL(`/journey.html?creator=${encodeURIComponent(slug)}`, url).toString(), 302);
+      }
+
+      // Vanity creator URLs: thejesuspeople.network/craigbrown serves the
+      // journey page for that creator without changing the address bar, so
+      // deep links like /craigbrown#grow keep working. Only a single lowercase
+      // segment that isn't a known page or asset qualifies.
+      const vanity = p.match(/^\/([a-z0-9][a-z0-9._-]{2,39})\/?$/);
+      if (vanity && req.method === 'GET' && !RESERVED_PATHS.has(vanity[1]) && !vanity[1].includes('.')) {
+        const journeyReq = new Request(new URL('/journey.html', url), req);
+        const res = await env.ASSETS.fetch(journeyReq);
+        if (res.ok) {
+          const html = (await res.text()).replace(
+            '<head>',
+            `<head><script>window.CREATOR_SLUG=${JSON.stringify(vanity[1])};</script>`,
+          );
+          return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } });
+        }
       }
 
       // Anything else falls through to static assets.
