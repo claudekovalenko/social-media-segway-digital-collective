@@ -2488,3 +2488,61 @@ body.jpn .how-list li { grid-template-columns: 30px 1fr; grid-template-rows: aut
 body.jpn .how-list li::before { grid-row: 1 / span 2; }
 body.jpn .how-list li b, body.jpn .how-list li span { grid-column: 2; }
 body.jpn .cta-row { flex-direction: row; }
+
+/* ==================================================================
+   The network site's new pieces in the dark Instagram look: the
+   hero, the URL chip, the numbered rows, how-it-works, commitments,
+   FAQ and the join block.
+   ================================================================== */
+body.ig .jpn-hero { padding: 6px 0 4px; }
+body.ig .jpn-hero h1 {
+  font-family: Fraunces, Georgia, serif; font-size: clamp(1.9rem, 7vw, 2.5rem);
+  line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 12px;
+}
+body.ig .jpn-hero h1 em {
+  font-style: italic; background: var(--ig-grad);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+body.ig .jpn-hero .hero-sub { font-size: 0.95rem; color: var(--ig-dim); max-width: 40ch; }
+body.ig .jpn-hero .overline { color: var(--ig-dim); }
+body.ig .jpn-hero .cta-row { display: flex; flex-direction: row; gap: 8px; margin-top: 16px; }
+body.ig .jpn-hero .cta-row .btn-primary, body.ig .jpn-hero .cta-row .btn-ghost { flex: 1; text-align: center; padding: 11px 14px; font-size: 0.9rem; }
+body.ig .hero-url {
+  margin-top: 14px; display: inline-flex; align-items: baseline; font-size: 0.86rem;
+  padding: 7px 12px; border-radius: 10px; background: #151515; border: 1px solid rgba(255,255,255,0.10); color: var(--ig-dim);
+}
+body.ig .hero-url b { color: var(--ig-text); }
+body.ig .j-num {
+  font-family: Fraunces, Georgia, serif; font-size: 1.35rem; font-weight: 600; line-height: 1; min-width: 36px;
+  background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+body.ig .j-row { align-items: center; }
+body.ig .how-list { list-style: none; counter-reset: how; margin: 12px 0 0; padding: 0; }
+body.ig .how-list li {
+  counter-increment: how; display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto;
+  column-gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ig-line); align-items: baseline;
+}
+body.ig .how-list li::before {
+  content: counter(how, decimal-leading-zero); grid-row: 1 / span 2;
+  font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1rem;
+  background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+body.ig .how-list li:last-child { border-bottom: 0; }
+body.ig .how-list li b, body.ig .how-list li span { grid-column: 2; }
+body.ig .how-list b { font-size: 0.95rem; }
+body.ig .how-list span { font-size: 0.84rem; color: var(--ig-dim); }
+body.ig .commit-list { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; font-size: 0.92rem; color: #d0d0d0; }
+body.ig .commit-list li::marker { color: #e6683c; }
+body.ig .faq { border-bottom: 1px solid var(--ig-line); padding: 12px 0; }
+body.ig .faq summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; list-style: none; display: flex; justify-content: space-between; gap: 12px; color: var(--ig-text); }
+body.ig .faq summary::-webkit-details-marker { display: none; }
+body.ig .faq summary::after { content: '+'; color: #e6683c; font-weight: 600; }
+body.ig .faq[open] summary::after { content: '–'; }
+body.ig .faq p { margin: 8px 0 0; font-size: 0.88rem; color: var(--ig-dim); line-height: 1.55; }
+body.ig .jpn-cta {
+  background: #151515; border: 1px solid rgba(255,255,255,0.10); border-radius: 20px; padding: 22px 18px 18px;
+  box-shadow: 0 24px 60px rgba(188,24,136,0.18), 0 8px 24px rgba(240,148,51,0.10), 0 12px 30px rgba(0,0,0,0.45);
+}
+body.ig .jpn-cta .cta-row { display: flex; gap: 8px; margin-top: 14px; }
+body.ig .jpn-cta .cta-row .btn-primary, body.ig .jpn-cta .cta-row .btn-ghost { flex: 1; text-align: center; padding: 11px 14px; font-size: 0.9rem; }
+body.ig.network .land-title { font-size: 1.4rem; }
