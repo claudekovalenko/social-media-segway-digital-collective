@@ -2546,3 +2546,54 @@ body.ig .jpn-cta {
 body.ig .jpn-cta .cta-row { display: flex; gap: 8px; margin-top: 14px; }
 body.ig .jpn-cta .cta-row .btn-primary, body.ig .jpn-cta .cta-row .btn-ghost { flex: 1; text-align: center; padding: 11px 14px; font-size: 0.9rem; }
 body.ig.network .land-title { font-size: 1.4rem; }
+
+/* ---- The network site, more umami --------------------------------------
+   A deeper wash at the top, rings with their own glow on the three steps,
+   a gradient edge on the URL chip, how-it-works numerals in rings, the
+   FAQ as soft rows, and the join block lit from beneath. */
+body.ig.network {
+  background-image:
+    radial-gradient(ellipse 80% 34% at 18% 0%, rgba(240, 148, 51, 0.24), transparent 70%),
+    radial-gradient(ellipse 70% 30% at 88% 6%, rgba(220, 39, 67, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 55% 26%, rgba(188, 24, 136, 0.16), transparent 70%);
+  background-size: 100% 1000px;
+}
+body.ig .jpn-hero h1 { text-shadow: 0 0 40px rgba(240,148,51,0.25), 0 0 80px rgba(220,39,67,0.18); }
+body.ig .hero-url {
+  border: 1.5px solid transparent;
+  background: linear-gradient(#141414,#141414) padding-box, var(--ig-grad) border-box;
+  box-shadow: 0 8px 24px rgba(220,39,67,0.18);
+}
+body.ig .jpn-hero .btn-primary { box-shadow: 0 10px 28px rgba(0,149,246,0.38), inset 0 1px 0 rgba(255,255,255,0.2); }
+body.ig .j-row .j-ring { width: 46px; height: 46px; }
+body.ig .j-row .j-ring i { font-family: Fraunces, Georgia, serif; font-size: 1.05rem; }
+body.ig .how-list li::before {
+  content: counter(how); display: grid; place-items: center; align-self: start;
+  width: 26px; height: 26px; border-radius: 50%; font-size: 0.78rem; font-family: 'Space Grotesk', sans-serif;
+  -webkit-text-fill-color: #fff; color: #fff; background: var(--ig-grad);
+  box-shadow: 0 0 16px rgba(220,39,67,0.45);
+}
+body.ig .how-list li { grid-template-columns: 34px 1fr; align-items: start; padding: 14px 0; }
+body.ig .how-list li b { padding-top: 3px; }
+body.ig .faq { border: 0; padding: 0; margin-top: 8px; }
+body.ig .faq summary { padding: 13px 14px; border-radius: 12px; background: #151515; border: 1px solid rgba(255,255,255,0.08); }
+body.ig .faq[open] summary { border-color: rgba(255,255,255,0.18); }
+body.ig .faq p { padding: 10px 14px 4px; }
+body.ig .commit-list li::marker { color: #e6683c; }
+body.ig .jpn-cta { position: relative; overflow: hidden; }
+body.ig .jpn-cta::before {
+  content: ''; position: absolute; inset: auto -20% -60% -20%; height: 120%; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgba(220,39,67,0.35), rgba(240,148,51,0.15) 40%, transparent 70%);
+}
+body.ig .jpn-cta > * { position: relative; z-index: 1; }
+body.ig .jpn-cta .land-title { font-size: 1.6rem; }
+body.ig .phone-frame { box-shadow: 0 34px 80px rgba(220,39,67,0.30), 0 12px 36px rgba(240,148,51,0.18), 0 24px 50px rgba(0,0,0,0.5); }
+body.ig .sec-kicker span { box-shadow: 0 4px 18px rgba(220,39,67,0.5); }
+body.ig .j-row .j-ring {
+  border: 2.5px solid transparent;
+  background: linear-gradient(#141414,#141414) padding-box, var(--ig-grad) border-box;
+  box-shadow: 0 0 22px rgba(220,39,67,0.45);
+}
+body.ig .j-row:nth-child(1) .j-ring { box-shadow: 0 0 22px rgba(240,148,51,0.5); }
+body.ig .j-row:nth-child(3) .j-ring { box-shadow: 0 0 22px rgba(188,24,136,0.5); }
+body.ig .j-row .j-ring i { width: auto; height: auto; background: transparent; font-size: 1.05rem; }
