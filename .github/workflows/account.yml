@@ -1,0 +1,54 @@
+name: Create or reset an account
+
+# Run from the Actions tab: creates the account if it is new, or resets the
+# password and role if it already exists. The password is hashed here the
+# same way the site hashes it (PBKDF2-SHA256, 100k rounds, random salt), so
+# it never reaches the database in the clear.
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: Email or username
+        required: true
+      password:
+        description: Password
+        required: true
+      role:
+        description: Tier
+        required: true
+        default: admin
+        type: choice
+        options: [admin, creator, pending]
+
+jobs:
+  account:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Hash the password
+        id: hash
+        env:
+          PASSWORD: ${{ inputs.password }}
+        run: |
+          node -e '
+            const { pbkdf2Sync, randomBytes } = require("crypto");
+            const salt = randomBytes(16);
+            const hash = pbkdf2Sync(process.env.PASSWORD, salt, 100000, 32, "sha256");
+            console.log("hash=pbkdf2$100000$" + salt.toString("hex") + "$" + hash.toString("hex"));
+          ' >> "$GITHUB_OUTPUT"
+      - name: Write the account
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: "830375f1830fccce2dac031f42817b3d"
+          EMAIL: ${{ inputs.email }}
+          ROLE: ${{ inputs.role }}
+          HASH: ${{ steps.hash.outputs.hash }}
+        run: |
+          npx --yes wrangler@4 d1 execute faith-journey-funnel --remote --command \
+            "INSERT INTO admins (email, pass_hash, role) VALUES (lower('$EMAIL'), '$HASH', '$ROLE') ON CONFLICT(email) DO UPDATE SET pass_hash = excluded.pass_hash, role = excluded.role;"
+          npx --yes wrangler@4 d1 execute faith-journey-funnel --remote --command \
+            "SELECT email, role, created_at FROM admins WHERE email = lower('$EMAIL');"
