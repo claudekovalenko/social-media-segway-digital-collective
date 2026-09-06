@@ -2873,3 +2873,130 @@ body.ig.network .ig-lede em {
   background: var(--ig-grad); -webkit-background-clip: text; background-clip: text;
   color: transparent; -webkit-text-fill-color: transparent;
 }
+
+/* ==================================================================
+   THE PROPOSAL'S PALETTE, as an overlay on the Instagram structure.
+   Ink #181817, ivory #F5F0E7, terracotta #A9533C, gold #B28B46,
+   sage #69705E. The tokens the dark theme reads are redefined here,
+   so layout and motion stay; only the colour changes. Hard-coded
+   dark surfaces from the umami passes are re-pointed below.
+   ================================================================== */
+body.ig.jpn {
+  --ig-bg: #F5F0E7; --ig-surface: #FFFFFF; --ig-surface-2: #EDE6D9; --ig-line: #DCD3C3;
+  --ig-text: #181817; --ig-dim: #6b6962; --ig-blue: #A9533C;
+  --ig-grad: linear-gradient(135deg, #A9533C, #B28B46);
+  --bg: #F5F0E7; --surface: #FFFFFF; --surface-2: #EDE6D9; --edge: #DCD3C3; --edge-lit: #cfc6b4;
+  --text: #181817; --text-dim: #6b6962; --lime: #181817; --lime-ink: #F5F0E7; --ok: #69705E; --err: #A9533C;
+  background-color: var(--ig-bg); color: var(--ig-text);
+  background-image:
+    radial-gradient(ellipse 80% 30% at 15% 0%, rgba(169,83,60,0.16), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 85% 6%, rgba(178,139,70,0.18), transparent 70%),
+    radial-gradient(ellipse 70% 24% at 50% 100%, rgba(105,112,94,0.12), transparent 70%);
+}
+body.ig.jpn ::selection { background: #A9533C; color: #fff; }
+body.ig.jpn h1, body.ig.jpn h2, body.ig.jpn .land-title, body.ig.jpn .ig-name, body.ig.jpn .step-head h2 { color: var(--ig-text); text-shadow: none; }
+body.ig.jpn .hero h1, body.ig.jpn header.hero h1 { text-shadow: none; }
+body.ig.jpn p, body.ig.jpn .land-copy, body.ig.jpn .hero-sub { color: #3a3935; }
+body.ig.jpn .ig-dim, body.ig.jpn .ig-muted, body.ig.jpn .ig-cat, body.ig.jpn .fine-print { color: var(--ig-dim); }
+
+/* Surfaces that were hard-coded dark. */
+body.ig.jpn .site-nav { background: rgba(245,240,231,0.94); border-color: var(--ig-line); box-shadow: 0 8px 24px rgba(24,24,23,0.08), inset 0 1px 0 #fff; }
+body.ig.jpn .brand, body.ig.jpn .brand .dc-mark { color: var(--ig-text); }
+body.ig.jpn .nav-login, body.ig.jpn .btn-ghost { background: #fff; color: var(--ig-text); border: 1px solid var(--ig-line); }
+body.ig.jpn .btn-primary, body.ig.jpn button[type="submit"], body.ig.jpn .partner-link, body.ig.jpn .ig-btn-primary {
+  background: #181817; color: #F5F0E7; box-shadow: 0 8px 22px rgba(24,24,23,0.18);
+}
+body.ig.jpn .btn-primary:hover, body.ig.jpn button[type="submit"]:hover:not(:disabled) { background: #A9533C; color: #fff; }
+body.ig.jpn .j-row, body.ig.jpn .coll-row, body.ig.jpn .phone-frame, body.ig.jpn .step-card, body.ig.jpn .step-card.static,
+body.ig.jpn .app-card, body.ig.jpn .table-scroll, body.ig.jpn .fold, body.ig.jpn .stat, body.ig.jpn .jpn-cta,
+body.ig.jpn .faq summary, body.ig.jpn .how-flow li, body.ig.jpn .directory-full .dir-row, body.ig.jpn .locale-panel,
+body.ig.jpn .tab-row, body.ig.jpn .hero-url, body.ig.jpn .draft-note, body.ig.jpn .gather-help, body.ig.jpn #joinCta {
+  background: #FFFFFF; background-color: #FFFFFF; border: 1px solid var(--ig-line); color: var(--ig-text);
+  box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.07);
+}
+body.ig.jpn .j-row:hover, body.ig.jpn .coll-row:hover { background: #fff; border-color: #c8bfae; }
+body.ig.jpn .step-card.open { border-color: #181817; }
+body.ig.jpn .j-meta span, body.ig.jpn .coll-meta span, body.ig.jpn .faq p, body.ig.jpn .how-list span { color: var(--ig-dim); }
+body.ig.jpn .faq summary { color: var(--ig-text); }
+body.ig.jpn .faq summary::after { color: #A9533C; }
+body.ig.jpn .commit-list { color: #3a3935; }
+body.ig.jpn .commit-list li::marker { color: #A9533C; }
+body.ig.jpn .hero-url { background: #fff; border: 1.5px solid transparent; background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; color: var(--ig-dim); box-shadow: none; }
+body.ig.jpn .hero-url b { color: var(--ig-text); }
+
+/* Rings and glows: terracotta to gold, soft. */
+body.ig.jpn .ig-ring, body.ig.jpn .step-icon, body.ig.jpn .bubble b, body.ig.jpn .dir-av, body.ig.jpn .bs-avatar,
+body.ig.jpn .ig-avatar, body.ig.jpn .coll-ring, body.ig.jpn .auth-mark, body.ig.jpn .j-ring, body.ig.jpn .how-ring {
+  background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; color: var(--ig-text);
+  box-shadow: 0 6px 18px rgba(169,83,60,0.22);
+}
+body.ig.jpn .how-row li:nth-child(n) .how-ring, body.ig.jpn .j-row:nth-child(n) .j-ring { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
+body.ig.jpn .phone-frame { background: #181817; background-color: #181817; border-color: #181817; box-shadow: 0 30px 60px rgba(24,24,23,0.28); }
+body.ig.jpn .phone-frame .bio-sample { background: #000; border: 0; color: #f5f5f5; }
+body.ig.jpn .phone-frame .bio-sample p, body.ig.jpn .phone-frame .bs-name { color: #f5f5f5; }
+body.ig.jpn .phone-frame .bs-bio { color: #bdbdbd; }
+body.ig.jpn .phone-tag { background: #A9533C; color: #fff; border: 0; }
+body.ig.jpn .bs-link { background: rgba(169,83,60,0.22); border-color: rgba(169,83,60,0.6); color: #ffd9cf; }
+body.ig.jpn .bs-actions span { background: #262626; color: #f5f5f5; }
+body.ig.jpn .bs-avatar { background: linear-gradient(#111,#111) padding-box, var(--ig-grad) border-box; color: #fff; }
+body.ig.jpn .jpn-cta { background: #181817; background-color: #181817; border-color: #181817; color: #F5F0E7; box-shadow: 0 30px 70px rgba(24,24,23,0.28); }
+body.ig.jpn .jpn-cta .land-title, body.ig.jpn .jpn-cta .land-copy { color: #F5F0E7; }
+body.ig.jpn .jpn-cta::after, body.ig.jpn .jpn-cta::before { display: none; }
+body.ig.jpn .jpn-cta .btn-primary { background: #A9533C; color: #fff; }
+body.ig.jpn .jpn-cta .btn-ghost { background: transparent; color: #F5F0E7; border-color: rgba(245,240,231,0.35); }
+body.ig.jpn .ig-lede em { background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; }
+body.ig.jpn .ig-stats b { color: var(--ig-text); }
+body.ig.jpn .ig-stats span { color: var(--ig-dim); }
+
+/* Forms and the steps page. */
+body.ig.jpn input, body.ig.jpn select, body.ig.jpn textarea { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
+body.ig.jpn input::placeholder, body.ig.jpn textarea::placeholder { color: #9a958a; }
+body.ig.jpn input:focus, body.ig.jpn select:focus, body.ig.jpn textarea:focus { border-color: #A9533C; }
+body.ig.jpn .check input, body.ig.jpn input[type="checkbox"] { accent-color: #A9533C; }
+body.ig.jpn .check.fine, body.ig.jpn .check.fine a { color: var(--ig-dim); }
+body.ig.jpn.journey { background-image: radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.14), transparent 70%); }
+body.ig.jpn.journey .step-card { background: #fff; background-color: #fff; box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.07); }
+body.ig.jpn.journey .step-card.open { box-shadow: 0 18px 44px rgba(24,24,23,0.12); }
+body.ig.jpn .video-placeholder { background: #EDE6D9; border: 1px solid var(--ig-line); color: var(--ig-dim); box-shadow: none; }
+body.ig.jpn .play-mark { background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; box-shadow: none; }
+body.ig.jpn .play-mark::before { border-left-color: #A9533C; }
+body.ig.jpn .globe { background: #fff; border-color: var(--ig-line); color: #3a3935; }
+body.ig.jpn .locale-panel select { background: #fff; border-color: var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .step-chevron { color: var(--ig-dim); }
+body.ig.jpn.journey .step-card.open .step-icon { background: linear-gradient(#A9533C,#A9533C) padding-box, var(--ig-grad) border-box; color: #fff; }
+
+/* Sign in, back end, directory, prose. */
+body.ig.jpn .tab-row::before { background: #181817; box-shadow: none; }
+body.ig.jpn .tab-row .tab { color: var(--ig-dim); }
+body.ig.jpn .tab-row .tab.on { color: #F5F0E7; }
+body.ig.jpn .wrap-narrow label { color: var(--ig-dim); }
+body.ig.jpn .wrap-narrow::after { display: none; }
+body.ig.jpn .pick span { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .pick input:checked + span { background: #181817; color: #F5F0E7; border-color: #181817; }
+body.ig.jpn .section, body.ig.jpn .prose-body > h2 { color: var(--ig-text); }
+body.ig.jpn .section::before, body.ig.jpn .prose-body > h2::before { background: #A9533C; box-shadow: none; }
+body.ig.jpn .section::after, body.ig.jpn .prose-body > h2::after { background: linear-gradient(90deg, var(--ig-line), transparent); }
+body.ig.jpn .prose-body p, body.ig.jpn .prose-body li { color: #3a3935; }
+body.ig.jpn th { color: var(--ig-dim); border-color: var(--ig-line); } body.ig.jpn td { border-color: #EDE6D9; color: var(--ig-text); }
+body.ig.jpn .topic-chip { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .topic-chip.on { background: #181817; color: #F5F0E7; border-color: #181817; }
+body.ig.jpn .dir-tag, body.ig.jpn .directory-full .dir-tag { background: #EDE6D9; border: 0; color: var(--ig-dim); }
+body.ig.jpn .land-copy a, body.ig.jpn .prose-body a, body.ig.jpn .aside-link a, body.ig.jpn .see-all a, body.ig.jpn .commit-list a, body.ig.jpn .faq a { color: #A9533C; }
+body.ig.jpn .btn-small.go { background: #181817; color: #F5F0E7; border-color: #181817; }
+body.ig.jpn .crm-saved, body.ig.jpn .success { color: #69705E; }
+body.ig.jpn .error, body.ig.jpn .err { color: #A9533C; }
+body.ig.jpn footer, body.ig.jpn footer a { color: var(--ig-dim); }
+body.ig.jpn .creator-badge { background: #fff; border: 1px solid var(--ig-line); color: #3a3935; }
+body.ig.jpn .fold h4, body.ig.jpn .app-meta { color: var(--ig-dim); }
+body.ig.jpn .dir-example { opacity: 0.6; }
+body.ig.jpn .auth-mark { box-shadow: 0 10px 30px rgba(169,83,60,0.25); }
+body.ig.jpn .wrap-narrow .step-card.static { box-shadow: 0 20px 50px rgba(169,83,60,0.14), 0 10px 30px rgba(24,24,23,0.08); }
+body.ig.jpn .ig-actions::after { display: none; }
+body.ig.jpn .phone-frame .bs-stats b { color: #f5f5f5; }
+body.ig.jpn .phone-frame .bs-stats span { color: #a8a8a8; }
+body.ig.jpn .phone-frame .bs-avatar { color: #fff; box-shadow: none; }
+body.ig.jpn.journey .step-card .step-icon, body.ig.jpn.journey .step-card:hover .step-icon,
+body.ig.jpn.journey .step-card.done .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
+body.ig.jpn.journey .step-card:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
+body.ig.jpn.journey .step-card.open:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.35); }
+body.ig.jpn .j-row .j-icon { color: var(--ig-text); }
