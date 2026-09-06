@@ -2856,3 +2856,12 @@ body.ig.network .hero-url { margin-top: 12px; }
 body.ig.network .ig-main > .land-section:first-child { margin-top: 34px; }
 body.ig.network .ig-bio .ig-name { font-size: 1.2rem; }
 body.ig.network .ig-bio .ig-cat { font-size: 0.86rem; }
+
+/* A calmer top: fewer lines, more air between the header and the first section. */
+body.ig.network .ig-profile { margin-top: 10px; }
+body.ig.network .ig-bio { margin-top: 14px; }
+body.ig.network .ig-bio p { line-height: 1.5; }
+body.ig.network .ig-actions { margin-top: 16px; }
+body.ig.network .hero-url { margin-top: 14px; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 48px; }
+body.ig.network .land-section { margin-top: 56px; }
