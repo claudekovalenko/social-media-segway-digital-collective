@@ -2653,3 +2653,24 @@ body.ig.network .j-meta b { font-size: 0.95rem; }
 body.ig.network .j-meta span { font-size: 0.8rem; }
 body.ig.network .journey-list { gap: 8px; margin-top: 10px; }
 body.ig.network .faq summary { padding: 11px 13px; font-size: 0.92rem; }
+
+/* How it works: five rings across, joined by a line, labels beneath. */
+body.ig .how-row {
+  list-style: none; margin: 14px 0 0; padding: 0 0 4px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; position: relative;
+}
+body.ig .how-row::before {
+  content: ''; position: absolute; left: 10%; right: 10%; top: 22px; height: 2px;
+  background: linear-gradient(90deg, #f09433, #dc2743, #bc1888); opacity: 0.55; z-index: 0;
+}
+body.ig .how-row li { display: grid; justify-items: center; gap: 8px; text-align: center; position: relative; z-index: 1; min-width: 0; }
+body.ig .how-row .how-ring { width: 44px; height: 44px; margin: 0; }
+body.ig .how-row .how-ring i { width: auto; height: auto; background: transparent; font-size: 0.98rem; font-family: Fraunces, Georgia, serif; }
+body.ig .how-row li:nth-child(1) .how-ring { box-shadow: 0 0 18px rgba(240,148,51,0.5); }
+body.ig .how-row li:nth-child(2) .how-ring { box-shadow: 0 0 18px rgba(230,104,60,0.45); }
+body.ig .how-row li:nth-child(3) .how-ring { box-shadow: 0 0 18px rgba(220,39,67,0.45); }
+body.ig .how-row li:nth-child(4) .how-ring { box-shadow: 0 0 18px rgba(204,35,102,0.45); }
+body.ig .how-row li:nth-child(5) .how-ring { box-shadow: 0 0 18px rgba(188,24,136,0.5); }
+body.ig .how-row b { font-size: 0.72rem; font-weight: 600; line-height: 1.2; color: var(--ig-text); }
+@media (max-width: 400px) { body.ig .how-row b { font-size: 0.66rem; } body.ig .how-row .how-ring { width: 40px; height: 40px; } body.ig .how-row::before { top: 20px; } }
+@media (min-width: 900px) { body.ig .how-row .how-ring { width: 52px; height: 52px; } body.ig .how-row b { font-size: 0.82rem; } body.ig .how-row::before { top: 26px; } }
