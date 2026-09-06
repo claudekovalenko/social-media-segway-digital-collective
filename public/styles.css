@@ -2817,3 +2817,8 @@ body.ig.network .phone-frame { max-width: min(330px, 100%); }
 body.ig.network .journey-list, body.ig.network .j-row { min-width: 0; }
 body.ig.network .j-meta { min-width: 0; }
 body.ig.network .j-meta b, body.ig.network .j-meta span { overflow-wrap: anywhere; }
+
+/* The join block keeps its own padding (a later rule zeroed section padding). */
+body.ig.network .jpn-cta { padding: 24px 20px 20px; }
+body.ig.network .jpn-cta .land-title { margin-bottom: 4px; }
+body.ig.network .jpn-cta .cta-row { margin-top: 16px; }
