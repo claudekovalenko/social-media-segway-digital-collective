@@ -2823,3 +2823,7 @@ body.ig.network .phone-frame { box-shadow: 0 40px 90px rgba(220,39,67,0.32), 0 1
 body.ig.network .faq summary { box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
 body.ig.network .jpn-cta { box-shadow: 0 30px 80px rgba(188,24,136,0.28), 0 10px 30px rgba(240,148,51,0.14), 0 12px 30px rgba(0,0,0,0.5); }
 body.ig.network .land-title { text-shadow: 0 0 30px rgba(220,39,67,0.18); }
+
+/* The five circles are back, without the strand between them. */
+body.ig .how-row::before { display: none; }
+body.ig.network .how-row { margin-top: 18px; gap: 6px; }
