@@ -2773,3 +2773,27 @@ body.ig.network .land-title { font-size: 1.45rem; margin-bottom: 4px; }
 body.ig.network .land-copy { font-size: 0.92rem; }
 body.ig.network .land-section { margin-top: 38px; padding-top: 0; }
 body.ig.network .land-section::before { display: none; }
+
+/* ==================================================================
+   ROOM. No rings in How it works, no strand: five quiet chips that
+   wrap naturally. More air between everything.
+   ================================================================== */
+body.ig .how-flow { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; counter-reset: flow; }
+body.ig .how-flow li {
+  counter-increment: flow; display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px 9px 10px; border-radius: 999px; font-size: 0.88rem; font-weight: 600;
+  background: #151515; border: 1px solid rgba(255,255,255,0.10); color: var(--ig-text);
+}
+body.ig .how-flow li::before {
+  content: counter(flow); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 0.7rem; font-weight: 700; color: #fff; background: var(--ig-grad);
+}
+body.ig.network .land-section { margin-top: 52px; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 40px; }
+body.ig.network .jpn-hero { padding-bottom: 8px; }
+body.ig.network .jpn-hero .hero-sub { margin-top: 4px; }
+body.ig.network .journey-list { gap: 10px; margin-top: 14px; }
+body.ig.network .j-row { padding: 12px 16px; }
+body.ig.network .phone-frame { margin-top: 22px; }
+body.ig.network .faq { margin-top: 10px; }
+body.ig.network footer { margin-top: 56px; }
