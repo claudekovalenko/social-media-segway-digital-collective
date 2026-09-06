@@ -2734,40 +2734,6 @@ body.ig.network .jpn-cta::after {
   background: radial-gradient(ellipse at 50% 100%, rgba(220,39,67,0.35), rgba(240,148,51,0.15) 40%, transparent 70%);
 }
 
-/* ==================================================================
-   THE THREAD. One vertical gradient line runs down the left of the
-   page from the hero to the join block; every section heading hangs
-   a small ring on it. The rings in How it works and the three steps
-   sit on the same line, so the whole page reads as one path down.
-   ================================================================== */
-body.ig.network .ig-main { position: relative; padding-left: 26px; }
-body.ig.network .ig-main::before {
-  content: ''; position: absolute; left: 6px; top: 8px; bottom: 120px; width: 2px; border-radius: 2px;
-  background: linear-gradient(180deg, #f09433, #dc2743 45%, #bc1888 80%, transparent);
-  opacity: 0.7;
-}
-body.ig.network .land-section { margin-top: 34px; padding-top: 0; }
-body.ig.network .land-section::before { display: none; }
-body.ig.network .land-title { position: relative; }
-body.ig.network .land-title::before {
-  content: ''; position: absolute; left: -26px; top: 0.42em; width: 14px; height: 14px; border-radius: 50%;
-  border: 2.5px solid transparent;
-  background: linear-gradient(#000,#000) padding-box, var(--ig-grad) border-box;
-  box-shadow: 0 0 14px rgba(220,39,67,0.5);
-  transform: translateX(-0px);
-}
-body.ig.network .ig-main > .land-section:first-child { margin-top: 24px; }
-body.ig.network .jpn-cta { margin-left: -26px; }
-body.ig.network .jpn-cta .land-title::before { display: none; }
-body.ig.network footer { margin-left: -26px; }
-body.ig.network .how-row { margin-left: -6px; }
-@media (min-width: 900px) {
-  body.ig.network .ig-main { padding-left: 34px; }
-  body.ig.network .ig-main::before { left: 8px; }
-  body.ig.network .land-title::before { left: -34px; width: 16px; height: 16px; }
-  body.ig.network .jpn-cta, body.ig.network footer { margin-left: -34px; }
-}
-
 /* Network page headings: bigger, with a quiet line beneath, evenly spaced. */
 body.ig.network .land-title { font-size: 1.45rem; margin-bottom: 4px; }
 body.ig.network .land-copy { font-size: 0.92rem; }
@@ -2832,3 +2798,22 @@ body.ig.network .how-row { margin-top: 18px; gap: 6px; }
    sequence on the page is How it works. */
 body.ig .j-row .j-icon { display: grid; place-items: center; color: var(--ig-text); }
 body.ig .j-row .j-icon svg { width: 18px; height: 18px; }
+body.ig.network .ig-main { padding-left: 0; }
+body.ig.network .jpn-cta, body.ig.network footer { margin-left: 0; }
+body.ig.network .how-row { margin-left: 0; gap: 4px; }
+body.ig.network .land-title::before { display: none; }
+
+/* Nothing on the network page may be wider than the phone. */
+body.ig.network .jpn-hero .cta-row .btn-primary, body.ig.network .jpn-hero .cta-row .btn-ghost,
+body.ig.network .jpn-cta .cta-row .btn-primary, body.ig.network .jpn-cta .cta-row .btn-ghost {
+  min-width: 0; white-space: normal; padding: 11px 10px; font-size: 0.86rem; line-height: 1.2;
+}
+body.ig .how-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+body.ig .how-row li { min-width: 0; }
+body.ig .how-row b { overflow-wrap: anywhere; }
+body.ig.network .hero-url { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.ig.network .wrap, body.ig.network .ig-main, body.ig.network .ig-side { max-width: 100%; min-width: 0; }
+body.ig.network .phone-frame { max-width: min(330px, 100%); }
+body.ig.network .journey-list, body.ig.network .j-row { min-width: 0; }
+body.ig.network .j-meta { min-width: 0; }
+body.ig.network .j-meta b, body.ig.network .j-meta span { overflow-wrap: anywhere; }
