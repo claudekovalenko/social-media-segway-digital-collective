@@ -97,7 +97,7 @@ const SESSION_HOURS = 12;
 
 // Deliberately low so simple accounts can be set up quickly; anything holding
 // real people's contact details deserves far more than the minimum.
-const MIN_PASSWORD = 6;
+const MIN_PASSWORD = 4;
 
 // Passwords are stored as PBKDF2-SHA256 with a random salt — never in the clear.
 const PBKDF2_ROUNDS = 100000;

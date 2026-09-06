@@ -1,9 +1,9 @@
 name: Create or reset an account
 
-# Run from the Actions tab: creates the account if it is new, or resets the
-# password and role if it already exists. The password is hashed here the
-# same way the site hashes it (PBKDF2-SHA256, 100k rounds, random salt), so
-# it never reaches the database in the clear.
+# Run from the Actions tab. Creates the account through the live site's own
+# API (so the password is hashed exactly as the site does it), or, if the
+# account already exists, resets its password and tier. Authenticates with
+# the ADMIN_KEY repo secret; nothing else is needed.
 
 on:
   workflow_dispatch:
@@ -25,30 +25,25 @@ jobs:
   account:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Hash the password
-        id: hash
+      - name: Create or reset
         env:
-          PASSWORD: ${{ inputs.password }}
-        run: |
-          node -e '
-            const { pbkdf2Sync, randomBytes } = require("crypto");
-            const salt = randomBytes(16);
-            const hash = pbkdf2Sync(process.env.PASSWORD, salt, 100000, 32, "sha256");
-            console.log("hash=pbkdf2$100000$" + salt.toString("hex") + "$" + hash.toString("hex"));
-          ' >> "$GITHUB_OUTPUT"
-      - name: Write the account
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: "830375f1830fccce2dac031f42817b3d"
+          SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          KEY: ${{ secrets.ADMIN_KEY }}
           EMAIL: ${{ inputs.email }}
+          PASSWORD: ${{ inputs.password }}
           ROLE: ${{ inputs.role }}
-          HASH: ${{ steps.hash.outputs.hash }}
         run: |
-          npx --yes wrangler@4 d1 execute faith-journey-funnel --remote --command \
-            "INSERT INTO admins (email, pass_hash, role) VALUES (lower('$EMAIL'), '$HASH', '$ROLE') ON CONFLICT(email) DO UPDATE SET pass_hash = excluded.pass_hash, role = excluded.role;"
-          npx --yes wrangler@4 d1 execute faith-journey-funnel --remote --command \
-            "SELECT email, role, created_at FROM admins WHERE email = lower('$EMAIL');"
+          body=$(jq -nc --arg e "$EMAIL" --arg p "$PASSWORD" --arg r "$ROLE" '{email:$e,password:$p,role:$r}')
+          code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
+            -H "content-type: application/json" -H "x-admin-key: $KEY" --data "$body")
+          echo "create: $code $(cat /tmp/out)"
+          if [ "$code" = "409" ]; then
+            code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts/password" \
+              -H "content-type: application/json" -H "x-admin-key: $KEY" --data "$body")
+            echo "password: $code $(cat /tmp/out)"
+            [ "$code" = "200" ] || exit 1
+            code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts/role" \
+              -H "content-type: application/json" -H "x-admin-key: $KEY" --data "$body")
+            echo "role: $code $(cat /tmp/out)"
+          fi
+          [ "$code" = "200" ] || exit 1
