@@ -2797,3 +2797,29 @@ body.ig.network .j-row { padding: 12px 16px; }
 body.ig.network .phone-frame { margin-top: 22px; }
 body.ig.network .faq { margin-top: 10px; }
 body.ig.network footer { margin-top: 56px; }
+
+/* Umami without clutter: warmth in the ground, light on the few objects. */
+body.ig.network {
+  background-image:
+    radial-gradient(ellipse 90% 36% at 15% 0%, rgba(240, 148, 51, 0.30), transparent 70%),
+    radial-gradient(ellipse 70% 30% at 90% 8%, rgba(220, 39, 67, 0.26), transparent 70%),
+    radial-gradient(ellipse 80% 30% at 50% 42%, rgba(188, 24, 136, 0.14), transparent 70%),
+    radial-gradient(ellipse 80% 24% at 50% 100%, rgba(220, 39, 67, 0.16), transparent 70%);
+  background-size: 100% 100%; background-attachment: scroll;
+}
+body.ig.network .jpn-hero h1 { text-shadow: 0 0 46px rgba(240,148,51,0.35), 0 0 90px rgba(220,39,67,0.22); }
+body.ig.network .how-flow li {
+  border: 1.5px solid transparent;
+  background: linear-gradient(#151515,#151515) padding-box, linear-gradient(135deg, rgba(240,148,51,0.55), rgba(188,24,136,0.55)) border-box;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+body.ig.network .j-row {
+  border: 1.5px solid transparent;
+  background: linear-gradient(#141414,#141414) padding-box, linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)) border-box;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+}
+body.ig.network .j-row:hover { background: linear-gradient(#181818,#181818) padding-box, linear-gradient(135deg, rgba(240,148,51,0.6), rgba(188,24,136,0.6)) border-box; }
+body.ig.network .phone-frame { box-shadow: 0 40px 90px rgba(220,39,67,0.32), 0 14px 40px rgba(240,148,51,0.2), 0 24px 50px rgba(0,0,0,0.55); }
+body.ig.network .faq summary { box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+body.ig.network .jpn-cta { box-shadow: 0 30px 80px rgba(188,24,136,0.28), 0 10px 30px rgba(240,148,51,0.14), 0 12px 30px rgba(0,0,0,0.5); }
+body.ig.network .land-title { text-shadow: 0 0 30px rgba(220,39,67,0.18); }
