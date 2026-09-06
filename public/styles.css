@@ -2843,3 +2843,16 @@ body.ig .locale-panel {
 body.ig .locale-panel select { background: #0f0f0f; border: 1px solid rgba(255,255,255,0.12); color: var(--ig-text); }
 body.ig .locale-note { color: var(--ig-dim); }
 body.ig .locale-field > span { color: var(--ig-dim); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+
+/* The Instagram profile header, on the network page. */
+body.ig.network .ig-profile { margin-top: 4px; }
+body.ig.network .ig-bio { margin-top: 12px; }
+body.ig.network .ig-bio p { font-size: 0.95rem; }
+body.ig.network .ig-name { font-size: 1.15rem; }
+body.ig.network .ig-actions { display: flex; gap: 8px; margin-top: 14px; padding-bottom: 0; }
+body.ig.network .ig-actions::after { display: none; }
+body.ig.network .ig-actions a { flex: 1; text-align: center; padding: 10px 12px; font-size: 0.88rem; border-radius: 10px; text-decoration: none; min-width: 0; white-space: normal; }
+body.ig.network .hero-url { margin-top: 12px; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 34px; }
+body.ig.network .ig-bio .ig-name { font-size: 1.2rem; }
+body.ig.network .ig-bio .ig-cat { font-size: 0.86rem; }
