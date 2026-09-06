@@ -20,6 +20,12 @@ on:
         default: admin
         type: choice
         options: [admin, creator, pending]
+      admin_email:
+        description: An existing admin's email (to authorize this)
+        required: true
+      admin_password:
+        description: That admin's password (masked in the log)
+        required: true
 
 jobs:
   account:
@@ -28,22 +34,28 @@ jobs:
       - name: Create or reset
         env:
           SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
-          KEY: ${{ secrets.ADMIN_KEY }}
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
           EMAIL: ${{ inputs.email }}
           PASSWORD: ${{ inputs.password }}
           ROLE: ${{ inputs.role }}
         run: |
+          echo "::add-mask::$ADMIN_PASSWORD"; echo "::add-mask::$PASSWORD"
+          login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+          TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
+          [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
+          echo "::add-mask::$TOKEN"
           body=$(jq -nc --arg e "$EMAIL" --arg p "$PASSWORD" --arg r "$ROLE" '{email:$e,password:$p,role:$r}')
           code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
-            -H "content-type: application/json" -H "x-admin-key: $KEY" --data "$body")
+            -H "content-type: application/json" -H "authorization: Bearer $TOKEN" --data "$body")
           echo "create: $code $(cat /tmp/out)"
           if [ "$code" = "409" ]; then
             code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts/password" \
-              -H "content-type: application/json" -H "x-admin-key: $KEY" --data "$body")
+              -H "content-type: application/json" -H "authorization: Bearer $TOKEN" --data "$body")
             echo "password: $code $(cat /tmp/out)"
             [ "$code" = "200" ] || exit 1
             code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts/role" \
-              -H "content-type: application/json" -H "x-admin-key: $KEY" --data "$body")
+              -H "content-type: application/json" -H "authorization: Bearer $TOKEN" --data "$body")
             echo "role: $code $(cat /tmp/out)"
           fi
           [ "$code" = "200" ] || exit 1
