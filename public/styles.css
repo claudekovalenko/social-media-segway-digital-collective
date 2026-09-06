@@ -2767,3 +2767,9 @@ body.ig.network .how-row { margin-left: -6px; }
   body.ig.network .land-title::before { left: -34px; width: 16px; height: 16px; }
   body.ig.network .jpn-cta, body.ig.network footer { margin-left: -34px; }
 }
+
+/* Network page headings: bigger, with a quiet line beneath, evenly spaced. */
+body.ig.network .land-title { font-size: 1.45rem; margin-bottom: 4px; }
+body.ig.network .land-copy { font-size: 0.92rem; }
+body.ig.network .land-section { margin-top: 38px; padding-top: 0; }
+body.ig.network .land-section::before { display: none; }
