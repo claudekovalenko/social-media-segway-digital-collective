@@ -212,3 +212,51 @@ Edit `DEFAULT_CONTENT` at the top of `public/app.js` with your embed URLs (e.g. 
 - `POST /api/creators/register` — `{ slug, name, mode, know_god_video_url?, grow_course_url?, find_church_video_url? }`
 - `GET /api/creators/:slug` — public creator config
 - `GET /api/admin/leads` — all leads, group signups, creators, and per-step counts (requires an allow-listed magic-link `Authorization: Bearer` token or the `x-admin-key` header)
+
+## The platform layer
+
+Everything below was added to match the developer proposal. It runs on D1
+today; `supabase/schema.sql` carries the same tables for Postgres.
+
+**People and responses.** Every form submission still writes a `leads` row
+(the old shape), and also upserts a **contact** (one per person, matched on
+email then phone) and inserts a **response** (one per submission, typed as
+`reported_commitment`, `discipleship_start` or `church_connection`, attributed
+to the creator, section and session). *Fold old leads into contacts* on the
+admin page migrates existing rows; it is safe to run more than once.
+
+**Events.** `public/track.js` sends `page_view`, `section_open`,
+`media_click`, `outbound_click`, `form_open`, `form_submit` and
+`followup_return` to `POST /api/events`, with UTM, referrer, the in-app
+browser it detected and a per-visit session id. No personal data.
+
+**Registration.** `POST /api/register` creates the creator, their account and
+their link in one step. The admin page switches between *open* (link live at
+once) and *needs admin approval*. `GET /api/slug/check` backs the live
+availability check; reserved names live in `RESERVED_PATHS` in `worker.js`.
+A verification email goes out on registration (`/api/verify?token=`).
+
+**Follow-up email.** On every submission the network sends the template for
+that response type, with the creator's own greeting, message and button where
+they set them (dashboard → *Your follow-up email*). Admins edit the network
+templates on the admin page. Every send is logged in `communications`, and
+each email carries a signed unsubscribe link that suppresses the contact.
+Sending needs two repository secrets: `RESEND_API_KEY` and `EMAIL_FROM`
+(a verified sender on your domain). `SITE_URL` sets the links inside emails.
+Without them every send is logged as `skipped` and nothing else breaks.
+
+**Analytics.** `GET /api/analytics` returns visitors, the funnel
+(visitors → Know God opened → form sent → reported commitment), responses by
+type, visitors by source and, for admins, totals by creator. The creator
+dashboard shows its own slice; the admin page shows the network. Same
+records, one filter.
+
+**Export, audit, protection.** `GET /api/export.csv` (creator: own rows;
+admin: all, `?creator=` to filter). Sensitive actions land in `audit_log`
+and show under *Recent changes*. Public forms and registration are rate
+limited per IP, carry a honeypot field, and reject submissions faster than
+1.5 seconds. Admins can pause a creator's page from *Who has access*; a
+paused or unknown link shows `unavailable.html` with a 404.
+
+**Reserved for later.** VisitorReach is a tracked outbound click until they
+provide a handoff; SMS and multi-step sequences are Phase 1.5.

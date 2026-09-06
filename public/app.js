@@ -311,6 +311,12 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     data.language = locale.language || null;
     data.interested_in_group = form.querySelector('[name=interested_in_group]')?.checked || false;
     data.consent = form.querySelector('[name=consent]')?.checked || false;
+    // Attribution and the two spam checks the server expects.
+    data.session_id = window.JP_SESSION || null;
+    data.t0 = Number(form.dataset.t0 || 0) || null;
+    const q = new URLSearchParams(location.search);
+    data.utm_source = q.get('utm_source'); data.utm_medium = q.get('utm_medium'); data.utm_campaign = q.get('utm_campaign');
+    if (window.jpTrack) jpTrack('form_submit', form.closest('.step-card')?.id || null);
     if (!data.interested_in_group) { delete data.group_slot; delete data.slot_note; }
     if (data.group_slot !== 'propose') delete data.slot_note;
     const success = form.querySelector('.success');

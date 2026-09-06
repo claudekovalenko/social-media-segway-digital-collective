@@ -65,7 +65,8 @@
         <div class="step-body">
           <div class="step-inner">
             <div id="video-know_god"></div>
-            <form data-step="know_god">
+            <form data-step="know_god" autocomplete="on">
+              <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
               <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
               <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
               <label class="check consent fine"><input type="checkbox" name="consent" required><span class="consent-text">I agree to be contacted about my next step and accept the <a href="privacy.html" target="_blank">Privacy &amp; Consent terms</a>.</span></label>
@@ -89,7 +90,8 @@
         <div class="step-body">
           <div class="step-inner">
             <div id="video-grow_with_god"></div>
-            <form data-step="grow_with_god">
+            <form data-step="grow_with_god" autocomplete="on">
+              <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
               <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
               <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
               <label class="check consent fine"><input type="checkbox" name="consent" required><span class="consent-text">I agree to be contacted about my next step and accept the <a href="privacy.html" target="_blank">Privacy &amp; Consent terms</a>.</span></label>
@@ -119,7 +121,8 @@
             <div class="gather-help" id="gatherHelp">
               <p data-i18n="gather_help">Tell us your city and we&rsquo;ll point you to a healthy church near you.</p>
             </div>
-            <form data-step="find_church">
+            <form data-step="find_church" autocomplete="on">
+              <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
               <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
               <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
               <input name="city" required maxlength="100" placeholder="City" aria-label="City" data-i18n-placeholder="f_city">
@@ -146,6 +149,7 @@
   </div>
   <script src="i18n.js"></script>
   <script src="app.js"></script>
+  <script src="track.js"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
   <script src="reveal.js" defer></script>
 </body>

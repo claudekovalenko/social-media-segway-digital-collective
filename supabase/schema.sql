@@ -160,3 +160,91 @@ create table if not exists settings (
 );
 
 alter table settings enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- Platform layer (proposal §6–§9). Mirrors what platform.js creates on D1, so
+-- the move to Supabase as system of record keeps the same shape.
+create table if not exists contacts (
+  id bigint generated always as identity primary key,
+  email text, phone text, name text,
+  first_creator_slug text, city text, country text, language text,
+  consent_version text, consent_at timestamptz,
+  unsubscribed_at timestamptz, suppressed_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists contacts_email on contacts (email) where email is not null;
+create index if not exists contacts_phone on contacts (phone);
+
+create table if not exists responses (
+  id bigint generated always as identity primary key,
+  contact_id bigint not null references contacts(id) on delete cascade,
+  lead_id bigint,
+  creator_slug text not null default 'default',
+  section text not null,
+  response_type text not null check (response_type in ('reported_commitment','discipleship_start','church_connection')),
+  campaign text, session_id text, source text,
+  status text not null default 'new',
+  notes text, next_follow_up date, last_contacted_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists responses_creator on responses (creator_slug, created_at);
+create index if not exists responses_contact on responses (contact_id);
+
+create table if not exists events (
+  id bigint generated always as identity primary key,
+  session_id text not null,
+  creator_slug text not null default 'default',
+  event text not null,
+  section text, target text,
+  referrer text, utm_source text, utm_medium text, utm_campaign text,
+  platform text, device text,
+  created_at timestamptz not null default now()
+);
+create index if not exists events_creator on events (creator_slug, created_at);
+create index if not exists events_session on events (session_id);
+
+create table if not exists communications (
+  id bigint generated always as identity primary key,
+  contact_id bigint, response_id bigint, creator_slug text,
+  channel text not null default 'email',
+  template text, to_address text, subject text,
+  provider text, provider_id text,
+  status text not null, error text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists audit_log (
+  id bigint generated always as identity primary key,
+  actor text, action text not null, target text, detail jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists verifications (
+  token text primary key, email text not null, kind text not null,
+  expires_at timestamptz not null, used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table creators add column if not exists status text not null default 'active';
+alter table creators add column if not exists display_name text;
+alter table creators add column if not exists phone text;
+alter table creators add column if not exists socials jsonb;
+alter table creators add column if not exists agreements_version text;
+alter table creators add column if not exists agreed_at timestamptz;
+alter table creators add column if not exists follow_up_greeting text;
+alter table creators add column if not exists follow_up_message text;
+alter table creators add column if not exists follow_up_cta_label text;
+alter table creators add column if not exists follow_up_cta_url text;
+alter table admins add column if not exists email_verified_at timestamptz;
+alter table admins add column if not exists phone text;
+
+alter table contacts enable row level security;
+alter table responses enable row level security;
+alter table events enable row level security;
+alter table communications enable row level security;
+alter table audit_log enable row level security;
+alter table verifications enable row level security;
+-- The Worker uses the service key; creator-scoped reads go through it and
+-- are filtered by creator_slug server-side. Add per-creator RLS policies here
+-- when a browser client ever reads these tables directly.

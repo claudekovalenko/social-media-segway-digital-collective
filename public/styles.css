@@ -3000,3 +3000,43 @@ body.ig.jpn.journey .step-card.done .step-icon { box-shadow: 0 6px 18px rgba(169
 body.ig.jpn.journey .step-card:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
 body.ig.jpn.journey .step-card.open:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.35); }
 body.ig.jpn .j-row .j-icon { color: var(--ig-text); }
+.hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; }
+
+/* Registration: the link field with its fixed prefix, and the availability note. */
+body.ig .slug-wrap { display: flex; align-items: stretch; border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; overflow: hidden; background: rgba(0,0,0,0.45); }
+body.ig.jpn .slug-wrap { background: #fff; border-color: var(--ig-line); }
+body.ig .slug-prefix { padding: 12px 0 12px 14px; font-size: 0.9rem; color: var(--ig-dim); white-space: nowrap; letter-spacing: 0; text-transform: none; font-weight: 400; }
+body.ig .slug-wrap input { border: 0 !important; background: transparent !important; padding-left: 2px !important; min-width: 0; flex: 1; }
+body.ig .slug-note { font-size: 0.78rem; letter-spacing: 0; text-transform: none; font-weight: 500; min-height: 1em; }
+body.ig .slug-note.ok { color: #69705E; } body.ig .slug-note.bad { color: #A9533C; }
+body.ig:not(.jpn) .slug-note.ok { color: #7fd1c9; } body.ig:not(.jpn) .slug-note.bad { color: #ff7a7a; }
+
+/* ---- Insights (analytics on both dashboards) ---------------------------- */
+body.ig .insight-bar { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
+body.ig .insight-range { padding: 8px 10px; border-radius: 10px; font-size: 0.86rem; max-width: 180px; }
+body.ig .insight-tiles { margin-bottom: 14px; }
+body.ig .stat small { display: block; font-size: 0.72rem; color: var(--ig-dim); margin-top: 2px; }
+body.ig .insight-title { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ig-dim); margin: 16px 0 8px; font-weight: 600; }
+body.ig .funnel-row { display: grid; grid-template-columns: 150px 1fr 40px; align-items: center; gap: 10px; margin: 6px 0; font-size: 0.86rem; }
+body.ig .funnel-bar { height: 12px; border-radius: 6px; background: var(--ig-grad); min-width: 4px; transition: width .6s cubic-bezier(.22,.8,.18,1); }
+body.ig .funnel-row b { text-align: right; font-variant-numeric: tabular-nums; }
+body.ig .insight-note { font-size: 0.8rem; color: var(--ig-dim); margin: 8px 0 0; }
+body.ig .source-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--ig-line); font-size: 0.86rem; }
+body.ig .source-row b { font-variant-numeric: tabular-nums; }
+body.ig .notice { padding: 12px 14px; border-radius: 12px; background: #151515; border: 1px solid rgba(255,255,255,0.10); font-size: 0.88rem; margin: 0 0 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+body.ig.jpn .notice { background: #fff; border-color: var(--ig-line); }
+body.ig .notice .btn-small { margin-left: auto; }
+body.ig .seg { display: inline-flex; border: 1px solid var(--ig-line); border-radius: 999px; overflow: hidden; }
+body.ig .seg button { border: 0; background: transparent; color: var(--ig-dim); padding: 7px 14px; font-size: 0.84rem; font-weight: 600; cursor: pointer; }
+body.ig .seg button.on { background: var(--ig-text); color: var(--ig-bg); }
+body.ig textarea.tpl { min-height: 70px; }
+body.ig .tpl-grid { display: grid; gap: 10px; }
+body.ig .tpl-block { padding: 12px 0; border-bottom: 1px solid var(--ig-line); }
+body.ig .tpl-block h5 { margin: 0 0 8px; font-size: 0.85rem; }
+body.ig .audit { font-size: 0.8rem; color: var(--ig-dim); }
+body.ig .audit li { padding: 5px 0; border-bottom: 1px solid var(--ig-line); list-style: none; }
+body.ig .audit ul { padding: 0; margin: 0; }
+@media (max-width: 520px) { body.ig .funnel-row { grid-template-columns: 110px 1fr 36px; } }
+body.ig.jpn .wrap-narrow label input, body.ig.jpn .wrap-narrow label select, body.ig.jpn .wrap-narrow textarea { background: #fff; border-color: var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .wrap-narrow input::placeholder { color: #9a958a; }
+body.ig .wrap-narrow label .pick-hint { display: inline; margin-left: 6px; font-weight: 500; letter-spacing: 0; text-transform: none; }

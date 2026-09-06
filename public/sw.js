@@ -19,7 +19,7 @@ const SHELL = [
   'styles.css',
   'app.js',
   'i18n.js',
-  'crm.js',
+  'crm.js','track.js','insights.js','unavailable',
   'reveal.js',
   'manifest.webmanifest',
   'icons/icon-192.png',

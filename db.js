@@ -6,6 +6,21 @@
 // the site keeps working while the migration is in progress.
 
 let ensureOnce = null;
+let platformColsOnce = null;
+// The platform layer adds columns to creators/admins; make sure they exist
+// before any SELECT names them, even on a database platform.js hasn't touched.
+async function ensurePlatformColumns(DB) {
+  if (!platformColsOnce) platformColsOnce = (async () => {
+    for (const [table, col, type] of [
+      ['creators', 'status', "TEXT NOT NULL DEFAULT 'active'"], ['creators', 'display_name', 'TEXT'],
+      ['creators', 'phone', 'TEXT'], ['creators', 'socials', 'TEXT'], ['creators', 'agreements_version', 'TEXT'],
+      ['creators', 'agreed_at', 'TEXT'], ['creators', 'follow_up_greeting', 'TEXT'], ['creators', 'follow_up_message', 'TEXT'],
+      ['creators', 'follow_up_cta_label', 'TEXT'], ['creators', 'follow_up_cta_url', 'TEXT'],
+      ['admins', 'email_verified_at', 'TEXT'], ['admins', 'phone', 'TEXT'],
+    ]) await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`).run().catch(() => {});
+  })();
+  await platformColsOnce;
+}
 
 export function makeDb(env) {
   return env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY
@@ -33,9 +48,11 @@ function d1Adapter(DB) {
 
     async creatorBySlug(slug) {
       await this.ensureAdmins();
+      await ensurePlatformColumns(DB);
       return DB.prepare(
         `SELECT slug, name, mode, know_god_video_url, grow_course_url,
-                find_church_video_url, gather_url
+                find_church_video_url, gather_url, status, display_name, handle, topic,
+                follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url
          FROM creators WHERE slug = ?`).bind(slug).first();
     },
 

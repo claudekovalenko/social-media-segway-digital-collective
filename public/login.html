@@ -78,17 +78,25 @@
       </form>
 
       <form id="joinForm" hidden>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
         <label>Your name
           <input name="name" type="text" required placeholder="Sam Rivera" autocomplete="name">
+        </label>
+        <label>Name to show on your page
+          <input name="display_name" type="text" placeholder="Sam Rivera" autocomplete="nickname">
         </label>
         <label>Email
           <input name="email" type="email" required placeholder="you@example.com" autocomplete="username">
         </label>
+        <label>Phone <span class="pick-hint">optional</span>
+          <input name="phone" type="tel" placeholder="+1 555 123 4567" autocomplete="tel">
+        </label>
         <label>Password
           <input name="password" type="password" required autocomplete="new-password" minlength="6">
         </label>
-        <label>Your handle
-          <input name="handle" type="text" placeholder="@yourhandle">
+        <label>Your link
+          <span class="slug-wrap"><span class="slug-prefix">thejesuspeople.network/</span><input name="slug" type="text" required placeholder="yourname" pattern="[a-z0-9][a-z0-9-]{2,39}" autocapitalize="none" spellcheck="false"></span>
+          <span class="slug-note" id="slugNote"></span>
         </label>
         <fieldset class="pick-set">
           <legend>Where you create <span class="pick-hint">pick all that apply</span></legend>
@@ -100,37 +108,30 @@
             <label class="pick"><input type="checkbox" name="platform" value="X"><span>X / Twitter</span></label>
             <label class="pick"><input type="checkbox" name="platform" value="Threads"><span>Threads</span></label>
             <label class="pick"><input type="checkbox" name="platform" value="Podcast"><span>Podcast</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Blog"><span>Blog</span></label>
             <label class="pick"><input type="checkbox" name="platform" value="Other"><span>Other</span></label>
           </div>
         </fieldset>
-        <label>Audience size
-          <select name="audience">
-            <option value="">Choose one</option>
-            <option>Under 1,000</option>
-            <option>1,000 &ndash; 10,000</option>
-            <option>10,000 &ndash; 100,000</option>
-            <option>100,000+</option>
-          </select>
+        <label>Your main handle or profile link
+          <input name="handle" type="text" placeholder="@yourhandle or https://…">
         </label>
-        <label>What you create about
+        <label>What you create about <span class="pick-hint">optional</span>
           <input name="topic" type="text" placeholder="Testimonies, apologetics, worship&hellip;">
         </label>
-        <label>Why do you want to join?
-          <textarea name="why" rows="4" required minlength="20"
-            placeholder="What you&rsquo;re building, and what you hope The Jesus People Network helps you do."></textarea>
+        <label class="check">
+          <input type="checkbox" name="agree_faith" required>
+          <span>I have read the <a href="beliefs.html" target="_blank">Statement of Faith</a> and agree to teach in agreement with it.</span>
         </label>
         <label class="check">
-          <input type="checkbox" name="agreed" required>
-          <span>I have read the <a href="beliefs.html" target="_blank">statement of faith</a> and I agree to teach in agreement with it, including the inerrancy and final authority of Scripture.</span>
+          <input type="checkbox" name="agree_commitments" required>
+          <span>I agree to the creator commitments: point people to a local church, handle responses with care, and keep content my own responsibility (it isn&rsquo;t vetted or endorsed by the network).</span>
         </label>
         <label class="check">
-          <input type="checkbox" name="understood" required>
-          <span>I understand The Jesus People Network is a hub, not a broadcaster: my content is my own responsibility, it isn&rsquo;t vetted or endorsed by the network, and its purpose is to point people toward healthy local church community.</span>
+          <input type="checkbox" name="agree_terms" required>
+          <span>I accept the <a href="terms.html" target="_blank">Terms</a> and the <a href="privacy.html" target="_blank">Privacy &amp; Consent</a> policy.</span>
         </label>
-        <button type="submit" id="joinBtn">Send application</button>
-        <p class="aside-link">You&rsquo;ll get an account right away and your link once an admin approves you.</p>
-        <div class="success" id="applied">Application sent. We&rsquo;ll be in touch — you can sign in any time to check.</div>
+        <button type="submit" id="joinBtn">Create my link</button>
+        <p class="aside-link" id="modeNote">Your link is ready the moment you register. We&rsquo;ll email you to confirm your address.</p>
+        <div class="success" id="applied"></div>
         <div class="error"></div>
       </form>
 
@@ -382,7 +383,7 @@
       document.getElementById('approvalNote').hidden = !hasAccounts;
       document.getElementById('toSignIn').hidden = !hasAccounts;
       document.getElementById('why').textContent = join
-        ? 'Tell us a little about your work.'
+        ? 'Create your link in a minute.'
         : (signUp
           ? (hasAccounts
             ? 'Create your account.'
@@ -410,35 +411,62 @@
       t.addEventListener('click', () => showTab(t.dataset.tab));
     }
 
+    // Link name: live availability check while typing.
+    const slugInput = document.querySelector('#joinForm [name=slug]');
+    const slugNote = document.getElementById('slugNote');
+    let slugTimer = null;
+    slugInput.addEventListener('input', () => {
+      slugInput.value = slugInput.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+      clearTimeout(slugTimer);
+      const v = slugInput.value;
+      if (v.length < 3) { slugNote.textContent = ''; slugNote.className = 'slug-note'; return; }
+      slugTimer = setTimeout(async () => {
+        try {
+          const r = await fetch(API_BASE + '/api/slug/check?slug=' + encodeURIComponent(v));
+          const b = await r.json();
+          slugNote.textContent = b.ok ? 'Available' : (b.reason || 'Not available');
+          slugNote.className = 'slug-note ' + (b.ok ? 'ok' : 'bad');
+        } catch { slugNote.textContent = ''; }
+      }, 350);
+    });
+    // Suggest a link name from the display name until they type their own.
+    document.querySelector('#joinForm [name=name]').addEventListener('input', (e) => {
+      if (slugInput.dataset.touched) return;
+      slugInput.value = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+      slugInput.dispatchEvent(new Event('input'));
+    });
+    slugInput.addEventListener('keydown', () => { slugInput.dataset.touched = '1'; });
+
     document.getElementById('joinForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.currentTarget;
       const form = new FormData(f);
       const data = Object.fromEntries(form.entries());
-      // Checkboxes: every ticked platform, not just the last one.
-      data.platform = form.getAll('platform').join(', ');
-      // Checkboxes arrive as 'on'; send them as real booleans.
-      data.agreed = form.get('agreed') === 'on';
-      data.understood = form.get('understood') === 'on';
+      const platforms = form.getAll('platform');
+      data.primary_platform = platforms[0] || null;
+      data.socials = { platforms, handle: data.handle || null };
+      for (const k of ['agree_faith', 'agree_commitments', 'agree_terms']) data[k] = form.get(k) === 'on';
       const error = f.querySelector('.error');
       const btn = document.getElementById('joinBtn');
       error.style.display = 'none';
       btn.disabled = true;
       try {
-        const res = await fetch(API_BASE + '/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+        const res = await fetch(API_BASE + '/api/register', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
         });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || 'Could not send the application.');
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || 'Could not create your link.');
+        sessionStorage.setItem('dc_admin_token', body.token);
+        if (body.role === 'pending') {
+          const ok = document.getElementById('applied');
+          ok.textContent = 'Registered. An admin will approve your link shortly; you can sign in any time to check.';
+          ok.style.display = 'block';
+          setTimeout(() => location.replace('dashboard.html'), 1800);
+        } else {
+          location.replace('dashboard.html?welcome=1');
         }
-        const body = await res.json();
-        done(body.token, body.role);
       } catch (err) {
-        error.textContent = err.message === 'Failed to fetch'
-          ? 'Could not reach the server — try again.' : err.message;
+        error.textContent = err.message === 'Failed to fetch' ? 'Could not reach the server — try again.' : err.message;
         error.style.display = 'block';
         btn.disabled = false;
       }

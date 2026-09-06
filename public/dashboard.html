@@ -36,6 +36,11 @@
         </span>
       </div>
       <div class="stat-row" id="stats"></div>
+      <div class="notice" id="welcome" hidden><span>Your link is live. Put it in your bio and every response comes back here.</span></div>
+      <div class="notice" id="verifyNote" hidden><span>Confirm your email so we can send responses your way.</span><button type="button" class="btn-small" id="resendVerify">Resend the email</button></div>
+
+      <h3 class="section">What happened through your link</h3>
+      <div id="insights"></div>
 
       <h3 class="section">Your links</h3>
       <form class="app-card" id="links">
@@ -58,6 +63,32 @@
         </div>
       </form>
 
+      <details class="fold">
+      <summary class="section">Your follow-up email</summary>
+      <form class="app-card" id="followup">
+        <p class="app-meta">The network sends this the moment someone responds on your page, in your name. Change the words; the structure, sender and unsubscribe stay the network&rsquo;s. Leave a field blank to use the network default.</p>
+        <label>Name to show
+          <input name="display_name" type="text" maxlength="80" placeholder="How your name appears">
+        </label>
+        <label>Greeting
+          <input name="follow_up_greeting" type="text" maxlength="200" placeholder="Hi {{first_name}},">
+        </label>
+        <label>Short message
+          <textarea name="follow_up_message" class="tpl" maxlength="600" placeholder="A sentence or two in your voice."></textarea>
+        </label>
+        <label>Button label
+          <input name="follow_up_cta_label" type="text" maxlength="60" placeholder="Grow with God">
+        </label>
+        <label>Button link
+          <input name="follow_up_cta_url" type="url" placeholder="https://… (defaults to your Grow with God section)">
+        </label>
+        <div class="app-actions">
+          <button type="submit" class="btn-small go">Save</button>
+          <span class="crm-saved"></span>
+        </div>
+      </form>
+      </details>
+
       <h3 class="section">Follow-ups due</h3>
       <div class="table-scroll"><table id="dueTable">
         <thead><tr><th>Name</th><th>Email</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
@@ -65,7 +96,7 @@
       </table></div>
       <p class="dir-empty" id="dueEmpty" hidden>Nothing due in the next few days.</p>
 
-      <h3 class="section">Your leads</h3>
+      <h3 class="section">Your responses</h3>
       <div class="table-scroll"><table id="leadsTable">
         <thead><tr><th>Name</th><th>Email</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
         <tbody></tbody>
@@ -80,6 +111,7 @@
 
   <script type="module">
     import { statusCell, followUpCell, notesCell, saverFor, dueLeads } from './crm.js';
+    import { mountInsights } from './insights.js';
 
     const API_BASE = location.hostname.endsWith('github.io')
       ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
@@ -168,6 +200,21 @@
         if (fallback) input.placeholder = fallback + '  (default)';
       }
 
+      // Analytics, scoped to this creator by the server.
+      const headersNow = credentials() || {};
+      mountInsights(document.getElementById('insights'), {
+        apiBase: API_BASE, headers: headersNow,
+        fetchJson: async (path) => { const r = await fetch(API_BASE + path, { headers: headersNow }); if (!r.ok) throw new Error('x'); return r.json(); },
+      });
+      // Follow-up settings.
+      const fu = document.getElementById('followup');
+      for (const f of ['display_name', 'follow_up_greeting', 'follow_up_message', 'follow_up_cta_label', 'follow_up_cta_url']) {
+        if (fu.elements[f]) fu.elements[f].value = data.creator[f] || '';
+      }
+      const q = new URLSearchParams(location.search);
+      if (q.get('welcome')) document.getElementById('welcome').hidden = false;
+      if (data.email_verified === false) document.getElementById('verifyNote').hidden = false;
+
       renderLeads('#leadsTable tbody', data.leads);
       renderLeads('#dueTable tbody', dueLeads(data.leads));
       document.getElementById('dueEmpty').hidden = dueLeads(data.leads).length > 0;
@@ -206,6 +253,28 @@
       } catch (err) {
         said.textContent = err.message;
       }
+    });
+
+    document.getElementById('followup').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const mark = form.querySelector('.crm-saved');
+      const body = Object.fromEntries(new FormData(form).entries());
+      mark.textContent = '…';
+      try {
+        const res = await fetch(API_BASE + '/api/creator/followup', {
+          method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+        const out = await res.json().catch(() => ({}));
+        mark.textContent = res.ok ? 'Saved' : (out.error || 'Could not save');
+      } catch { mark.textContent = 'Could not save'; }
+      setTimeout(() => { mark.textContent = ''; }, 3000);
+    });
+    document.getElementById('resendVerify').addEventListener('click', async (e) => {
+      const btn = e.currentTarget; btn.disabled = true;
+      const res = await fetch(API_BASE + '/api/verify/resend', { method: 'POST', headers: credentials() || {} }).catch(() => null);
+      const out = res ? await res.json().catch(() => ({})) : {};
+      btn.textContent = out.status === 'sent' ? 'Sent' : (out.status === 'skipped' ? 'Email is not set up yet' : (out.error || 'Try again later'));
     });
 
     document.getElementById('signOut').addEventListener('click', (e) => {

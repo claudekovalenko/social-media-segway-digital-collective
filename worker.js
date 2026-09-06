@@ -1,4 +1,6 @@
 import { makeDb, usingSupabase, emailFromToken } from './db.js';
+import { handlePlatform, sendFollowUp } from './platform-routes.js';
+import { platform, rateLimited, clientIp } from './platform.js';
 
 // Cloudflare Worker backend for the Faith Journey funnel.
 // Static files in public/ are served by Workers Assets; this handles /api/* and /c/*.
@@ -269,6 +271,15 @@ export default {
     const url = new URL(req.url);
     const p = url.pathname;
     const db = makeDb(env);
+    // Platform routes: events, registration, analytics, export, follow-up.
+    // They live in their own module and answer first.
+    try {
+      const handled = await handlePlatform(req, url, env, db, whoami, hashPassword, signSession,
+        accountSecretFor, newAccessKey, sha256hex, defaultLinks, SESSION_HOURS, RESERVED_PATHS);
+      if (handled) return handled;
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
 
     try {
       if (req.method === 'OPTIONS' && p.startsWith('/api/')) {
@@ -685,9 +696,12 @@ export default {
           db.leadsForCreator(me.creator_slug),
           db.countsForCreator(me.creator_slug),
         ]);
+        const account = me.email ? await db.adminByEmail(me.email).catch(() => null) : null;
+        const { key_hash, ...creatorPublic } = creator;
         return json({
-          creator, leads, counts, role: me.role,
-          link: `/c/${me.creator_slug}`, defaults: await defaultLinks(db),
+          creator: creatorPublic, leads, counts, role: me.role,
+          link: `/${me.creator_slug}`, defaults: await defaultLinks(db),
+          email_verified: account ? Boolean(account.email_verified_at) : null,
         });
       }
 
@@ -699,12 +713,20 @@ export default {
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
         const row = await db.creatorBySlug(p.split('/')[3]);
-        if (!row) return json({ error: 'creator not found' }, 404);
-        return json({ ...row, defaults: await defaultLinks(db) });
+        if (!row || row.status === 'suspended') return json({ error: 'creator not found' }, 404);
+        // Never the key hash or private contact details on the public config.
+        const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
+        return json({ ...pub, defaults: await defaultLinks(db) });
       }
 
       if (p === '/api/leads' && req.method === 'POST') {
+        if (rateLimited(`lead:${clientIp(req)}`, 20, 10 * 60_000)) {
+          return json({ error: 'Too many submissions. Please try again in a few minutes.' }, 429);
+        }
         const b = await req.json().catch(() => ({}));
+        // Honeypot and timing: bots fill hidden fields and submit instantly.
+        if (b.website) return json({ ok: true }, 201);
+        if (b.t0 && Date.now() - Number(b.t0) < 1500) return json({ error: 'Please take a moment and try again.' }, 400);
         const step = String(b.step || '');
         const name = String(b.name || '').trim().slice(0, 100);
         const email = String(b.email || '').trim().slice(0, 200);
@@ -729,7 +751,26 @@ export default {
         if (interested) {
           await db.insertGroupSignup({ lead_id: leadId, creator_slug: creatorSlug, slot: null });
         }
-        return json({ ok: true }, 201);
+        // The platform record: one contact per person, one response per
+        // submission, then the network's follow-up in the creator's name.
+        let recorded = null;
+        try {
+          const pf = platform(env.DB);
+          recorded = await pf.recordSubmission({
+            lead_id: leadId, step, name, email, phone: b.phone, city: b.city, country, language,
+            creator_slug: creatorSlug, campaign: String(b.utm_campaign || '').slice(0, 120) || null,
+            session_id: String(b.session_id || '').slice(0, 64) || null,
+            source: String(b.utm_source || b.platform || '').slice(0, 80) || null,
+          });
+          const creator = creatorSlug !== 'default' ? await db.creatorBySlug(creatorSlug).catch(() => null) : null;
+          await sendFollowUp(env, url, db, pf, {
+            contact_id: recorded.contact_id, response_id: recorded.response_id, creator, step, name, email,
+            defaults: await defaultLinks(db), settings: await db.settings().catch(() => ({})),
+          });
+        } catch (err) {
+          console.error('platform record failed', err.message);
+        }
+        return json({ ok: true, response_id: recorded?.response_id || null }, 201);
       }
 
       if (p === '/api/admin/leads' && req.method === 'GET') {
@@ -762,7 +803,14 @@ export default {
       // segment that isn't a known page or asset qualifies.
       const vanity = p.match(/^\/([a-z0-9][a-z0-9._-]{2,39})\/?$/);
       if (vanity && req.method === 'GET' && !RESERVED_PATHS.has(vanity[1]) && !vanity[1].includes('.')) {
-        const journeyReq = new Request(new URL('/journey.html', url), req);
+        const owner = await db.creatorBySlug(vanity[1]).catch(() => null);
+        if (!owner || owner.status === 'suspended') {
+          // Unknown or disabled creator: a real page, not the default funnel.
+          const res404 = await env.ASSETS.fetch(new Request(new URL('/unavailable', url), req));
+          return new Response(res404.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } });
+        }
+        // The asset layer answers /journey.html with a redirect; ask for the clean path.
+        const journeyReq = new Request(new URL('/journey', url), req);
         const res = await env.ASSETS.fetch(journeyReq);
         if (res.ok) {
           const html = (await res.text()).replace(

@@ -33,6 +33,30 @@
       </div>
       <div class="stat-row" id="stats"></div>
 
+      <h3 class="section">Across the network</h3>
+      <div id="insights"></div>
+
+      <details class="fold">
+      <summary class="section">Registration &amp; follow-up</summary>
+      <div class="app-card" id="platformCard">
+        <p class="app-meta">How new creators get in, and the emails the network sends in their name.</p>
+        <p class="notice" id="emailState"></p>
+        <h4>New creators</h4>
+        <div class="seg" id="regMode">
+          <button type="button" data-mode="open">Open — link is live at once</button>
+          <button type="button" data-mode="approval">Needs admin approval</button>
+        </div>
+        <h4 style="margin-top:16px">Follow-up templates</h4>
+        <form id="templates" class="tpl-grid"></form>
+        <div class="app-actions">
+          <button type="button" class="btn-small go" id="saveTemplates">Save templates</button>
+          <button type="button" class="btn-small" id="testFollowup">Send me a test</button>
+          <button type="button" class="btn-small" id="migrate">Fold old leads into contacts</button>
+          <span class="crm-saved" id="platformSaved"></span>
+        </div>
+      </div>
+      </details>
+
       <details class="fold">
       <summary class="section">Network defaults</summary>
       <form class="app-card" id="defaults">
@@ -94,9 +118,14 @@
         </div>
       </form>
       <div class="table-scroll"><table id="accountsTable">
-        <thead><tr><th>Email</th><th>Tier</th><th>Their link</th><th>Reset password</th></tr></thead>
+        <thead><tr><th>Email</th><th>Tier</th><th>Their link</th><th>Page</th><th>Reset password</th></tr></thead>
         <tbody></tbody>
       </table></div>
+      </details>
+
+      <details class="fold">
+      <summary class="section">Recent changes</summary>
+      <div class="audit"><ul id="auditList"></ul></div>
       </details>
 
     </div>
@@ -109,6 +138,7 @@
 
   <script type="module">
     import { LEAD_STATUS, statusCell, followUpCell, notesCell, saverFor, dueLeads } from './crm.js';
+    import { mountInsights } from './insights.js';
 
     // The dashboard reads live data, so it always talks to the Worker.
     const API_BASE = location.hostname.endsWith('github.io')
@@ -159,7 +189,77 @@
         (data.admin_email || 'Signed in with the admin key') +
         (data.backend ? ' · ' + data.backend : '');
       render(data);
+      const headersNow = credentials() || {};
+      mountInsights(document.getElementById('insights'), {
+        apiBase: API_BASE, headers: headersNow,
+        fetchJson: async (path) => { const r = await fetch(API_BASE + path, { headers: headersNow }); if (!r.ok) throw new Error('x'); return r.json(); },
+      });
+      loadPlatform();
     }
+
+    // ---- registration mode, templates, audit -------------------------------
+    const TPL_FIELDS = [['subject', 'Subject'], ['greeting', 'Greeting'], ['message', 'Message'], ['cta_label', 'Button label'], ['cta_url', 'Button link']];
+    const TPL_NAMES = { reported_commitment: 'After a reported commitment', discipleship_start: 'After a discipleship start', church_connection: 'After a church connection request' };
+    async function loadPlatform() {
+      const res = await fetch(API_BASE + '/api/admin/platform', { headers: credentials() || {} }).catch(() => null);
+      if (!res || !res.ok) return;
+      const d = await res.json();
+      document.getElementById('emailState').textContent = d.email_configured
+        ? 'Email is connected. Follow-ups and verification emails are being sent.'
+        : 'Email is not connected yet: add RESEND_API_KEY and EMAIL_FROM as repository secrets. Until then every send is logged as skipped.';
+      for (const b of document.querySelectorAll('#regMode button')) b.classList.toggle('on', b.dataset.mode === d.registration_mode);
+      const form = document.getElementById('templates');
+      form.replaceChildren();
+      for (const [type, name] of Object.entries(TPL_NAMES)) {
+        const block = document.createElement('div'); block.className = 'tpl-block';
+        const h = document.createElement('h5'); h.textContent = name; block.appendChild(h);
+        for (const [key, label] of TPL_FIELDS) {
+          const lab = document.createElement('label'); lab.textContent = label;
+          const input = document.createElement(key === 'message' ? 'textarea' : 'input');
+          if (key === 'message') input.className = 'tpl';
+          input.name = `${type}.${key}`; input.value = d.templates[type][key] || '';
+          lab.appendChild(input); block.appendChild(lab);
+        }
+        form.appendChild(block);
+      }
+      const hint = document.createElement('p'); hint.className = 'app-meta';
+      hint.textContent = 'Tokens: {{first_name}} {{creator_name}} {{grow_url}} {{gather_url}} {{journey_url}}';
+      form.appendChild(hint);
+      const ul = document.getElementById('auditList'); ul.replaceChildren();
+      for (const a of d.audit) {
+        const li = document.createElement('li');
+        li.textContent = `${(a.created_at || '').slice(0, 16).replace('T', ' ')} · ${a.actor || '—'} · ${a.action} ${a.target || ''}`;
+        ul.appendChild(li);
+      }
+    }
+    document.getElementById('regMode').addEventListener('click', async (e) => {
+      const b = e.target.closest('button[data-mode]'); if (!b) return;
+      await fetch(API_BASE + '/api/admin/platform', { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify({ registration_mode: b.dataset.mode }) });
+      for (const x of document.querySelectorAll('#regMode button')) x.classList.toggle('on', x === b);
+    });
+    document.getElementById('saveTemplates').addEventListener('click', async () => {
+      const mark = document.getElementById('platformSaved'); mark.textContent = '…';
+      const templates = {};
+      for (const input of document.querySelectorAll('#templates [name]')) {
+        const [type, key] = input.name.split('.'); templates[type] = templates[type] || {}; templates[type][key] = input.value;
+      }
+      const res = await fetch(API_BASE + '/api/admin/platform', { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify({ templates }) });
+      mark.textContent = res.ok ? 'Saved' : 'Could not save'; setTimeout(() => { mark.textContent = ''; }, 3000);
+    });
+    document.getElementById('testFollowup').addEventListener('click', async () => {
+      const mark = document.getElementById('platformSaved'); mark.textContent = '…';
+      const res = await fetch(API_BASE + '/api/admin/test-followup', { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'know_god', name: 'Test' }) });
+      const out = await res.json().catch(() => ({}));
+      mark.textContent = res.ok ? `Sent to ${out.to} (or logged as skipped if email is not connected)` : (out.error || 'Failed');
+      setTimeout(() => { mark.textContent = ''; }, 6000);
+    });
+    document.getElementById('migrate').addEventListener('click', async () => {
+      const mark = document.getElementById('platformSaved'); mark.textContent = '…';
+      const res = await fetch(API_BASE + '/api/admin/migrate', { method: 'POST', headers: credentials() || {} });
+      const out = await res.json().catch(() => ({}));
+      mark.textContent = res.ok ? `Done: ${out.scanned} leads scanned, ${out.contacts} new contacts, ${out.responses} responses` : (out.error || 'Failed');
+      setTimeout(() => { mark.textContent = ''; }, 8000);
+    });
 
     document.getElementById('signOut').addEventListener('click', (e) => {
       e.preventDefault();
@@ -279,6 +379,7 @@
       pending: 'Nothing yet — awaiting review',
     };
 
+    let lastData = {};
     function renderAccounts(accounts) {
       const tb = document.querySelector('#accountsTable tbody');
       tb.replaceChildren();
@@ -326,7 +427,21 @@
 
         tr.appendChild(cell(a.email));
         tr.appendChild(tier);
-        tr.appendChild(cell(a.creator_slug ? `/c/${a.creator_slug}` : ''));
+        tr.appendChild(cell(a.creator_slug ? `/${a.creator_slug}` : ''));
+        const pageTd = document.createElement('td');
+        if (a.creator_slug) {
+          const c = (lastData.creators || []).find((x) => x.slug === a.creator_slug);
+          const suspended = c && c.status === 'suspended';
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-small';
+          b.textContent = suspended ? 'Paused — enable' : 'Pause page';
+          b.addEventListener('click', async () => {
+            b.disabled = true;
+            await fetch(`${API_BASE}/api/admin/creators/${a.creator_slug}/${suspended ? 'enable' : 'suspend'}`, { method: 'POST', headers: credentials() || {} });
+            load();
+          });
+          pageTd.appendChild(b);
+        }
+        tr.appendChild(pageTd);
 
         const reset = document.createElement('td');
         const resetWrap = document.createElement('div');
@@ -431,6 +546,7 @@
       }
 
       renderApplications(data.applications || []);
+      lastData = data;
       renderAccounts(data.accounts || []);
 
     }
