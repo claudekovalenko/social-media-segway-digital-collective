@@ -2865,3 +2865,11 @@ body.ig.network .ig-actions { margin-top: 16px; }
 body.ig.network .hero-url { margin-top: 14px; }
 body.ig.network .ig-main > .land-section:first-child { margin-top: 48px; }
 body.ig.network .land-section { margin-top: 56px; }
+
+/* The one line that matters: the second half carries the gradient. */
+body.ig.network .ig-bio .ig-lede { font-size: 1.05rem; line-height: 1.45; }
+body.ig.network .ig-lede em {
+  font-style: normal; font-weight: 700; white-space: nowrap;
+  background: var(--ig-grad); -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
