@@ -41,7 +41,7 @@ const I18N = {
     vid2: 'Discipleship course intro video goes here.',
     vid3: 'Training video: joining a healthy local church — or starting a local gathering of your own.',
     err: 'Something went wrong',
-    explore_creators: 'Explore creators in the collective →',
+    explore_creators: 'Explore creators in the network →',
     back_home: 'The Jesus People Network',
     consent: 'I agree to be contacted about my next step and accept the {privacy}.',
     privacy_name: 'Privacy & Consent terms',

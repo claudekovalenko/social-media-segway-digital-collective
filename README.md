@@ -91,7 +91,7 @@ a state worth keeping.
 ## Accounts, tiers, and the CRM
 
 Everyone — you and every creator — signs in at **`/login.html`**. One page, two
-tabs: **Sign in** and **Join the collective**. The account's `role` decides
+tabs: **Sign in** and **Join the network**. The account's `role` decides
 what opens next:
 
 Every account reaches the database — the tier decides how much of it:
@@ -140,9 +140,9 @@ selector, so access can be granted, downgraded, or revoked (set to `pending`)
 at any time. An admin can't remove their own admin access, and only admins can
 change anyone's tier.
 
-### What the collective does and doesn't endorse
+### What the network does and doesn't endorse
 
-The statement of faith carries a clause saying plainly that Digital Collective
+The statement of faith carries a clause saying plainly that The Jesus People Network
 is a hub, not a broadcaster: creators sign the statement, but their content is
 not vetted, and listing someone is not an endorsement of their teaching. It
 encourages people to be Bereans (Acts 17:11), to test everything against
@@ -156,7 +156,7 @@ and acknowledgement of those content terms. Both are checked server-side, and
 the moment of agreement is stored on the application as `agreed_at` and shown
 to the reviewing admin.
 
-### Joining the collective
+### Joining the network
 
 The **Join** tab collects name, email, password, handle, platform, audience
 size, topic, and *why they want to join*. That's stored in `applications` and
@@ -176,13 +176,13 @@ same rule covers edits: a creator updating a lead that isn't theirs gets a 403.
 ### Links each creator controls
 
 Every creator sets their own links from **Your links** on their dashboard: the
-Know God video, the Grow with God course, the Gather Locally video, and where
-Gather Locally sends people. Anything left blank falls back to the collective
+Know God video, the Grow with God course, the Get Connected video, and where
+Get Connected sends people. Anything left blank falls back to the network
 defaults in `DEFAULT_LINKS` at the top of `worker.js` — change the URLs there
 and every creator who hasn't overridden them follows.
 
 The defaults themselves are editable from **Collective defaults** at the top of
-the database view — no deploy needed. Until the Gather Locally link is filled
+the database view — no deploy needed. Until the Get Connected link is filled
 in, the step explains what happens next instead of showing a dead button; the
 moment an admin saves a URL, the button appears on every creator's page at
 once. `DEFAULT_LINKS` in `worker.js` is only the fallback for anything unset.

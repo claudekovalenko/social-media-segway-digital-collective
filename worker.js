@@ -20,7 +20,7 @@ const VALID_LEAD_STATUS = new Set([
 // An admin may edit a specific creator's links by naming the slug.
 const b_slug = (b) => (b && typeof b.slug === 'string' ? b.slug : null);
 
-// Fallbacks in code. Anything an admin saves under "Collective defaults" in
+// Fallbacks in code. Anything an admin saves under "Network defaults" in
 // the database view wins over these, so the links can be filled in later
 // without a deploy.
 const DEFAULT_LINKS = {
@@ -379,7 +379,7 @@ export default {
       }
 
       // ---- one door for everyone ------------------------------------------
-      // Join the collective: an application plus a pending account, so the
+      // Join the network: an application plus a pending account, so the
       // person can sign in and watch for the decision.
       if (p === '/api/auth/signup' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
@@ -498,7 +498,7 @@ export default {
         });
       }
 
-      // Collective-wide defaults, editable by an admin.
+      // Network-wide defaults, editable by an admin.
       if (p === '/api/admin/settings' && req.method === 'POST') {
         const who = await isAdmin(req, url, env, db);
         if (!who.ok) return json({ error: 'unauthorized' }, 401);
@@ -570,7 +570,7 @@ export default {
       }
 
       // A creator sets the links their own page uses. Blank means "use the
-      // collective's default", so clearing a field is a real action.
+      // network's default", so clearing a field is a real action.
       if (p === '/api/creator/links' && (req.method === 'POST' || req.method === 'PATCH')) {
         const me = await whoami(req, url, env, db);
         if (me.role !== 'creator' && me.role !== 'admin') {
@@ -691,7 +691,7 @@ export default {
         });
       }
 
-      // The collective's defaults on their own, for a page whose creator slug
+      // The network's defaults on their own, for a page whose creator slug
       // doesn't resolve.
       if (p === '/api/defaults' && req.method === 'GET') {
         return json({ defaults: await defaultLinks(db) });

@@ -39,7 +39,7 @@
 
       <h3 class="section">Your links</h3>
       <form class="app-card" id="links">
-        <p class="app-meta">What your page shows at each step. Leave one blank to use the collective&rsquo;s default.</p>
+        <p class="app-meta">What your page shows at each step. Leave one blank to use the network&rsquo;s default.</p>
         <label>Know God &mdash; video
           <input name="know_god_video_url" type="url" placeholder="https://…">
         </label>
@@ -158,7 +158,7 @@
         stats.appendChild(el);
       }
 
-      // Fill the link editor with what's set, showing the collective default
+      // Fill the link editor with what's set, showing the network default
       // as the placeholder wherever a creator hasn't set their own.
       const form = document.getElementById('links');
       for (const field of ['know_god_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {

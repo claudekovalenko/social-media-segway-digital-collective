@@ -1,12 +1,12 @@
 {
-  "name": "Next Step",
-  "short_name": "Next Step",
-  "description": "Know God, Grow with God, Gather Locally — take your next step.",
+  "name": "The Jesus People Network",
+  "short_name": "Jesus People",
+  "description": "Know God, Grow with God, Get Connected — take your next step.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b0b0b",
-  "theme_color": "#0b0b0b",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "icons/icon-192.png",
