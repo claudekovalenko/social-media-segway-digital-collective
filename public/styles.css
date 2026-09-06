@@ -2642,3 +2642,14 @@ body.ig .locale-panel { animation: faq-in .3s var(--ease-soft) both; }
   body.ig .faq p, body.ig .locale-panel { animation: none; }
   html { scroll-behavior: auto; }
 }
+
+/* Simpler network page: tighter sections, rows on one line. */
+body.ig.network .land-section { margin-top: 30px; }
+body.ig.network .land-title { font-size: 1.3rem; margin-bottom: 6px; }
+body.ig.network .jpn-hero h1 { font-size: clamp(1.8rem, 6.5vw, 2.3rem); }
+body.ig.network .j-row { padding: 10px 14px; }
+body.ig.network .j-row .j-ring { width: 40px; height: 40px; }
+body.ig.network .j-meta b { font-size: 0.95rem; }
+body.ig.network .j-meta span { font-size: 0.8rem; }
+body.ig.network .journey-list { gap: 8px; margin-top: 10px; }
+body.ig.network .faq summary { padding: 11px 13px; font-size: 0.92rem; }
