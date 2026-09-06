@@ -249,7 +249,7 @@ function setupLocale() {
 setupLocale();
 applyLanguage();
 
-// ---- the Gather Locally link --------------------------------------------
+// ---- the Get Connected link --------------------------------------------
 // One outbound link for finding a church. A creator can point this anywhere;
 // otherwise everyone gets the network's default partner.
 function showGatherLink(url, label) {

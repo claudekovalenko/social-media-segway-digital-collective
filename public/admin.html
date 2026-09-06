@@ -36,20 +36,20 @@
       <details class="fold">
       <summary class="section">Network defaults</summary>
       <form class="app-card" id="defaults">
-        <p class="app-meta">What every creator&rsquo;s page shows unless they set their own. Fill the Gather Locally link in when the Visitor Reach connection is ready &mdash; it goes live everywhere at once.</p>
+        <p class="app-meta">What every creator&rsquo;s page shows unless they set their own. Fill the Get Connected link in when the Visitor Reach connection is ready &mdash; it goes live everywhere at once.</p>
         <label>Know God &mdash; video
           <input name="know_god_video_url" type="url" placeholder="https://…">
         </label>
         <label>Grow with God &mdash; course
           <input name="grow_course_url" type="url" placeholder="https://…">
         </label>
-        <label>Gather Locally &mdash; video
+        <label>Get Connected &mdash; video
           <input name="find_church_video_url" type="url" placeholder="https://…">
         </label>
-        <label>Gather Locally &mdash; where to send people
+        <label>Get Connected &mdash; where to send people
           <input name="gather_url" type="url" placeholder="https://… (leave blank until it's ready)">
         </label>
-        <label>Gather Locally &mdash; note under the form
+        <label>Get Connected &mdash; note under the form
           <input name="gather_label" type="text" maxlength="200">
         </label>
         <div class="app-actions">
@@ -115,7 +115,7 @@
       ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
       : '';
 
-    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Gather Locally' };
+    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Get Connected' };
     const PATH_NAMES = {
       join_church: 'Join a local church', start_gathering: 'Start a local gathering',
       both: 'Both', not_sure: 'Not sure yet',
