@@ -5,6 +5,8 @@
 // through Supabase's REST API; otherwise it falls back to the D1 database, so
 // the site keeps working while the migration is in progress.
 
+let ensureOnce = null;
+
 export function makeDb(env) {
   return env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY
     ? supabaseAdapter(env.SUPABASE_URL.replace(/\/+$/, ''), env.SUPABASE_SERVICE_KEY)
@@ -96,6 +98,9 @@ function d1Adapter(DB) {
     // Tables and added columns are created on first use, so a database made
     // before any of this keeps working without a migration step.
     async ensureAdmins() {
+      // Once per Worker isolate. Before this, every call re-ran the CREATE
+      // TABLEs and ten ALTER TABLE attempts — dozens of D1 round trips per page.
+      if (!ensureOnce) ensureOnce = (async () => {
       await DB.batch([
         DB.prepare(
           `CREATE TABLE IF NOT EXISTS admins (
@@ -140,6 +145,8 @@ function d1Adapter(DB) {
       ]) {
         await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`).run().catch(() => {});
       }
+      })();
+      await ensureOnce;
     },
 
     async countAdmins() {

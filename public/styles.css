@@ -2674,3 +2674,48 @@ body.ig .how-row li:nth-child(5) .how-ring { box-shadow: 0 0 18px rgba(188,24,13
 body.ig .how-row b { font-size: 0.72rem; font-weight: 600; line-height: 1.2; color: var(--ig-text); }
 @media (max-width: 400px) { body.ig .how-row b { font-size: 0.66rem; } body.ig .how-row .how-ring { width: 40px; height: 40px; } body.ig .how-row::before { top: 20px; } }
 @media (min-width: 900px) { body.ig .how-row .how-ring { width: 52px; height: 52px; } body.ig .how-row b { font-size: 0.82rem; } body.ig .how-row::before { top: 26px; } }
+
+/* ==================================================================
+   BACK END, simplified. Section titles are plain rows, folds are one
+   box with the title inside it (no title floating over an edge, no
+   card inside a card), stats are two-up on a phone, tables show the
+   person first and keep their controls compact.
+   ================================================================== */
+body.wide.ig .wrap { padding-top: 0; }
+body.wide.ig .section { margin: 28px 0 10px; font-size: 0.92rem; }
+body.wide.ig .fold { margin-top: 24px; padding: 0 16px 14px; overflow: hidden; }
+body.wide.ig .fold > summary.section {
+  margin: 0; padding: 14px 0; cursor: pointer; list-style: none;
+}
+body.wide.ig .fold > summary::-webkit-details-marker { display: none; }
+body.wide.ig .fold > summary.section::after {
+  content: '+'; flex: 0 0 auto; height: auto; background: none;
+  color: var(--ig-dim); font-weight: 600; margin-left: auto;
+}
+body.wide.ig .fold[open] > summary.section::after { content: '–'; }
+body.wide.ig .fold .app-card { background: transparent; border: 0; box-shadow: none; padding: 0 0 10px; }
+body.wide.ig .fold .table-scroll { border: 0; background: transparent; box-shadow: none; padding: 0; }
+body.wide.ig .fold h4 { font-size: 0.82rem; color: var(--ig-dim); font-weight: 600; margin: 0 0 10px; }
+body.wide.ig .stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+body.wide.ig .stat { padding: 12px 14px; }
+body.wide.ig .stat b { font-size: 1.4rem; }
+body.wide.ig .stat span, body.wide.ig .stat small { font-size: 0.8rem; color: var(--ig-dim); }
+body.wide.ig .table-scroll { padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+body.wide.ig table { font-size: 0.84rem; }
+body.wide.ig th { padding: 10px 10px; white-space: nowrap; }
+body.wide.ig td { padding: 8px 10px; white-space: nowrap; vertical-align: middle; }
+body.wide.ig td:first-child, body.wide.ig th:first-child { padding-left: 14px; }
+body.wide.ig td select, body.wide.ig td input { padding: 7px 9px; font-size: 0.82rem; border-radius: 8px; min-width: 0; }
+body.wide.ig td input[type="date"] { width: 138px; }
+body.wide.ig td input[type="text"], body.wide.ig td textarea { width: 160px; }
+body.wide.ig .app-card { padding: 14px 16px; }
+body.wide.ig .app-actions { display: grid; gap: 8px; }
+body.wide.ig .creator-bar, body.wide.ig .admin-bar { font-size: 0.82rem; color: var(--ig-dim); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 6px; }
+body.wide.ig .hero { padding: 10px 0 8px; }
+body.wide.ig .hero h1 { font-size: 1.7rem; }
+body.wide.ig .hero-sub { font-size: 0.9rem; }
+@media (min-width: 900px) {
+  body.wide.ig .stat-row { grid-template-columns: repeat(4, 1fr); max-width: 760px; }
+  body.wide.ig .app-actions { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: center; }
+}
+body.wide.ig td select { min-width: 132px; }

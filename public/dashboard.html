@@ -60,14 +60,14 @@
 
       <h3 class="section">Follow-ups due</h3>
       <div class="table-scroll"><table id="dueTable">
-        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
         <tbody></tbody>
       </table></div>
       <p class="dir-empty" id="dueEmpty" hidden>Nothing due in the next few days.</p>
 
       <h3 class="section">Your leads</h3>
       <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Step</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
         <tbody></tbody>
       </table></div>
       <p class="aside-link">Everyone here checked the consent box, so you may contact them about the step they took. Please honor opt-outs immediately.</p>
@@ -179,12 +179,11 @@
       for (const l of leads) {
         const tr = document.createElement('tr');
         const save = saverFor(API_BASE, credentials() || {}, l.id);
+        [l.name, l.email, STEP_NAMES[l.step] || l.step].forEach(v => tr.appendChild(cell(v)));
         tr.appendChild(statusCell(l, save));
         tr.appendChild(followUpCell(l, save));
         tr.appendChild(notesCell(l, save));
-        [l.created_at, STEP_NAMES[l.step] || l.step, l.name, l.email, l.phone, l.city,
-         l.country,
-         PATH_NAMES[l.path] || l.path]
+        [(l.created_at || '').slice(0, 10), l.phone, l.city, l.country, PATH_NAMES[l.path] || l.path]
           .forEach(v => tr.appendChild(cell(v)));
         tb.appendChild(tr);
       }
