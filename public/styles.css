@@ -2832,3 +2832,14 @@ body.ig.network .jpn-cta::after { display: block; }
 body.ig.network .faq, body.ig.network .faq summary { border-top: 0; }
 body.ig.network .jpn-cta .cta-row { flex-direction: row; flex-wrap: nowrap; }
 body.ig.network .jpn-cta { margin-top: 44px; }
+
+/* The language panel is a solid surface; nothing shows through it. */
+body.ig .locale-panel {
+  background: #151515; -webkit-backdrop-filter: none; backdrop-filter: none;
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  z-index: 30;
+}
+body.ig .locale-panel select { background: #0f0f0f; border: 1px solid rgba(255,255,255,0.12); color: var(--ig-text); }
+body.ig .locale-note { color: var(--ig-dim); }
+body.ig .locale-field > span { color: var(--ig-dim); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
