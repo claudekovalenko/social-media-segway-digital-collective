@@ -15,7 +15,7 @@ const SHELL = [
   'admin',
   'creator',
   'beliefs',
-  'privacy',
+  'privacy','terms',
   'styles.css',
   'app.js',
   'i18n.js',
