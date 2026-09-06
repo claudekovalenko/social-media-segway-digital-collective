@@ -2733,3 +2733,37 @@ body.ig.network .jpn-cta::after {
   content: ''; position: absolute; inset: auto -20% -60% -20%; height: 120%; z-index: 0; pointer-events: none;
   background: radial-gradient(ellipse at 50% 100%, rgba(220,39,67,0.35), rgba(240,148,51,0.15) 40%, transparent 70%);
 }
+
+/* ==================================================================
+   THE THREAD. One vertical gradient line runs down the left of the
+   page from the hero to the join block; every section heading hangs
+   a small ring on it. The rings in How it works and the three steps
+   sit on the same line, so the whole page reads as one path down.
+   ================================================================== */
+body.ig.network .ig-main { position: relative; padding-left: 26px; }
+body.ig.network .ig-main::before {
+  content: ''; position: absolute; left: 6px; top: 8px; bottom: 120px; width: 2px; border-radius: 2px;
+  background: linear-gradient(180deg, #f09433, #dc2743 45%, #bc1888 80%, transparent);
+  opacity: 0.7;
+}
+body.ig.network .land-section { margin-top: 34px; padding-top: 0; }
+body.ig.network .land-section::before { display: none; }
+body.ig.network .land-title { position: relative; }
+body.ig.network .land-title::before {
+  content: ''; position: absolute; left: -26px; top: 0.42em; width: 14px; height: 14px; border-radius: 50%;
+  border: 2.5px solid transparent;
+  background: linear-gradient(#000,#000) padding-box, var(--ig-grad) border-box;
+  box-shadow: 0 0 14px rgba(220,39,67,0.5);
+  transform: translateX(-0px);
+}
+body.ig.network .ig-main > .land-section:first-child { margin-top: 24px; }
+body.ig.network .jpn-cta { margin-left: -26px; }
+body.ig.network .jpn-cta .land-title::before { display: none; }
+body.ig.network footer { margin-left: -26px; }
+body.ig.network .how-row { margin-left: -6px; }
+@media (min-width: 900px) {
+  body.ig.network .ig-main { padding-left: 34px; }
+  body.ig.network .ig-main::before { left: 8px; }
+  body.ig.network .land-title::before { left: -34px; width: 16px; height: 16px; }
+  body.ig.network .jpn-cta, body.ig.network footer { margin-left: -34px; }
+}
