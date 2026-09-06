@@ -2827,3 +2827,8 @@ body.ig.network .land-title { text-shadow: 0 0 30px rgba(220,39,67,0.18); }
 /* The five circles are back, without the strand between them. */
 body.ig .how-row::before { display: none; }
 body.ig.network .how-row { margin-top: 18px; gap: 6px; }
+
+/* The three steps carry their icons, not numbers, so the only counted
+   sequence on the page is How it works. */
+body.ig .j-row .j-icon { display: grid; place-items: center; color: var(--ig-text); }
+body.ig .j-row .j-icon svg { width: 18px; height: 18px; }
