@@ -2719,3 +2719,13 @@ body.wide.ig .hero-sub { font-size: 0.9rem; }
   body.wide.ig .app-actions { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: center; }
 }
 body.wide.ig td select { min-width: 132px; }
+
+/* Network page: no kickers. Sections separated by a fading hairline and air. */
+body.ig.network .land-section { position: relative; margin-top: 36px; padding-top: 26px; }
+body.ig.network .land-section::before {
+  content: ''; display: block; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.16), transparent 70%);
+}
+body.ig.network .ig-main > .land-section:first-child::before { display: none; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 26px; padding-top: 0; }
+body.ig.network .jpn-cta::before { display: none; }
