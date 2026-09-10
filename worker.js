@@ -370,7 +370,10 @@ export default {
         if (!name || !/.+@.+\..+/.test(email)) {
           return json({ error: 'A name and a real email address are needed.' }, 400);
         }
-        if (!b.agreed) return json({ error: 'Please agree to the Statement of Faith and the terms.' }, 400);
+        if (!b.agreed) return json({ error: 'Please tick every box before sending this.' }, 400);
+        // Which commitments they actually ticked, kept with the application
+        // rather than assumed from a single yes.
+        const agreed = Array.isArray(b.agreements) ? b.agreements.join(', ').slice(0, 300) : null;
         const platforms = Array.isArray(b.platform) ? b.platform.join(', ').slice(0, 200) : null;
         await db.insertApplication({
           email, name,
@@ -379,6 +382,7 @@ export default {
           audience: String(b.audience || '').trim().slice(0, 60) || null,
           topic: String(b.topic || '').trim().slice(0, 100) || null,
           why: String(b.why || '').trim().slice(0, 1000) || null,
+          agreements: agreed,
           agreed: true,
         });
         return json({ ok: true }, 201);

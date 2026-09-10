@@ -184,6 +184,7 @@ function d1Adapter(DB) {
         ['admins', 'creator_slug', 'TEXT'],
         ['admins', 'name', 'TEXT'],
         ['applications', 'agreed_at', 'TEXT'],
+        ['applications', 'agreements', 'TEXT'],
         ['creators', 'email', 'TEXT'],
         ['creators', 'handle', 'TEXT'],
         ['creators', 'topic', 'TEXT'],
@@ -261,9 +262,9 @@ function d1Adapter(DB) {
     async insertApplication(a) {
       await this.ensureAdmins();
       const r = await DB.prepare(
-        `INSERT INTO applications (email, name, handle, platform, audience, topic, why, agreed_at)
-         VALUES (lower(?), ?, ?, ?, ?, ?, ?, ?)`)
-        .bind(a.email, a.name, a.handle, a.platform, a.audience, a.topic, a.why,
+        `INSERT INTO applications (email, name, handle, platform, audience, topic, why, agreements, agreed_at)
+         VALUES (lower(?), ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .bind(a.email, a.name, a.handle, a.platform, a.audience, a.topic, a.why, a.agreements || null,
           a.agreed ? new Date().toISOString() : null).run();
       return r.meta.last_row_id;
     },

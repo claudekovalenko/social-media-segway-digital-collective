@@ -134,8 +134,16 @@
           <span>I have read the <a href="beliefs.html" target="_blank">Statement of Faith</a> and agree to teach in agreement with it.</span>
         </label>
         <label class="check">
-          <input type="checkbox" name="agree_commitments" required>
-          <span>I will point people to a local church, handle every response with care, and keep my content my own responsibility.</span>
+          <input type="checkbox" name="agree_church" required>
+          <span>I will point people to a local church.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="agree_care" required>
+          <span>I will handle every response with care, and keep what people tell me private.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="agree_content" required>
+          <span>My content is my own responsibility. It isn&rsquo;t vetted or endorsed by the collective.</span>
         </label>
         <label class="check">
           <input type="checkbox" name="agree_terms" required>
@@ -433,7 +441,11 @@
       const form = new FormData(f);
       const data = Object.fromEntries(form.entries());
       data.platform = form.getAll('platform');
-      data.agreed = ['agree_faith', 'agree_commitments', 'agree_terms'].every((k) => form.get(k) === 'on');
+      // Each commitment is its own box, and every one of them has to be
+      // ticked before this counts as agreed.
+      const AGREEMENTS = ['agree_faith', 'agree_church', 'agree_care', 'agree_content', 'agree_terms'];
+      data.agreed = AGREEMENTS.every((k) => form.get(k) === 'on');
+      data.agreements = AGREEMENTS.filter((k) => form.get(k) === 'on');
       const error = f.querySelector('.error');
       const btn = document.getElementById('joinBtn');
       error.style.display = 'none';
