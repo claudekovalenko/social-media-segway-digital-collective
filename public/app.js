@@ -17,6 +17,7 @@ localStorage.setItem('creator', creatorSlug);
 // on every creator config, and that copy is the one to change.
 const DEFAULT_CONTENT = {
   know_god_video_url: '',    // gospel video
+  grow_video_url: '',        // discipleship intro video
   grow_course_url: '',       // discipleship course
   find_church_video_url: '', // "how to find a church" training
   gather_url: '',            // set under "Collective defaults" in the database
@@ -33,12 +34,30 @@ function refreshVideoPlaceholders() {
   }
 }
 
+// YouTube share links (youtu.be, watch?v=, m.youtube.com, shorts) only play
+// inside an iframe as /embed/ID. Anything else is used as given.
+function toEmbedUrl(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^(www|m)\./, '');
+    let id = null;
+    if (host === 'youtu.be') id = u.pathname.slice(1).split('/')[0];
+    else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+      if (u.pathname === '/watch') id = u.searchParams.get('v');
+      else if (/^\/(embed|shorts|live)\//.test(u.pathname)) id = u.pathname.split('/')[2];
+    }
+    if (!id) return url;
+    const start = u.searchParams.get('t') || u.searchParams.get('start') || u.searchParams.get('time_continue');
+    return `https://www.youtube-nocookie.com/embed/${id}?rel=0` + (start ? `&start=${parseInt(start, 10) || 0}` : '');
+  } catch { return url; }
+}
+
 function embed(containerId, url, placeholderText) {
   const el = document.getElementById(containerId);
   if (url) {
     const iframe = document.createElement('iframe');
     iframe.className = 'video-frame';
-    iframe.src = url;
+    iframe.src = toEmbedUrl(url);
     iframe.allow = 'autoplay; fullscreen; picture-in-picture';
     iframe.allowFullscreen = true;
     el.replaceChildren(iframe);
@@ -85,7 +104,7 @@ async function loadCreator() {
   // network's defaults, which the API sends as `defaults`.
   const fallback = creator.defaults || DEFAULT_CONTENT;
   embed('video-know_god', creator.know_god_video_url || fallback.know_god_video_url, t('vid1'));
-  embed('video-grow_with_god', creator.grow_course_url || fallback.grow_course_url, t('vid2'));
+  embed('video-grow_with_god', creator.grow_video_url || fallback.grow_video_url, t('vid2'));
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
   // Buttons under the videos: each points where the creator (or the
   // collective) says the next step is.

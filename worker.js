@@ -28,7 +28,8 @@ const b_slug = (b) => (b && typeof b.slug === 'string' ? b.slug : null);
 const DEFAULT_LINKS = {
   know_god_video_url: '',    // gospel video
   know_god_next_url: '',     // where the button under the gospel video goes
-  grow_course_url: '',       // discipleship course
+  grow_video_url: '',        // discipleship intro video
+  grow_course_url: '',       // discipleship course (the button under it)
   find_church_video_url: '', // "how to find a church" training
   gather_url: '',            // where Gather Locally sends people
   gather_label: 'In partnership with Visitor Reach — helping people find a church home.',
@@ -601,7 +602,7 @@ export default {
         if (!slug) return json({ error: 'This account has no creator link.' }, 400);
         const b = await req.json().catch(() => ({}));
         const fields = {};
-        for (const key of ['know_god_video_url', 'know_god_next_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {
+        for (const key of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {
           if (b[key] === undefined) continue;
           const value = String(b[key] || '').trim().slice(0, 500);
           if (value && !/^https?:\/\//i.test(value)) {

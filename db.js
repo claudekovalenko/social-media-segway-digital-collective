@@ -50,7 +50,7 @@ function d1Adapter(DB) {
       await this.ensureAdmins();
       await ensurePlatformColumns(DB);
       return DB.prepare(
-        `SELECT slug, name, mode, know_god_video_url, know_god_next_url, grow_course_url,
+        `SELECT slug, name, mode, know_god_video_url, know_god_next_url, grow_video_url, grow_course_url,
                 find_church_video_url, gather_url, status, display_name, handle, topic,
                 follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url
          FROM creators WHERE slug = ?`).bind(slug).first();
@@ -158,6 +158,7 @@ function d1Adapter(DB) {
         ['creators', 'handle', 'TEXT'],
         ['creators', 'topic', 'TEXT'],
         ['creators', 'key_hash', 'TEXT'],
+        ['creators', 'grow_video_url', 'TEXT'],
         ['creators', 'gather_url', 'TEXT'],
         ['leads', 'status', "TEXT NOT NULL DEFAULT 'new'"],
         ['leads', 'notes', 'TEXT'],
@@ -325,7 +326,7 @@ function supabaseAdapter(url, serviceKey) {
     async creatorBySlug(slug) {
       return first(await rest(
         `creators?slug=eq.${encodeURIComponent(slug)}` +
-        `&select=slug,name,mode,know_god_video_url,grow_course_url,find_church_video_url,gather_url&limit=1`));
+        `&select=slug,name,mode,know_god_video_url,know_god_next_url,grow_video_url,grow_course_url,find_church_video_url,gather_url,status,display_name,handle,topic&limit=1`));
     },
 
     async creatorByKeyHash(hash) {
