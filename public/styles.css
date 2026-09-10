@@ -3139,3 +3139,28 @@ body.ig.jpn .site-nav {
 .vid-thumb img { width: 96px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--ig-line, #DCD3C3); display: block; background: #EDE6D9; }
 .vid-thumb span { font-size: 0.74rem; color: #9a948a; }
 .vid-thumb:hover span { color: #A9533C; }
+
+/* Arrival without a blink. The headline is the one place the typeface swap
+   shows, so it waits, briefly, for its font before fading in; a timer in the
+   head bounds the wait at under half a second on any connection. */
+html.js .hero h1 { opacity: 0; }
+html.fonts-in .hero h1 { opacity: 1; transition: opacity .32s ease-out; }
+html.js.fonts-in body.journey .hero h1 { animation: none; }
+
+/* The same small manners on every page: one focus ring, one hover tempo,
+   one lift. It is what makes separate pages read as one place. */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid #B28B46; outline-offset: 3px; border-radius: 6px;
+}
+body.ig.jpn :where(.btn-primary, .btn-ghost, .btn-small, .step-cta, .partner-link, .nav-login, .tab, .dir-ig) {
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+body.ig.jpn :where(.btn-primary, .step-cta, .partner-link):hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(24,24,23,0.12); }
+body.ig.jpn :where(.btn-primary, .step-cta, .partner-link):active { transform: translateY(0); box-shadow: none; }
+body.ig.jpn :where(.step-card, .app-card, .dir-row, .link-group, .profile-bar, .creator-card) { transition: border-color .18s ease, box-shadow .18s ease; }
+body.ig.jpn :where(.dir-row, .creator-card):hover { border-color: #C9A98C; box-shadow: 0 6px 18px rgba(24,24,23,0.08); }
+body.ig.jpn ::selection { background: #EAD9C2; color: #181817; }
+@media (prefers-reduced-motion: reduce) {
+  html.js .hero h1 { opacity: 1; transition: none; }
+  body.ig.jpn :where(.btn-primary, .step-cta, .partner-link):hover { transform: none; }
+}
