@@ -37,6 +37,28 @@ const DEFAULT_LINKS = {
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
 
+// A creator can give a YouTube channel address as their photo. The channel's
+// public avatar is read from the page and cached for six hours, so when they
+// change it on YouTube the site follows within the day. Anything else is
+// treated as a direct image address.
+async function resolveAvatar(url) {
+  if (!url) return url;
+  let u;
+  try { u = new URL(url); } catch { return url; }
+  const host = u.hostname.replace(/^(www|m)\./, '');
+  if (host !== 'youtube.com' || !/^\/(@[\w.-]+|channel\/[\w-]+|c\/[\w.-]+|user\/[\w.-]+)\/?$/.test(u.pathname)) return url;
+  try {
+    const res = await fetch(`https://www.youtube.com${u.pathname}`, {
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; DigitalCollective/1.0)', 'accept-language': 'en' },
+      cf: { cacheTtl: 21600, cacheEverything: true },
+    });
+    if (!res.ok) return url;
+    const html = (await res.text()).slice(0, 400000);
+    const m = html.match(/property="og:image" content="([^"]+)"/);
+    return m ? m[1] : url;
+  } catch { return url; }
+}
+
 async function endorsements(db) {
   const saved = await db.settings().catch(() => ({}));
   try { const a = JSON.parse(saved.endorsements || '[]'); return Array.isArray(a) ? a : []; }
@@ -335,7 +357,9 @@ export default {
 
       // Public directory: creators who set a handle, with their topic tag.
       if (p === '/api/directory' && req.method === 'GET') {
-        return json({ creators: await db.directory() });
+        const creators = await db.directory();
+        await Promise.all(creators.map(async (c) => { c.avatar_url = await resolveAvatar(c.avatar_url); }));
+        return json({ creators });
       }
 
       // What the dashboard needs to start a magic-link sign-in, if configured.
@@ -784,6 +808,7 @@ export default {
         if (!row || row.status === 'suspended') return json({ error: 'creator not found' }, 404);
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
+        pub.avatar_url = await resolveAvatar(pub.avatar_url);
         return json({ ...pub, defaults: await defaultLinks(db) });
       }
 
