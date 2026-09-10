@@ -37,6 +37,12 @@ const DEFAULT_LINKS = {
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
 
+async function creatorAliases(db) {
+  const saved = await db.settings().catch(() => ({}));
+  try { const a = JSON.parse(saved.creator_aliases || '{}'); return a && typeof a === 'object' ? a : {}; }
+  catch { return {}; }
+}
+
 async function defaultLinks(db) {
   const saved = await db.settings().catch(() => ({}));
   const out = { ...DEFAULT_LINKS };
@@ -535,6 +541,30 @@ export default {
         return json({ ok: true, defaults: await defaultLinks(db) });
       }
 
+      // Short links: POST { alias: "craig", slug: "craigbrown" } adds one,
+      // POST { alias: "craig", slug: null } removes it. GET lists them.
+      if (p === '/api/admin/aliases') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        const aliases = await creatorAliases(db);
+        if (req.method === 'POST') {
+          const b = await req.json().catch(() => ({}));
+          const alias = String(b.alias || '').toLowerCase().trim();
+          if (!/^[a-z0-9][a-z0-9-]{1,39}$/.test(alias)) return json({ error: 'Alias must be letters, numbers, or dashes.' }, 400);
+          if (RESERVED_PATHS.has(alias)) return json({ error: 'That name is reserved.' }, 400);
+          if (await db.creatorBySlug(alias).catch(() => null)) return json({ error: 'A creator already has that link.' }, 409);
+          if (b.slug) {
+            const target = String(b.slug).toLowerCase().trim();
+            if (!(await db.creatorBySlug(target).catch(() => null))) return json({ error: 'No creator with that link name.' }, 404);
+            aliases[alias] = target;
+          } else {
+            delete aliases[alias];
+          }
+          await db.setSetting('creator_aliases', JSON.stringify(aliases));
+        }
+        return json({ ok: true, aliases });
+      }
+
       // Set a new password for an account. Admins only — this is how a
       // forgotten password gets fixed without touching the database.
       if (p === '/api/admin/accounts/password' && req.method === 'POST') {
@@ -813,7 +843,11 @@ export default {
       // segment that isn't a known page or asset qualifies.
       const vanity = p.match(/^\/([a-z0-9][a-z0-9._-]{2,39})\/?$/);
       if (vanity && req.method === 'GET' && !RESERVED_PATHS.has(vanity[1]) && !vanity[1].includes('.')) {
-        const owner = await db.creatorBySlug(vanity[1]).catch(() => null);
+        // Short aliases (/craig for /craigbrown) live in settings; every
+        // response is still attributed to the real creator.
+        const aliases = await creatorAliases(db);
+        const slug = aliases[vanity[1]] || vanity[1];
+        const owner = await db.creatorBySlug(slug).catch(() => null);
         if (!owner || owner.status === 'suspended') {
           // Unknown or disabled creator: a real page, not the default funnel.
           const res404 = await env.ASSETS.fetch(new Request(new URL('/unavailable', url), req));
@@ -825,7 +859,7 @@ export default {
         if (res.ok) {
           const html = (await res.text()).replace(
             '<head>',
-            `<head><script>window.CREATOR_SLUG=${JSON.stringify(vanity[1])};</script>`,
+            `<head><script>window.CREATOR_SLUG=${JSON.stringify(slug)};</script>`,
           );
           return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } });
         }
