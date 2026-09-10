@@ -33,7 +33,7 @@ const DEFAULT_LINKS = {
   find_church_video_url: '', // "how to find a church" training
   gather_url: '',            // where Gather Locally sends people
   gather_label: 'In partnership with Visitor Reach — helping people find a church home.',
-  gather_alt_label: 'Prefer something smaller? Find a house church',
+  gather_alt_label: 'Other ways to gather locally',
   gather_alt_url: '',       // a quieter second option under the church finder
 };
 
