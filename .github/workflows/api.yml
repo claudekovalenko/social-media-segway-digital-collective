@@ -1,0 +1,57 @@
+name: Call the live API as an admin
+
+# Run from the Actions tab for one-off admin calls (a migration, a setting,
+# a look at the data) without touching the database by hand. Signs in with
+# the admin credentials you enter (masked), then makes one request.
+
+on:
+  workflow_dispatch:
+    inputs:
+      method:
+        description: HTTP method
+        required: true
+        default: GET
+        type: choice
+        options: [GET, POST, PATCH]
+      path:
+        description: API path (e.g. /api/admin/platform)
+        required: true
+      body:
+        description: JSON body for POST/PATCH (optional)
+        required: false
+      jq:
+        description: jq filter for the response (optional, e.g. ".creators")
+        required: false
+        default: "."
+      admin_email:
+        description: Admin email
+        required: true
+      admin_password:
+        description: Admin password (masked)
+        required: true
+
+jobs:
+  call:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask
+        run: echo "::add-mask::${{ inputs.admin_password }}"
+      - name: Call
+        env:
+          SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+          METHOD: ${{ inputs.method }}
+          APIPATH: ${{ inputs.path }}
+          BODY: ${{ inputs.body }}
+          FILTER: ${{ inputs.jq }}
+        run: |
+          login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+          TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
+          [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
+          echo "::add-mask::$TOKEN"
+          if [ "$METHOD" = "GET" ]; then
+            curl -s "$SITE$APIPATH" -H "authorization: Bearer $TOKEN" | jq "${FILTER:-.}"
+          else
+            curl -s -X "$METHOD" "$SITE$APIPATH" -H "authorization: Bearer $TOKEN" -H "content-type: application/json" --data "${BODY:-{}}" | jq "${FILTER:-.}"
+          fi
