@@ -7,17 +7,44 @@
 
 let ensureOnce = null;
 let platformColsOnce = null;
+// Adding a column that already exists is an error D1 reports over the network,
+// so running one ALTER per column meant twenty-odd round trips on every cold
+// start, which is most of a second before any real query runs. Reading the
+// table's columns once and adding only what is genuinely missing turns that
+// into a single read, and on a database that is already up to date, no writes
+// at all.
+async function addMissingColumns(DB, wanted) {
+  const byTable = new Map();
+  for (const [table, col, type] of wanted) {
+    if (!byTable.has(table)) byTable.set(table, []);
+    byTable.get(table).push([col, type]);
+  }
+  await Promise.all([...byTable].map(async ([table, cols]) => {
+    let have;
+    try {
+      const r = await DB.prepare(`SELECT name FROM pragma_table_info(?)`).bind(table).all();
+      have = new Set((r.results || []).map((x) => x.name));
+    } catch { have = null; }
+    // No column list means the table is missing or the read failed; fall back
+    // to attempting each one, which is correct if slower.
+    for (const [col, type] of cols) {
+      if (have && have.has(col)) continue;
+      await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`).run().catch(() => {});
+    }
+  }));
+}
+
 // The platform layer adds columns to creators/admins; make sure they exist
 // before any SELECT names them, even on a database platform.js hasn't touched.
 async function ensurePlatformColumns(DB) {
   if (!platformColsOnce) platformColsOnce = (async () => {
-    for (const [table, col, type] of [
+    await addMissingColumns(DB, [
       ['creators', 'status', "TEXT NOT NULL DEFAULT 'active'"], ['creators', 'display_name', 'TEXT'], ['creators', 'know_god_next_url', 'TEXT'],
       ['creators', 'phone', 'TEXT'], ['creators', 'socials', 'TEXT'], ['creators', 'agreements_version', 'TEXT'],
       ['creators', 'agreed_at', 'TEXT'], ['creators', 'follow_up_greeting', 'TEXT'], ['creators', 'follow_up_message', 'TEXT'],
       ['creators', 'follow_up_cta_label', 'TEXT'], ['creators', 'follow_up_cta_url', 'TEXT'],
       ['admins', 'email_verified_at', 'TEXT'], ['admins', 'phone', 'TEXT'],
-    ]) await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`).run().catch(() => {});
+    ]);
   })();
   await platformColsOnce;
 }
@@ -152,7 +179,7 @@ function d1Adapter(DB) {
            )`),
       ]);
       // Columns added after the first release.
-      for (const [table, col, type] of [
+      await addMissingColumns(DB, [
         ['admins', 'role', "TEXT NOT NULL DEFAULT 'admin'"],
         ['admins', 'creator_slug', 'TEXT'],
         ['admins', 'name', 'TEXT'],
@@ -172,9 +199,7 @@ function d1Adapter(DB) {
         ['leads', 'notes', 'TEXT'],
         ['leads', 'next_follow_up', 'TEXT'],
         ['leads', 'last_contacted_at', 'TEXT'],
-      ]) {
-        await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`).run().catch(() => {});
-      }
+      ]);
       })();
       await ensureOnce;
     },
