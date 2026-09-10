@@ -1,9 +1,12 @@
 // Service worker: network-first, so a fresh deploy shows up on the very next
 // open instead of one load later. The cache is a fallback for slow or absent
 // connections, not the default source.
-const CACHE_VERSION = 'dc-4';
+const CACHE_VERSION = 'dc-5';
 const CACHE_NAME = `faith-journey-${CACHE_VERSION}`;
-const NETWORK_TIMEOUT = 2500;
+// Long enough that a slow mobile connection still gets the fresh file. The
+// cache is for being offline, not for being slow: a short timer here once
+// served a stale stylesheet and made a deploy look like it never happened.
+const NETWORK_TIMEOUT = 15000;
 // Clean URLs, not the .html paths: the Worker answers /journey.html with a
 // 307 to /journey, and a redirected response cannot be cached.
 const SHELL = [
