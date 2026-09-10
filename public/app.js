@@ -10,7 +10,7 @@ const API_BASE = location.hostname.endsWith('github.io')
 
 const params = new URLSearchParams(location.search);
 // Remember the creator across visits so the attribution survives navigation.
-const creatorSlug = params.get('creator') || localStorage.getItem('creator') || 'default';
+const creatorSlug = window.CREATOR_SLUG || params.get('creator') || localStorage.getItem('creator') || 'default';
 localStorage.setItem('creator', creatorSlug);
 
 // Used only if the API can't be reached; the server sends these as `defaults`
@@ -82,7 +82,7 @@ async function loadCreator() {
 
   // Custom mode uses the creator's own videos; default mode uses platform content.
   // A creator's own links win; anything they leave blank falls back to the
-  // collective's defaults, which the API sends as `defaults`.
+  // network's defaults, which the API sends as `defaults`.
   const fallback = creator.defaults || DEFAULT_CONTENT;
   embed('video-know_god', creator.know_god_video_url || fallback.know_god_video_url, t('vid1'));
   embed('video-grow_with_god', creator.grow_course_url || fallback.grow_course_url, t('vid2'));
@@ -249,7 +249,7 @@ function setupLocale() {
 setupLocale();
 applyLanguage();
 
-// ---- the Gather Locally link --------------------------------------------
+// ---- the Get Connected link --------------------------------------------
 // One outbound link for finding a church. A creator can point this anywhere;
 // otherwise everyone gets the collective's default partner.
 function showGatherLink(url, label) {
@@ -311,6 +311,12 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     data.language = locale.language || null;
     data.interested_in_group = form.querySelector('[name=interested_in_group]')?.checked || false;
     data.consent = form.querySelector('[name=consent]')?.checked || false;
+    // Attribution and the two spam checks the server expects.
+    data.session_id = window.JP_SESSION || null;
+    data.t0 = Number(form.dataset.t0 || 0) || null;
+    const q = new URLSearchParams(location.search);
+    data.utm_source = q.get('utm_source'); data.utm_medium = q.get('utm_medium'); data.utm_campaign = q.get('utm_campaign');
+    if (window.jpTrack) jpTrack('form_submit', form.closest('.step-card')?.id || null);
     if (!data.interested_in_group) { delete data.group_slot; delete data.slot_note; }
     if (data.group_slot !== 'propose') delete data.slot_note;
     const success = form.querySelector('.success');
@@ -338,3 +344,9 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
 
 // Runs last so every constant above (locale, strings) is initialised first.
 loadCreator();
+
+// Deep links: /craigbrown#grow opens that step on arrival.
+(() => {
+  const target = location.hash && document.querySelector(`.step-card${location.hash}`);
+  if (target) { target.classList.add('open'); setTimeout(() => target.scrollIntoView({ block: 'start', behavior: 'smooth' }), 350); }
+})();

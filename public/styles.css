@@ -482,7 +482,7 @@ body.wide .wrap { max-width: min(1360px, 94vw); }
 .note-block { border-top: 1px solid var(--edge); padding-top: 22px; }
 .note-block .land-copy { color: var(--text-dim); font-size: 0.92rem; }
 
-/* The outbound partner link on Gather Locally. */
+/* The outbound partner link on Get Connected. */
 .partner-link {
   display: block; text-align: center; margin-bottom: 14px;
   padding: 12px 20px; border-radius: 999px;
@@ -2292,3 +2292,751 @@ body.ig .phone-frame .bs-bio { font-size: 11px; line-height: 1.45; color: #d0d0d
 body.ig .phone-frame .bs-name { font-size: 13px; }
 body.ig .phone-frame .bs-bio { font-size: 10px; line-height: 1.4; color: #bdbdbd; }
 body.ig .phone-frame .bs-link { font-size: 10px; margin-top: 5px; }
+
+/* ==================================================================
+   THE JESUS PEOPLE NETWORK — the palette and voice from the project
+   proposal: ink, ivory, terracotta, gold, sage. Editorial, warm,
+   direct. A light theme that replaces the Instagram-dark layer on
+   pages carrying body.jpn. Serif display, Inter for interface, a
+   strong 01/02/03 hierarchy, and calm creator pages.
+   ================================================================== */
+:root {
+  --ink:#181817; --ivory:#F5F0E7; --terracotta:#A9533C; --gold:#B28B46; --sage:#69705E;
+  --ivory-2:#EDE6D9; --ivory-3:#FBF8F2; --ink-2:#3a3935; --ink-3:#6b6962; --line:#DCD3C3;
+}
+body.jpn {
+  background: var(--ivory); color: var(--ink);
+  background-image:
+    radial-gradient(ellipse 70% 30% at 20% 0%, rgba(169,83,60,0.10), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 85% 4%, rgba(178,139,70,0.12), transparent 70%);
+  background-repeat: no-repeat; background-size: 100% 800px;
+  font-family: Inter, system-ui, -apple-system, sans-serif; line-height: 1.6;
+}
+body.jpn::before, body.jpn::after, body.jpn .glow { display: none !important; }
+body.jpn ::selection { background: var(--terracotta); color: #fff; }
+body.jpn .wrap { max-width: 520px; padding: 0 20px 72px; }
+body.jpn .wrap::before { display: none; }
+
+/* Type */
+body.jpn h1, body.jpn h2, body.jpn .land-title, body.jpn .hero h1, body.jpn header.hero h1,
+body.jpn .step-head h2, body.jpn .auth-hero h1 {
+  font-family: Fraunces, Georgia, serif; font-weight: 600; letter-spacing: -0.02em; color: var(--ink);
+}
+body.jpn header.hero h1, body.jpn .hero h1 {
+  font-size: clamp(2.1rem, 8vw, 3rem); line-height: 1.06; margin-bottom: 14px;
+  background: none; -webkit-text-fill-color: initial; text-shadow: none;
+}
+body.jpn .hero h1 em { font-style: italic; color: var(--terracotta); background: none; -webkit-text-fill-color: currentColor; }
+body.jpn .hero-sub, body.jpn .land-copy, body.jpn p { color: var(--ink-2); }
+body.jpn .hero-sub { font-size: 1.02rem; max-width: 38ch; }
+body.jpn .overline { color: var(--terracotta); letter-spacing: 0.14em; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 12px; }
+body.jpn .land-title { font-size: 1.6rem; line-height: 1.2; margin-bottom: 8px; }
+body.jpn .land-section { margin-top: 44px; padding-top: 0; border: 0; }
+body.jpn .land-section::before { display: none; }
+body.jpn .fine-print { font-size: 0.82rem; color: var(--ink-3); margin-top: 12px; }
+
+/* Nav */
+body.jpn .site-nav {
+  position: sticky; top: 10px; z-index: 20; margin: 12px 0 28px; padding: 10px 14px;
+  border-radius: 999px; background: rgba(245,240,231,0.92); border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(24,24,23,0.08); backdrop-filter: none;
+}
+body.jpn .brand, body.jpn .brand .dc-mark { color: var(--ink); }
+body.jpn .nav-login { background: var(--ink); color: var(--ivory); border: 0; padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: 0.85rem; }
+
+/* Kickers: 01 / 02 / 03 in terracotta */
+body.jpn .sec-kicker span { background: var(--terracotta); box-shadow: none; border-radius: 6px; }
+body.jpn .sec-kicker.plain span { background: var(--gold); width: 10px; height: 10px; }
+body.jpn .sec-kicker::after { background: linear-gradient(90deg, var(--line), transparent); }
+
+/* Hero extras */
+body.jpn .jpn-hero { padding: 8px 0 4px; }
+body.jpn .cta-row { display: flex; gap: 8px; margin-top: 18px; }
+body.jpn .cta-row .btn-primary, body.jpn .cta-row .btn-ghost { flex: 1; text-align: center; }
+body.jpn .hero-url {
+  margin-top: 16px; display: inline-flex; align-items: baseline; gap: 0; font-size: 0.9rem;
+  padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--line); color: var(--ink-3);
+}
+body.jpn .hero-url b { color: var(--ink); }
+
+/* Buttons: ink primary, quiet ghost, terracotta as the accent — never all three */
+body.jpn .btn-primary, body.jpn button[type="submit"], body.jpn .partner-link, body.jpn .ig-btn-wide {
+  background: var(--ink); color: var(--ivory); border: 0; border-radius: 12px; font-weight: 600;
+  box-shadow: 0 8px 22px rgba(24,24,23,0.18); font-family: Inter, sans-serif;
+}
+body.jpn .btn-primary:hover, body.jpn button[type="submit"]:hover:not(:disabled) { background: var(--terracotta); color: #fff; }
+body.jpn .btn-ghost, body.jpn .tab, body.jpn .btn-small, body.jpn .coll-row, body.jpn .ig-btn-wide {
+  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 12px; font-weight: 600; box-shadow: none;
+}
+body.jpn .ig-btn-wide { color: var(--ink); }
+
+/* Rows and cards: white on ivory, hairline, a whisper of shadow */
+body.jpn .j-row, body.jpn .coll-row, body.jpn .step-card, body.jpn .step-card.static, body.jpn .app-card,
+body.jpn .table-scroll, body.jpn .fold, body.jpn .phone-frame, body.jpn .dir-row, body.jpn .draft-note,
+body.jpn .locale-panel, body.jpn .stat, body.jpn #joinCta, body.jpn .gather-help {
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.06);
+  backdrop-filter: none; color: var(--ink);
+}
+body.jpn .journey-list { display: grid; gap: 10px; margin: 16px 0 0; }
+body.jpn .j-row { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; text-decoration: none; }
+body.jpn .j-num { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; font-weight: 600; color: var(--terracotta); line-height: 1; min-width: 34px; }
+body.jpn .j-meta b { display: block; font-size: 1rem; margin-bottom: 2px; }
+body.jpn .j-meta span { font-size: 0.86rem; color: var(--ink-3); }
+
+body.jpn .how-list { list-style: none; counter-reset: how; margin: 14px 0 0; padding: 0; display: grid; gap: 0; }
+body.jpn .how-list li {
+  counter-increment: how; display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--line); align-items: baseline;
+}
+body.jpn .how-list li::before {
+  content: counter(how, decimal-leading-zero); font-family: Fraunces, Georgia, serif;
+  color: var(--gold); font-weight: 600; font-size: 1.05rem;
+}
+body.jpn .how-list li:last-child { border-bottom: 0; }
+body.jpn .how-list b { display: block; font-size: 0.98rem; }
+body.jpn .how-list span { font-size: 0.86rem; color: var(--ink-3); }
+body.jpn .commit-list { margin: 12px 0 0; padding-left: 18px; display: grid; gap: 8px; font-size: 0.95rem; color: var(--ink-2); }
+body.jpn .commit-list li::marker { color: var(--terracotta); }
+body.jpn .faq { border-bottom: 1px solid var(--line); padding: 12px 0; }
+body.jpn .faq summary { cursor: pointer; font-weight: 600; font-size: 0.98rem; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+body.jpn .faq summary::after { content: '+'; color: var(--terracotta); font-weight: 600; }
+body.jpn .faq[open] summary::after { content: '–'; }
+body.jpn .faq p { margin: 8px 0 0; font-size: 0.9rem; color: var(--ink-2); }
+body.jpn .jpn-cta { background: var(--ink); color: var(--ivory); border-radius: 20px; padding: 24px 20px; }
+body.jpn .jpn-cta .land-title, body.jpn .jpn-cta .land-copy { color: var(--ivory); }
+body.jpn .jpn-cta .btn-primary { background: var(--terracotta); color: #fff; }
+body.jpn .jpn-cta .btn-ghost { background: transparent; color: var(--ivory); border-color: rgba(245,240,231,0.35); }
+
+/* The phone sample on ivory */
+body.jpn .phone-frame { background: var(--ink); border-color: var(--ink); width: 78%; max-width: 330px; margin: 18px auto 0; padding: 10px; border-radius: 30px; box-shadow: 0 30px 60px rgba(24,24,23,0.25); }
+body.jpn .phone-frame .bio-sample { background: #000; color: #f5f5f5; border: 0; }
+body.jpn .phone-frame .bio-sample p, body.jpn .phone-frame .bs-name { color: #f5f5f5; }
+body.jpn .phone-frame .bs-bio { color: #bdbdbd; }
+body.jpn .phone-tag { background: var(--terracotta); color: #fff; border: 0; }
+body.jpn .bs-link { background: rgba(169,83,60,0.22); border-color: rgba(169,83,60,0.6); color: #ffd9cf; }
+body.jpn .bs-actions span { background: #262626; color: #f5f5f5; }
+body.jpn .bs-avatar { background: linear-gradient(#111,#111) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box; border: 2.5px solid transparent; color: #fff; }
+
+/* Steps page on ivory */
+body.jpn.journey { background-image: radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.12), transparent 70%); }
+body.jpn.journey .hero h1 { text-shadow: none; }
+body.jpn.journey .step-card { padding: 2px 16px; }
+body.jpn.journey .step-card.open { border-color: var(--ink); box-shadow: 0 18px 44px rgba(24,24,23,0.12); background: #fff; }
+body.jpn.journey .step-card:hover { border-color: #c8bfae; background: #fff; }
+body.jpn .step-icon, body.jpn .bubble b, body.jpn .dir-av, body.jpn .coll-ring, body.jpn .auth-mark, body.jpn .ig-avatar {
+  border: 2px solid transparent; color: var(--ink); box-shadow: none;
+  background: linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box;
+}
+body.jpn.journey .step-card.open .step-icon { background: linear-gradient(var(--terracotta),var(--terracotta)) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box; color: #fff; }
+body.jpn .step-head h2 { color: var(--ink); font-size: 1.15rem; }
+body.jpn .step-chevron { color: var(--ink-3); }
+body.jpn .video-placeholder { background: var(--ivory-2); border: 1px solid var(--line); color: var(--ink-3); box-shadow: none; }
+body.jpn .play-mark { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box; box-shadow: none; }
+body.jpn .play-mark::before { border-left-color: var(--terracotta); }
+body.jpn input, body.jpn select, body.jpn textarea {
+  background: #fff; border: 1px solid var(--line); color: var(--ink); border-radius: 12px;
+}
+body.jpn input::placeholder, body.jpn textarea::placeholder { color: #9a958a; }
+body.jpn input:focus, body.jpn select:focus, body.jpn textarea:focus { border-color: var(--terracotta); outline: none; }
+body.jpn .check input, body.jpn input[type="checkbox"] { accent-color: var(--terracotta); }
+body.jpn .check.fine, body.jpn .check.fine a { color: var(--ink-3); }
+body.jpn .globe { border-color: var(--line); color: var(--ink-2); background: #fff; }
+body.jpn footer, body.jpn footer a { color: var(--ink-3); }
+body.jpn .success { color: var(--sage); } body.jpn .error, body.jpn .err { color: var(--terracotta); }
+
+/* Sign in */
+body.jpn .auth-hero h1 { font-size: 2rem; }
+body.jpn .tab-row { background: #fff; border: 1px solid var(--line); }
+body.jpn .tab-row::before { background: var(--ink); box-shadow: none; }
+body.jpn .tab-row .tab { color: var(--ink-3); }
+body.jpn .tab-row .tab.on { color: var(--ivory); }
+body.jpn .wrap-narrow label { color: var(--ink-3); }
+body.jpn .wrap-narrow::after { display: none; }
+body.jpn .pick span { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+body.jpn .pick input:checked + span { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+
+/* Back end + directory + prose */
+body.jpn .section { color: var(--ink); }
+body.jpn .section::before, body.jpn .prose-body > h2::before { background: var(--terracotta); box-shadow: none; }
+body.jpn .section::after, body.jpn .prose-body > h2::after { background: linear-gradient(90deg, var(--line), transparent); }
+body.jpn .prose-body p, body.jpn .prose-body li { color: var(--ink-2); }
+body.jpn th { color: var(--ink-3); border-color: var(--line); } body.jpn td { border-color: var(--ivory-2); color: var(--ink); }
+body.jpn .stat b { color: var(--ink); }
+body.jpn .topic-chip { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+body.jpn .topic-chip.on { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+body.jpn .directory-full .dir-tag, body.jpn .dir-tag { background: var(--ivory-2); border: 0; color: var(--ink-3); }
+body.jpn .dir-name, body.jpn .directory-full .dir-name { color: var(--ink-3); }
+body.jpn .land-copy a, body.jpn .prose-body a, body.jpn .aside-link a, body.jpn .see-all a { color: var(--terracotta); }
+body.jpn .btn-small.go { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+body.jpn .crm-saved { color: var(--sage); }
+body.jpn .dir-empty, body.jpn .draft-note { color: var(--ink-3); }
+body.jpn .creator-badge { background: #fff; border: 1px solid var(--line); color: var(--ink-2); }
+body.jpn .partner-note { color: var(--ink-3); }
+
+@media (min-width: 900px) {
+  body.jpn .wrap { max-width: 720px; }
+  body.jpn.network .wrap { max-width: 760px; }
+  body.jpn .journey-list { grid-template-columns: repeat(3, 1fr); }
+  body.jpn .j-row { flex-direction: column; gap: 10px; }
+  body.jpn.wide .wrap { max-width: min(1360px, 94vw); }
+}
+body.jpn .sec-kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
+body.jpn .sec-kicker span { display: inline-grid; place-items: center; width: 26px; height: 26px; color: #fff; font-size: 0.7rem; font-weight: 700; }
+body.jpn .sec-kicker::after { content: ''; flex: 1; height: 1px; }
+body.jpn .how-list li { grid-template-columns: 30px 1fr; grid-template-rows: auto auto; }
+body.jpn .how-list li::before { grid-row: 1 / span 2; }
+body.jpn .how-list li b, body.jpn .how-list li span { grid-column: 2; }
+body.jpn .cta-row { flex-direction: row; }
+
+/* ==================================================================
+   The network site's new pieces in the dark Instagram look: the
+   hero, the URL chip, the numbered rows, how-it-works, commitments,
+   FAQ and the join block.
+   ================================================================== */
+body.ig .jpn-hero { padding: 6px 0 4px; }
+body.ig .jpn-hero h1 {
+  font-family: Fraunces, Georgia, serif; font-size: clamp(1.9rem, 7vw, 2.5rem);
+  line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 12px;
+}
+body.ig .jpn-hero h1 em {
+  font-style: italic; background: var(--ig-grad);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+body.ig .jpn-hero .hero-sub { font-size: 0.95rem; color: var(--ig-dim); max-width: 40ch; }
+body.ig .jpn-hero .overline { color: var(--ig-dim); }
+body.ig .jpn-hero .cta-row { display: flex; flex-direction: row; gap: 8px; margin-top: 16px; }
+body.ig .jpn-hero .cta-row .btn-primary, body.ig .jpn-hero .cta-row .btn-ghost { flex: 1; text-align: center; padding: 11px 14px; font-size: 0.9rem; }
+body.ig .hero-url {
+  margin-top: 14px; display: inline-flex; align-items: baseline; font-size: 0.86rem;
+  padding: 7px 12px; border-radius: 10px; background: #151515; border: 1px solid rgba(255,255,255,0.10); color: var(--ig-dim);
+}
+body.ig .hero-url b { color: var(--ig-text); }
+body.ig .j-num {
+  font-family: Fraunces, Georgia, serif; font-size: 1.35rem; font-weight: 600; line-height: 1; min-width: 36px;
+  background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+body.ig .j-row { align-items: center; }
+body.ig .how-list { list-style: none; counter-reset: how; margin: 12px 0 0; padding: 0; }
+body.ig .how-list li {
+  counter-increment: how; display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto;
+  column-gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ig-line); align-items: baseline;
+}
+body.ig .how-list li::before {
+  content: counter(how, decimal-leading-zero); grid-row: 1 / span 2;
+  font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1rem;
+  background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+body.ig .how-list li:last-child { border-bottom: 0; }
+body.ig .how-list li b, body.ig .how-list li span { grid-column: 2; }
+body.ig .how-list b { font-size: 0.95rem; }
+body.ig .how-list span { font-size: 0.84rem; color: var(--ig-dim); }
+body.ig .commit-list { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; font-size: 0.92rem; color: #d0d0d0; }
+body.ig .commit-list li::marker { color: #e6683c; }
+body.ig .faq { border-bottom: 1px solid var(--ig-line); padding: 12px 0; }
+body.ig .faq summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; list-style: none; display: flex; justify-content: space-between; gap: 12px; color: var(--ig-text); }
+body.ig .faq summary::-webkit-details-marker { display: none; }
+body.ig .faq summary::after { content: '+'; color: #e6683c; font-weight: 600; }
+body.ig .faq[open] summary::after { content: '–'; }
+body.ig .faq p { margin: 8px 0 0; font-size: 0.88rem; color: var(--ig-dim); line-height: 1.55; }
+body.ig .jpn-cta {
+  background: #151515; border: 1px solid rgba(255,255,255,0.10); border-radius: 20px; padding: 22px 18px 18px;
+  box-shadow: 0 24px 60px rgba(188,24,136,0.18), 0 8px 24px rgba(240,148,51,0.10), 0 12px 30px rgba(0,0,0,0.45);
+}
+body.ig .jpn-cta .cta-row { display: flex; gap: 8px; margin-top: 14px; }
+body.ig .jpn-cta .cta-row .btn-primary, body.ig .jpn-cta .cta-row .btn-ghost { flex: 1; text-align: center; padding: 11px 14px; font-size: 0.9rem; }
+body.ig.network .land-title { font-size: 1.4rem; }
+
+/* ---- The network site, more umami --------------------------------------
+   A deeper wash at the top, rings with their own glow on the three steps,
+   a gradient edge on the URL chip, how-it-works numerals in rings, the
+   FAQ as soft rows, and the join block lit from beneath. */
+body.ig.network {
+  background-image:
+    radial-gradient(ellipse 80% 34% at 18% 0%, rgba(240, 148, 51, 0.24), transparent 70%),
+    radial-gradient(ellipse 70% 30% at 88% 6%, rgba(220, 39, 67, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 55% 26%, rgba(188, 24, 136, 0.16), transparent 70%);
+  background-size: 100% 1000px;
+}
+body.ig .jpn-hero h1 { text-shadow: 0 0 40px rgba(240,148,51,0.25), 0 0 80px rgba(220,39,67,0.18); }
+body.ig .hero-url {
+  border: 1.5px solid transparent;
+  background: linear-gradient(#141414,#141414) padding-box, var(--ig-grad) border-box;
+  box-shadow: 0 8px 24px rgba(220,39,67,0.18);
+}
+body.ig .jpn-hero .btn-primary { box-shadow: 0 10px 28px rgba(0,149,246,0.38), inset 0 1px 0 rgba(255,255,255,0.2); }
+body.ig .j-row .j-ring { width: 46px; height: 46px; }
+body.ig .j-row .j-ring i { font-family: Fraunces, Georgia, serif; font-size: 1.05rem; }
+body.ig .how-list li::before {
+  content: counter(how); display: grid; place-items: center; align-self: start;
+  width: 26px; height: 26px; border-radius: 50%; font-size: 0.78rem; font-family: 'Space Grotesk', sans-serif;
+  -webkit-text-fill-color: #fff; color: #fff; background: var(--ig-grad);
+  box-shadow: 0 0 16px rgba(220,39,67,0.45);
+}
+body.ig .how-list li { grid-template-columns: 34px 1fr; align-items: start; padding: 14px 0; }
+body.ig .how-list li b { padding-top: 3px; }
+body.ig .faq { border: 0; padding: 0; margin-top: 8px; }
+body.ig .faq summary { padding: 13px 14px; border-radius: 12px; background: #151515; border: 1px solid rgba(255,255,255,0.08); }
+body.ig .faq[open] summary { border-color: rgba(255,255,255,0.18); }
+body.ig .faq p { padding: 10px 14px 4px; }
+body.ig .commit-list li::marker { color: #e6683c; }
+body.ig .jpn-cta { position: relative; overflow: hidden; }
+body.ig .jpn-cta::before {
+  content: ''; position: absolute; inset: auto -20% -60% -20%; height: 120%; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgba(220,39,67,0.35), rgba(240,148,51,0.15) 40%, transparent 70%);
+}
+body.ig .jpn-cta > * { position: relative; z-index: 1; }
+body.ig .jpn-cta .land-title { font-size: 1.6rem; }
+body.ig .phone-frame { box-shadow: 0 34px 80px rgba(220,39,67,0.30), 0 12px 36px rgba(240,148,51,0.18), 0 24px 50px rgba(0,0,0,0.5); }
+body.ig .sec-kicker span { box-shadow: 0 4px 18px rgba(220,39,67,0.5); }
+body.ig .j-row .j-ring {
+  border: 2.5px solid transparent;
+  background: linear-gradient(#141414,#141414) padding-box, var(--ig-grad) border-box;
+  box-shadow: 0 0 22px rgba(220,39,67,0.45);
+}
+body.ig .j-row:nth-child(1) .j-ring { box-shadow: 0 0 22px rgba(240,148,51,0.5); }
+body.ig .j-row:nth-child(3) .j-ring { box-shadow: 0 0 22px rgba(188,24,136,0.5); }
+body.ig .j-row .j-ring i { width: auto; height: auto; background: transparent; font-size: 1.05rem; }
+
+/* ==================================================================
+   SMOOTHNESS. One easing curve for the whole site, longer reveals
+   that rise and settle, hover lifts, a press on every button, and
+   the FAQ unfolding instead of popping. Transform and opacity only,
+   so nothing repaints while it moves.
+   ================================================================== */
+:root { --ease-soft: cubic-bezier(.22,.8,.18,1); }
+body.ig .reveal { opacity: 0; transform: translateY(22px) scale(.985); }
+body.ig .reveal.in {
+  opacity: 1; transform: none;
+  transition: opacity .8s var(--ease-soft), transform .9s var(--ease-soft);
+}
+body.ig .j-row, body.ig .coll-row, body.ig .faq summary, body.ig .btn-primary, body.ig .btn-ghost,
+body.ig .ig-btn-wide, body.ig .nav-login, body.ig .phone-frame, body.ig .directory-full .dir-row,
+body.ig button[type="submit"], body.ig .partner-link, body.ig .tab, body.ig .hero-url {
+  transition: transform .35s var(--ease-soft), box-shadow .35s var(--ease-soft),
+              border-color .35s var(--ease-soft), background-color .35s var(--ease-soft);
+}
+body.ig .j-row:hover, body.ig .coll-row:hover, body.ig .directory-full .dir-row:hover {
+  transform: translateY(-2px); border-color: rgba(255,255,255,0.22);
+}
+body.ig .btn-primary:hover, body.ig .ig-btn-wide:hover, body.ig .nav-login:hover, body.ig button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+body.ig .btn-primary:active, body.ig .btn-ghost:active, body.ig .ig-btn-wide:active, body.ig .nav-login:active,
+body.ig button[type="submit"]:active, body.ig .j-row:active, body.ig .coll-row:active, body.ig .faq summary:active, body.ig .tab:active {
+  transform: scale(.985); transition-duration: .12s;
+}
+body.ig .phone-frame:hover { transform: translateY(-3px); }
+body.ig .faq summary::after { transition: transform .35s var(--ease-soft); display: inline-block; }
+body.ig .faq[open] summary::after { content: '+'; transform: rotate(45deg); }
+body.ig .faq p { animation: faq-in .45s var(--ease-soft) both; }
+@keyframes faq-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+body.ig .site-nav { transition: box-shadow .4s var(--ease-soft), background-color .4s var(--ease-soft); }
+body.ig .sec-kicker span { transition: transform .4s var(--ease-soft); }
+body.ig .land-section:hover .sec-kicker span { transform: scale(1.08); }
+html { scroll-behavior: smooth; }
+body.ig .step-chevron, body.ig .step-icon { transition-timing-function: var(--ease-soft); }
+body.ig .locale-panel { animation: faq-in .3s var(--ease-soft) both; }
+@media (prefers-reduced-motion: reduce) {
+  body.ig .reveal, body.ig .reveal.in { transition: none; transform: none; opacity: 1; }
+  body.ig .faq p, body.ig .locale-panel { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* Simpler network page: tighter sections, rows on one line. */
+body.ig.network .land-section { margin-top: 30px; }
+body.ig.network .land-title { font-size: 1.3rem; margin-bottom: 6px; }
+body.ig.network .jpn-hero h1 { font-size: clamp(1.8rem, 6.5vw, 2.3rem); }
+body.ig.network .j-row { padding: 10px 14px; }
+body.ig.network .j-row .j-ring { width: 40px; height: 40px; }
+body.ig.network .j-meta b { font-size: 0.95rem; }
+body.ig.network .j-meta span { font-size: 0.8rem; }
+body.ig.network .journey-list { gap: 8px; margin-top: 10px; }
+body.ig.network .faq summary { padding: 11px 13px; font-size: 0.92rem; }
+
+/* How it works: five rings across, joined by a line, labels beneath. */
+body.ig .how-row {
+  list-style: none; margin: 14px 0 0; padding: 0 0 4px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; position: relative;
+}
+body.ig .how-row::before {
+  content: ''; position: absolute; left: 10%; right: 10%; top: 22px; height: 2px;
+  background: linear-gradient(90deg, #f09433, #dc2743, #bc1888); opacity: 0.55; z-index: 0;
+}
+body.ig .how-row li { display: grid; justify-items: center; gap: 8px; text-align: center; position: relative; z-index: 1; min-width: 0; }
+body.ig .how-row .how-ring { width: 44px; height: 44px; margin: 0; }
+body.ig .how-row .how-ring i { width: auto; height: auto; background: transparent; font-size: 0.98rem; font-family: Fraunces, Georgia, serif; }
+body.ig .how-row li:nth-child(1) .how-ring { box-shadow: 0 0 18px rgba(240,148,51,0.5); }
+body.ig .how-row li:nth-child(2) .how-ring { box-shadow: 0 0 18px rgba(230,104,60,0.45); }
+body.ig .how-row li:nth-child(3) .how-ring { box-shadow: 0 0 18px rgba(220,39,67,0.45); }
+body.ig .how-row li:nth-child(4) .how-ring { box-shadow: 0 0 18px rgba(204,35,102,0.45); }
+body.ig .how-row li:nth-child(5) .how-ring { box-shadow: 0 0 18px rgba(188,24,136,0.5); }
+body.ig .how-row b { font-size: 0.72rem; font-weight: 600; line-height: 1.2; color: var(--ig-text); }
+@media (max-width: 400px) { body.ig .how-row b { font-size: 0.66rem; } body.ig .how-row .how-ring { width: 40px; height: 40px; } body.ig .how-row::before { top: 20px; } }
+@media (min-width: 900px) { body.ig .how-row .how-ring { width: 52px; height: 52px; } body.ig .how-row b { font-size: 0.82rem; } body.ig .how-row::before { top: 26px; } }
+
+/* ==================================================================
+   BACK END, simplified. Section titles are plain rows, folds are one
+   box with the title inside it (no title floating over an edge, no
+   card inside a card), stats are two-up on a phone, tables show the
+   person first and keep their controls compact.
+   ================================================================== */
+body.wide.ig .wrap { padding-top: 0; }
+body.wide.ig .section { margin: 28px 0 10px; font-size: 0.92rem; }
+body.wide.ig .fold { margin-top: 24px; padding: 0 16px 14px; overflow: hidden; }
+body.wide.ig .fold > summary.section {
+  margin: 0; padding: 14px 0; cursor: pointer; list-style: none;
+}
+body.wide.ig .fold > summary::-webkit-details-marker { display: none; }
+body.wide.ig .fold > summary.section::after {
+  content: '+'; flex: 0 0 auto; height: auto; background: none;
+  color: var(--ig-dim); font-weight: 600; margin-left: auto;
+}
+body.wide.ig .fold[open] > summary.section::after { content: '–'; }
+body.wide.ig .fold .app-card { background: transparent; border: 0; box-shadow: none; padding: 0 0 10px; }
+body.wide.ig .fold .table-scroll { border: 0; background: transparent; box-shadow: none; padding: 0; }
+body.wide.ig .fold h4 { font-size: 0.82rem; color: var(--ig-dim); font-weight: 600; margin: 0 0 10px; }
+body.wide.ig .stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+body.wide.ig .stat { padding: 12px 14px; }
+body.wide.ig .stat b { font-size: 1.4rem; }
+body.wide.ig .stat span, body.wide.ig .stat small { font-size: 0.8rem; color: var(--ig-dim); }
+body.wide.ig .table-scroll { padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+body.wide.ig table { font-size: 0.84rem; }
+body.wide.ig th { padding: 10px 10px; white-space: nowrap; }
+body.wide.ig td { padding: 8px 10px; white-space: nowrap; vertical-align: middle; }
+body.wide.ig td:first-child, body.wide.ig th:first-child { padding-left: 14px; }
+body.wide.ig td select, body.wide.ig td input { padding: 7px 9px; font-size: 0.82rem; border-radius: 8px; min-width: 0; }
+body.wide.ig td input[type="date"] { width: 138px; }
+body.wide.ig td input[type="text"], body.wide.ig td textarea { width: 160px; }
+body.wide.ig .app-card { padding: 14px 16px; }
+body.wide.ig .app-actions { display: grid; gap: 8px; }
+body.wide.ig .creator-bar, body.wide.ig .admin-bar { font-size: 0.82rem; color: var(--ig-dim); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 6px; }
+body.wide.ig .hero { padding: 10px 0 8px; }
+body.wide.ig .hero h1 { font-size: 1.7rem; }
+body.wide.ig .hero-sub { font-size: 0.9rem; }
+@media (min-width: 900px) {
+  body.wide.ig .stat-row { grid-template-columns: repeat(4, 1fr); max-width: 760px; }
+  body.wide.ig .app-actions { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: center; }
+}
+body.wide.ig td select { min-width: 132px; }
+
+/* Network page: no kickers. Sections separated by a fading hairline and air. */
+body.ig.network .land-section { position: relative; margin-top: 36px; padding-top: 26px; }
+body.ig.network .land-section::before {
+  content: ''; display: block; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.16), transparent 70%);
+}
+body.ig.network .ig-main > .land-section:first-child::before { display: none; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 26px; padding-top: 0; }
+body.ig.network .jpn-cta::before { display: none; }
+body.ig.network .jpn-cta::after {
+  content: ''; position: absolute; inset: auto -20% -60% -20%; height: 120%; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgba(220,39,67,0.35), rgba(240,148,51,0.15) 40%, transparent 70%);
+}
+
+/* Network page headings: bigger, with a quiet line beneath, evenly spaced. */
+body.ig.network .land-title { font-size: 1.45rem; margin-bottom: 4px; }
+body.ig.network .land-copy { font-size: 0.92rem; }
+body.ig.network .land-section { margin-top: 38px; padding-top: 0; }
+body.ig.network .land-section::before { display: none; }
+
+/* ==================================================================
+   ROOM. No rings in How it works, no strand: five quiet chips that
+   wrap naturally. More air between everything.
+   ================================================================== */
+body.ig .how-flow { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; counter-reset: flow; }
+body.ig .how-flow li {
+  counter-increment: flow; display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px 9px 10px; border-radius: 999px; font-size: 0.88rem; font-weight: 600;
+  background: #151515; border: 1px solid rgba(255,255,255,0.10); color: var(--ig-text);
+}
+body.ig .how-flow li::before {
+  content: counter(flow); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 0.7rem; font-weight: 700; color: #fff; background: var(--ig-grad);
+}
+body.ig.network .land-section { margin-top: 52px; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 40px; }
+body.ig.network .jpn-hero { padding-bottom: 8px; }
+body.ig.network .jpn-hero .hero-sub { margin-top: 4px; }
+body.ig.network .journey-list { gap: 10px; margin-top: 14px; }
+body.ig.network .j-row { padding: 12px 16px; }
+body.ig.network .phone-frame { margin-top: 22px; }
+body.ig.network .faq { margin-top: 10px; }
+body.ig.network footer { margin-top: 56px; }
+
+/* Umami without clutter: warmth in the ground, light on the few objects. */
+body.ig.network {
+  background-image:
+    radial-gradient(ellipse 90% 36% at 15% 0%, rgba(240, 148, 51, 0.30), transparent 70%),
+    radial-gradient(ellipse 70% 30% at 90% 8%, rgba(220, 39, 67, 0.26), transparent 70%),
+    radial-gradient(ellipse 80% 30% at 50% 42%, rgba(188, 24, 136, 0.14), transparent 70%),
+    radial-gradient(ellipse 80% 24% at 50% 100%, rgba(220, 39, 67, 0.16), transparent 70%);
+  background-size: 100% 100%; background-attachment: scroll;
+}
+body.ig.network .jpn-hero h1 { text-shadow: 0 0 46px rgba(240,148,51,0.35), 0 0 90px rgba(220,39,67,0.22); }
+body.ig.network .how-flow li {
+  border: 1.5px solid transparent;
+  background: linear-gradient(#151515,#151515) padding-box, linear-gradient(135deg, rgba(240,148,51,0.55), rgba(188,24,136,0.55)) border-box;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+body.ig.network .j-row {
+  border: 1.5px solid transparent;
+  background: linear-gradient(#141414,#141414) padding-box, linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)) border-box;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+}
+body.ig.network .j-row:hover { background: linear-gradient(#181818,#181818) padding-box, linear-gradient(135deg, rgba(240,148,51,0.6), rgba(188,24,136,0.6)) border-box; }
+body.ig.network .phone-frame { box-shadow: 0 40px 90px rgba(220,39,67,0.32), 0 14px 40px rgba(240,148,51,0.2), 0 24px 50px rgba(0,0,0,0.55); }
+body.ig.network .faq summary { box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+body.ig.network .jpn-cta { box-shadow: 0 30px 80px rgba(188,24,136,0.28), 0 10px 30px rgba(240,148,51,0.14), 0 12px 30px rgba(0,0,0,0.5); }
+body.ig.network .land-title { text-shadow: 0 0 30px rgba(220,39,67,0.18); }
+
+/* The five circles are back, without the strand between them. */
+body.ig .how-row::before { display: none; }
+body.ig.network .how-row { margin-top: 18px; gap: 6px; }
+
+/* The three steps carry their icons, not numbers, so the only counted
+   sequence on the page is How it works. */
+body.ig .j-row .j-icon { display: grid; place-items: center; color: var(--ig-text); }
+body.ig .j-row .j-icon svg { width: 18px; height: 18px; }
+body.ig.network .ig-main { padding-left: 0; }
+body.ig.network .jpn-cta, body.ig.network footer { margin-left: 0; }
+body.ig.network .how-row { margin-left: 0; gap: 4px; }
+body.ig.network .land-title::before { display: none; }
+
+/* Nothing on the network page may be wider than the phone. */
+body.ig.network .jpn-hero .cta-row .btn-primary, body.ig.network .jpn-hero .cta-row .btn-ghost,
+body.ig.network .jpn-cta .cta-row .btn-primary, body.ig.network .jpn-cta .cta-row .btn-ghost {
+  min-width: 0; white-space: normal; padding: 11px 10px; font-size: 0.86rem; line-height: 1.2;
+}
+body.ig .how-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+body.ig .how-row li { min-width: 0; }
+body.ig .how-row b { overflow-wrap: anywhere; }
+body.ig.network .hero-url { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.ig.network .wrap, body.ig.network .ig-main, body.ig.network .ig-side { max-width: 100%; min-width: 0; }
+body.ig.network .phone-frame { max-width: min(330px, 100%); }
+body.ig.network .journey-list, body.ig.network .j-row { min-width: 0; }
+body.ig.network .j-meta { min-width: 0; }
+body.ig.network .j-meta b, body.ig.network .j-meta span { overflow-wrap: anywhere; }
+
+/* The join block keeps its own padding (a later rule zeroed section padding). */
+body.ig.network .jpn-cta { padding: 24px 20px 20px; }
+body.ig.network .jpn-cta .land-title { margin-bottom: 4px; }
+body.ig.network .jpn-cta .cta-row { margin-top: 16px; }
+
+/* No rules or lines around any section on the network page, and the join
+   block's two buttons sit side by side like the hero's. */
+body.ig.network .land-section, body.ig.network .land-section::before, body.ig.network .land-section::after,
+body.ig.network .ig-main::before, body.ig.network .ig-main::after { border: 0; }
+body.ig.network .land-section::before, body.ig.network .land-section::after { display: none; }
+body.ig.network .jpn-cta::after { display: block; }
+body.ig.network .faq, body.ig.network .faq summary { border-top: 0; }
+body.ig.network .jpn-cta .cta-row { flex-direction: row; flex-wrap: nowrap; }
+body.ig.network .jpn-cta { margin-top: 44px; }
+
+/* The language panel is a solid surface; nothing shows through it. */
+body.ig .locale-panel {
+  background: #151515; -webkit-backdrop-filter: none; backdrop-filter: none;
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  z-index: 30;
+}
+body.ig .locale-panel select { background: #0f0f0f; border: 1px solid rgba(255,255,255,0.12); color: var(--ig-text); }
+body.ig .locale-note { color: var(--ig-dim); }
+body.ig .locale-field > span { color: var(--ig-dim); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+
+/* The Instagram profile header, on the network page. */
+body.ig.network .ig-profile { margin-top: 4px; }
+body.ig.network .ig-bio { margin-top: 12px; }
+body.ig.network .ig-bio p { font-size: 0.95rem; }
+body.ig.network .ig-name { font-size: 1.15rem; }
+body.ig.network .ig-actions { display: flex; gap: 8px; margin-top: 14px; padding-bottom: 0; }
+body.ig.network .ig-actions::after { display: none; }
+body.ig.network .ig-actions a { flex: 1; text-align: center; padding: 10px 12px; font-size: 0.88rem; border-radius: 10px; text-decoration: none; min-width: 0; white-space: normal; }
+body.ig.network .hero-url { margin-top: 12px; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 34px; }
+body.ig.network .ig-bio .ig-name { font-size: 1.2rem; }
+body.ig.network .ig-bio .ig-cat { font-size: 0.86rem; }
+
+/* A calmer top: fewer lines, more air between the header and the first section. */
+body.ig.network .ig-profile { margin-top: 10px; }
+body.ig.network .ig-bio { margin-top: 14px; }
+body.ig.network .ig-bio p { line-height: 1.5; }
+body.ig.network .ig-actions { margin-top: 16px; }
+body.ig.network .hero-url { margin-top: 14px; }
+body.ig.network .ig-main > .land-section:first-child { margin-top: 48px; }
+body.ig.network .land-section { margin-top: 56px; }
+
+/* The one line that matters: the second half carries the gradient. */
+body.ig.network .ig-bio .ig-lede { font-size: 1.05rem; line-height: 1.45; }
+body.ig.network .ig-lede em {
+  font-style: normal; font-weight: 700; white-space: nowrap;
+  background: var(--ig-grad); -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+
+/* ==================================================================
+   THE PROPOSAL'S PALETTE, as an overlay on the Instagram structure.
+   Ink #181817, ivory #F5F0E7, terracotta #A9533C, gold #B28B46,
+   sage #69705E. The tokens the dark theme reads are redefined here,
+   so layout and motion stay; only the colour changes. Hard-coded
+   dark surfaces from the umami passes are re-pointed below.
+   ================================================================== */
+body.ig.jpn {
+  --ig-bg: #F5F0E7; --ig-surface: #FFFFFF; --ig-surface-2: #EDE6D9; --ig-line: #DCD3C3;
+  --ig-text: #181817; --ig-dim: #6b6962; --ig-blue: #A9533C;
+  --ig-grad: linear-gradient(135deg, #A9533C, #B28B46);
+  --bg: #F5F0E7; --surface: #FFFFFF; --surface-2: #EDE6D9; --edge: #DCD3C3; --edge-lit: #cfc6b4;
+  --text: #181817; --text-dim: #6b6962; --lime: #181817; --lime-ink: #F5F0E7; --ok: #69705E; --err: #A9533C;
+  background-color: var(--ig-bg); color: var(--ig-text);
+  background-image:
+    radial-gradient(ellipse 80% 30% at 15% 0%, rgba(169,83,60,0.16), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 85% 6%, rgba(178,139,70,0.18), transparent 70%),
+    radial-gradient(ellipse 70% 24% at 50% 100%, rgba(105,112,94,0.12), transparent 70%);
+}
+body.ig.jpn ::selection { background: #A9533C; color: #fff; }
+body.ig.jpn h1, body.ig.jpn h2, body.ig.jpn .land-title, body.ig.jpn .ig-name, body.ig.jpn .step-head h2 { color: var(--ig-text); text-shadow: none; }
+body.ig.jpn .hero h1, body.ig.jpn header.hero h1 { text-shadow: none; }
+body.ig.jpn p, body.ig.jpn .land-copy, body.ig.jpn .hero-sub { color: #3a3935; }
+body.ig.jpn .ig-dim, body.ig.jpn .ig-muted, body.ig.jpn .ig-cat, body.ig.jpn .fine-print { color: var(--ig-dim); }
+
+/* Surfaces that were hard-coded dark. */
+body.ig.jpn .site-nav { background: rgba(245,240,231,0.94); border-color: var(--ig-line); box-shadow: 0 8px 24px rgba(24,24,23,0.08), inset 0 1px 0 #fff; }
+body.ig.jpn .brand, body.ig.jpn .brand .dc-mark { color: var(--ig-text); }
+body.ig.jpn .nav-login, body.ig.jpn .btn-ghost { background: #fff; color: var(--ig-text); border: 1px solid var(--ig-line); }
+body.ig.jpn .btn-primary, body.ig.jpn button[type="submit"], body.ig.jpn .partner-link, body.ig.jpn .ig-btn-primary {
+  background: #181817; color: #F5F0E7; box-shadow: 0 8px 22px rgba(24,24,23,0.18);
+}
+body.ig.jpn .btn-primary:hover, body.ig.jpn button[type="submit"]:hover:not(:disabled) { background: #A9533C; color: #fff; }
+body.ig.jpn .j-row, body.ig.jpn .coll-row, body.ig.jpn .phone-frame, body.ig.jpn .step-card, body.ig.jpn .step-card.static,
+body.ig.jpn .app-card, body.ig.jpn .table-scroll, body.ig.jpn .fold, body.ig.jpn .stat, body.ig.jpn .jpn-cta,
+body.ig.jpn .faq summary, body.ig.jpn .how-flow li, body.ig.jpn .directory-full .dir-row, body.ig.jpn .locale-panel,
+body.ig.jpn .tab-row, body.ig.jpn .hero-url, body.ig.jpn .draft-note, body.ig.jpn .gather-help, body.ig.jpn #joinCta {
+  background: #FFFFFF; background-color: #FFFFFF; border: 1px solid var(--ig-line); color: var(--ig-text);
+  box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.07);
+}
+body.ig.jpn .j-row:hover, body.ig.jpn .coll-row:hover { background: #fff; border-color: #c8bfae; }
+body.ig.jpn .step-card.open { border-color: #181817; }
+body.ig.jpn .j-meta span, body.ig.jpn .coll-meta span, body.ig.jpn .faq p, body.ig.jpn .how-list span { color: var(--ig-dim); }
+body.ig.jpn .faq summary { color: var(--ig-text); }
+body.ig.jpn .faq summary::after { color: #A9533C; }
+body.ig.jpn .commit-list { color: #3a3935; }
+body.ig.jpn .commit-list li::marker { color: #A9533C; }
+body.ig.jpn .hero-url { background: #fff; border: 1.5px solid transparent; background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; color: var(--ig-dim); box-shadow: none; }
+body.ig.jpn .hero-url b { color: var(--ig-text); }
+
+/* Rings and glows: terracotta to gold, soft. */
+body.ig.jpn .ig-ring, body.ig.jpn .step-icon, body.ig.jpn .bubble b, body.ig.jpn .dir-av, body.ig.jpn .bs-avatar,
+body.ig.jpn .ig-avatar, body.ig.jpn .coll-ring, body.ig.jpn .auth-mark, body.ig.jpn .j-ring, body.ig.jpn .how-ring {
+  background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; color: var(--ig-text);
+  box-shadow: 0 6px 18px rgba(169,83,60,0.22);
+}
+body.ig.jpn .how-row li:nth-child(n) .how-ring, body.ig.jpn .j-row:nth-child(n) .j-ring { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
+body.ig.jpn .phone-frame { background: #181817; background-color: #181817; border-color: #181817; box-shadow: 0 30px 60px rgba(24,24,23,0.28); }
+body.ig.jpn .phone-frame .bio-sample { background: #000; border: 0; color: #f5f5f5; }
+body.ig.jpn .phone-frame .bio-sample p, body.ig.jpn .phone-frame .bs-name { color: #f5f5f5; }
+body.ig.jpn .phone-frame .bs-bio { color: #bdbdbd; }
+body.ig.jpn .phone-tag { background: #A9533C; color: #fff; border: 0; }
+body.ig.jpn .bs-link { background: rgba(169,83,60,0.22); border-color: rgba(169,83,60,0.6); color: #ffd9cf; }
+body.ig.jpn .bs-actions span { background: #262626; color: #f5f5f5; }
+body.ig.jpn .bs-avatar { background: linear-gradient(#111,#111) padding-box, var(--ig-grad) border-box; color: #fff; }
+body.ig.jpn .jpn-cta { background: #181817; background-color: #181817; border-color: #181817; color: #F5F0E7; box-shadow: 0 30px 70px rgba(24,24,23,0.28); }
+body.ig.jpn .jpn-cta .land-title, body.ig.jpn .jpn-cta .land-copy { color: #F5F0E7; }
+body.ig.jpn .jpn-cta::after, body.ig.jpn .jpn-cta::before { display: none; }
+body.ig.jpn .jpn-cta .btn-primary { background: #A9533C; color: #fff; }
+body.ig.jpn .jpn-cta .btn-ghost { background: transparent; color: #F5F0E7; border-color: rgba(245,240,231,0.35); }
+body.ig.jpn .ig-lede em { background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; }
+body.ig.jpn .ig-stats b { color: var(--ig-text); }
+body.ig.jpn .ig-stats span { color: var(--ig-dim); }
+
+/* Forms and the steps page. */
+body.ig.jpn input, body.ig.jpn select, body.ig.jpn textarea { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
+body.ig.jpn input::placeholder, body.ig.jpn textarea::placeholder { color: #9a958a; }
+body.ig.jpn input:focus, body.ig.jpn select:focus, body.ig.jpn textarea:focus { border-color: #A9533C; }
+body.ig.jpn .check input, body.ig.jpn input[type="checkbox"] { accent-color: #A9533C; }
+body.ig.jpn .check.fine, body.ig.jpn .check.fine a { color: var(--ig-dim); }
+body.ig.jpn.journey { background-image: radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.14), transparent 70%); }
+body.ig.jpn.journey .step-card { background: #fff; background-color: #fff; box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.07); }
+body.ig.jpn.journey .step-card.open { box-shadow: 0 18px 44px rgba(24,24,23,0.12); }
+body.ig.jpn .video-placeholder { background: #EDE6D9; border: 1px solid var(--ig-line); color: var(--ig-dim); box-shadow: none; }
+body.ig.jpn .play-mark { background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; box-shadow: none; }
+body.ig.jpn .play-mark::before { border-left-color: #A9533C; }
+body.ig.jpn .globe { background: #fff; border-color: var(--ig-line); color: #3a3935; }
+body.ig.jpn .locale-panel select { background: #fff; border-color: var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .step-chevron { color: var(--ig-dim); }
+body.ig.jpn.journey .step-card.open .step-icon { background: linear-gradient(#A9533C,#A9533C) padding-box, var(--ig-grad) border-box; color: #fff; }
+
+/* Sign in, back end, directory, prose. */
+body.ig.jpn .tab-row::before { background: #181817; box-shadow: none; }
+body.ig.jpn .tab-row .tab { color: var(--ig-dim); }
+body.ig.jpn .tab-row .tab.on { color: #F5F0E7; }
+body.ig.jpn .wrap-narrow label { color: var(--ig-dim); }
+body.ig.jpn .wrap-narrow::after { display: none; }
+body.ig.jpn .pick span { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .pick input:checked + span { background: #181817; color: #F5F0E7; border-color: #181817; }
+body.ig.jpn .section, body.ig.jpn .prose-body > h2 { color: var(--ig-text); }
+body.ig.jpn .section::before, body.ig.jpn .prose-body > h2::before { background: #A9533C; box-shadow: none; }
+body.ig.jpn .section::after, body.ig.jpn .prose-body > h2::after { background: linear-gradient(90deg, var(--ig-line), transparent); }
+body.ig.jpn .prose-body p, body.ig.jpn .prose-body li { color: #3a3935; }
+body.ig.jpn th { color: var(--ig-dim); border-color: var(--ig-line); } body.ig.jpn td { border-color: #EDE6D9; color: var(--ig-text); }
+body.ig.jpn .topic-chip { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .topic-chip.on { background: #181817; color: #F5F0E7; border-color: #181817; }
+body.ig.jpn .dir-tag, body.ig.jpn .directory-full .dir-tag { background: #EDE6D9; border: 0; color: var(--ig-dim); }
+body.ig.jpn .land-copy a, body.ig.jpn .prose-body a, body.ig.jpn .aside-link a, body.ig.jpn .see-all a, body.ig.jpn .commit-list a, body.ig.jpn .faq a { color: #A9533C; }
+body.ig.jpn .btn-small.go { background: #181817; color: #F5F0E7; border-color: #181817; }
+body.ig.jpn .crm-saved, body.ig.jpn .success { color: #69705E; }
+body.ig.jpn .error, body.ig.jpn .err { color: #A9533C; }
+body.ig.jpn footer, body.ig.jpn footer a { color: var(--ig-dim); }
+body.ig.jpn .creator-badge { background: #fff; border: 1px solid var(--ig-line); color: #3a3935; }
+body.ig.jpn .fold h4, body.ig.jpn .app-meta { color: var(--ig-dim); }
+body.ig.jpn .dir-example { opacity: 0.6; }
+body.ig.jpn .auth-mark { box-shadow: 0 10px 30px rgba(169,83,60,0.25); }
+body.ig.jpn .wrap-narrow .step-card.static { box-shadow: 0 20px 50px rgba(169,83,60,0.14), 0 10px 30px rgba(24,24,23,0.08); }
+body.ig.jpn .ig-actions::after { display: none; }
+body.ig.jpn .phone-frame .bs-stats b { color: #f5f5f5; }
+body.ig.jpn .phone-frame .bs-stats span { color: #a8a8a8; }
+body.ig.jpn .phone-frame .bs-avatar { color: #fff; box-shadow: none; }
+body.ig.jpn.journey .step-card .step-icon, body.ig.jpn.journey .step-card:hover .step-icon,
+body.ig.jpn.journey .step-card.done .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
+body.ig.jpn.journey .step-card:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
+body.ig.jpn.journey .step-card.open:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.35); }
+body.ig.jpn .j-row .j-icon { color: var(--ig-text); }
+.hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; }
+
+/* Registration: the link field with its fixed prefix, and the availability note. */
+body.ig .slug-wrap { display: flex; align-items: stretch; border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; overflow: hidden; background: rgba(0,0,0,0.45); }
+body.ig.jpn .slug-wrap { background: #fff; border-color: var(--ig-line); }
+body.ig .slug-prefix { padding: 12px 0 12px 14px; font-size: 0.9rem; color: var(--ig-dim); white-space: nowrap; letter-spacing: 0; text-transform: none; font-weight: 400; }
+body.ig .slug-wrap input { border: 0 !important; background: transparent !important; padding-left: 2px !important; min-width: 0; flex: 1; }
+body.ig .slug-note { font-size: 0.78rem; letter-spacing: 0; text-transform: none; font-weight: 500; min-height: 1em; }
+body.ig .slug-note.ok { color: #69705E; } body.ig .slug-note.bad { color: #A9533C; }
+body.ig:not(.jpn) .slug-note.ok { color: #7fd1c9; } body.ig:not(.jpn) .slug-note.bad { color: #ff7a7a; }
+
+/* ---- Insights (analytics on both dashboards) ---------------------------- */
+body.ig .insight-bar { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
+body.ig .insight-range { padding: 8px 10px; border-radius: 10px; font-size: 0.86rem; max-width: 180px; }
+body.ig .insight-tiles { margin-bottom: 14px; }
+body.ig .stat small { display: block; font-size: 0.72rem; color: var(--ig-dim); margin-top: 2px; }
+body.ig .insight-title { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ig-dim); margin: 16px 0 8px; font-weight: 600; }
+body.ig .funnel-row { display: grid; grid-template-columns: 150px 1fr 40px; align-items: center; gap: 10px; margin: 6px 0; font-size: 0.86rem; }
+body.ig .funnel-bar { height: 12px; border-radius: 6px; background: var(--ig-grad); min-width: 4px; transition: width .6s cubic-bezier(.22,.8,.18,1); }
+body.ig .funnel-row b { text-align: right; font-variant-numeric: tabular-nums; }
+body.ig .insight-note { font-size: 0.8rem; color: var(--ig-dim); margin: 8px 0 0; }
+body.ig .source-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--ig-line); font-size: 0.86rem; }
+body.ig .source-row b { font-variant-numeric: tabular-nums; }
+body.ig .notice { padding: 12px 14px; border-radius: 12px; background: #151515; border: 1px solid rgba(255,255,255,0.10); font-size: 0.88rem; margin: 0 0 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+body.ig.jpn .notice { background: #fff; border-color: var(--ig-line); }
+body.ig .notice .btn-small { margin-left: auto; }
+body.ig .seg { display: inline-flex; border: 1px solid var(--ig-line); border-radius: 999px; overflow: hidden; }
+body.ig .seg button { border: 0; background: transparent; color: var(--ig-dim); padding: 7px 14px; font-size: 0.84rem; font-weight: 600; cursor: pointer; }
+body.ig .seg button.on { background: var(--ig-text); color: var(--ig-bg); }
+body.ig textarea.tpl { min-height: 70px; }
+body.ig .tpl-grid { display: grid; gap: 10px; }
+body.ig .tpl-block { padding: 12px 0; border-bottom: 1px solid var(--ig-line); }
+body.ig .tpl-block h5 { margin: 0 0 8px; font-size: 0.85rem; }
+body.ig .audit { font-size: 0.8rem; color: var(--ig-dim); }
+body.ig .audit li { padding: 5px 0; border-bottom: 1px solid var(--ig-line); list-style: none; }
+body.ig .audit ul { padding: 0; margin: 0; }
+@media (max-width: 520px) { body.ig .funnel-row { grid-template-columns: 110px 1fr 36px; } }
+body.ig.jpn .wrap-narrow label input, body.ig.jpn .wrap-narrow label select, body.ig.jpn .wrap-narrow textarea { background: #fff; border-color: var(--ig-line); color: var(--ig-text); }
+body.ig.jpn .wrap-narrow input::placeholder { color: #9a958a; }
+body.ig .wrap-narrow label .pick-hint { display: inline; margin-left: 6px; font-weight: 500; letter-spacing: 0; text-transform: none; }
