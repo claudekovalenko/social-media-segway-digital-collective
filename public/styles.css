@@ -3045,3 +3045,8 @@ body.ig .wrap-narrow label .pick-hint { display: inline; margin-left: 6px; font-
 body.journey.buttons form[data-step], body.journey.buttons .gather-help { display: none !important; }
 body.journey.buttons .step-cta { display: block; margin-top: 12px; text-align: center; }
 body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
+
+/* Back-to-creator link on a creator's page. */
+.back-link { display: inline-block; margin-top: 10px; font-size: 0.92rem; font-weight: 600; color: #A9533C; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+.back-link.foot { margin-top: 0; font-size: 0.95rem; }

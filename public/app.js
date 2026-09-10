@@ -110,6 +110,7 @@ async function loadCreator() {
   // collective) says the next step is.
   showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow');
   showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect');
+  showBackLink(creator);
   showGatherLink(
     creator.gather_url || fallback.gather_url,
     creator.gather_url ? null : (fallback.gather_label || null)
@@ -293,6 +294,19 @@ function showStepButton(id, url, nextStepId) {
       next.classList.add('open');
       setTimeout(() => next.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
     };
+  }
+}
+
+// "Back to Craig on Instagram": the creator's own page, shown under the
+// badge and again at the foot so people can return when they're done.
+function showBackLink(creator) {
+  const url = creator.back_url;
+  const label = creator.back_label || t('back_to', { name: creator.name || '' });
+  for (const id of ['backLink', 'backLinkFoot']) {
+    const a = document.getElementById(id);
+    if (!a) continue;
+    a.hidden = !url;
+    if (url) { a.href = url; a.textContent = '\u2190 ' + label; }
   }
 }
 

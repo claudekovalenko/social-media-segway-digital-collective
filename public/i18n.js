@@ -37,6 +37,7 @@ const I18N = {
     path_both: 'Both — join a church and start a gathering',
     path_unsure: 'Not sure yet — help me figure it out',
     footer: 'Creators — sign in',
+    back_to: 'Back to {name}',
     shared_by: 'Shared with you by {name}',
     vid1: 'Gospel video goes here — a short message about knowing God personally.',
     vid2: 'Discipleship course intro video goes here.',

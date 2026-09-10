@@ -105,6 +105,6 @@
       }
     });
   </script>
-  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
+  <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js"); const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !window.__reloaded) { window.__reloaded = true; location.reload(); } }); }</script>
 </body>
 </html>

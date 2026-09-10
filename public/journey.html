@@ -50,6 +50,7 @@
       <h1><span data-i18n="hero_1">Take your</span><br><em data-i18n="hero_2">next step</em></h1>
       <p class="hero-sub" data-i18n="hero_sub">Wherever you are in your journey &mdash; start here.</p>
       <span class="creator-badge" id="creatorBadge" hidden></span>
+      <a class="back-link" id="backLink" href="#" rel="noopener" hidden></a>
     </header>
 
     <div class="steps">
@@ -140,6 +141,7 @@
     </div>
 
     <footer>
+      <p><a class="back-link foot" id="backLinkFoot" href="#" rel="noopener" hidden></a></p>
       <p><a href="login.html" data-i18n="footer">Creators &mdash; sign in</a></p>
       <p class="footer-quiet">
         <a href="index.html">
@@ -152,7 +154,7 @@
   <script src="i18n.js"></script>
   <script src="app.js"></script>
   <script src="track.js"></script>
-  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
+  <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js"); const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !window.__reloaded) { window.__reloaded = true; location.reload(); } }); }</script>
   <script src="reveal.js" defer></script>
 </body>
 </html>

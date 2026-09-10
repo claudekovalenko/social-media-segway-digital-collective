@@ -55,6 +55,55 @@
       </details>
 
       <details class="fold">
+      <summary class="section">Creator pages</summary>
+      <form class="app-card" id="creatorPage">
+        <p class="app-meta">Pick a creator to see and change exactly what their page shows. Blank fields fall back to the collective defaults below.</p>
+        <label>Creator
+          <select name="slug" id="creatorPick"></select>
+        </label>
+        <p class="app-meta" id="creatorPageLinks"></p>
+        <label>Name on the page
+          <input name="name" type="text" maxlength="100">
+        </label>
+        <label>Know God &mdash; video
+          <input name="know_god_video_url" type="url" placeholder="https://…">
+        </label>
+        <label>Know God &mdash; where the button goes
+          <input name="know_god_next_url" type="url" placeholder="next step on the page">
+        </label>
+        <label>Grow with God &mdash; video
+          <input name="grow_video_url" type="url" placeholder="https://…">
+        </label>
+        <label>Grow with God &mdash; where the button goes
+          <input name="grow_course_url" type="url" placeholder="next step on the page">
+        </label>
+        <label>Get Connected &mdash; video
+          <input name="find_church_video_url" type="url" placeholder="https://…">
+        </label>
+        <label>Get Connected &mdash; where to send people
+          <input name="gather_url" type="url" placeholder="https://…">
+        </label>
+        <label>Back to them &mdash; Instagram, channel, or site
+          <input name="back_url" type="url" placeholder="https://instagram.com/…">
+        </label>
+        <label>Back to them &mdash; what the link says
+          <input name="back_label" type="text" maxlength="60" placeholder="Back to Craig on Instagram">
+        </label>
+        <div class="app-actions">
+          <button type="submit" class="btn-small go">Save this page</button>
+          <span class="crm-saved"></span>
+        </div>
+        <h4 style="margin-top:16px">Short links</h4>
+        <p class="app-meta">Extra addresses that open this creator&rsquo;s page, like /craig for /craigbrown.</p>
+        <div id="aliasList" class="app-meta"></div>
+        <div class="crm-cell">
+          <input type="text" id="aliasNew" placeholder="short name" maxlength="40">
+          <button type="button" class="btn-small" id="aliasAdd">Add</button>
+          <span class="crm-saved" id="aliasMark"></span>
+        </div>
+      </form>
+    </details>
+    <details class="fold">
       <summary class="section">Collective defaults</summary>
       <form class="app-card" id="defaults">
         <p class="app-meta">What every creator&rsquo;s page shows unless they set their own. Fill the Get Connected link in when the Visitor Reach connection is ready &mdash; it goes live everywhere at once.</p>
@@ -545,10 +594,87 @@
       renderApplications(data.applications || []);
       lastData = data;
       renderAccounts(data.accounts || []);
+      fillCreatorPick(data.creators || []);
 
     }
+    // ---- Creator pages: edit any creator's links and short names ----------
+    const PAGE_FIELDS = ['name', 'know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url', 'back_label'];
+    let aliasesAll = {};
+    function fillCreatorPick(creators) {
+      const pick = document.getElementById('creatorPick');
+      const current = pick.value;
+      pick.replaceChildren();
+      for (const c of creators.filter((x) => x.slug !== 'default')) {
+        const o = document.createElement('option');
+        o.value = c.slug; o.textContent = `${c.name || c.slug} — /${c.slug}`;
+        pick.appendChild(o);
+      }
+      if (!pick.options.length) { const o = document.createElement('option'); o.textContent = 'No creators yet'; o.value = ''; pick.appendChild(o); }
+      pick.value = [...pick.options].some((o) => o.value === current) ? current : pick.options[0].value;
+      loadCreatorPage();
+    }
+    async function loadCreatorPage() {
+      const form = document.getElementById('creatorPage');
+      const slug = form.elements.slug.value;
+      const linksEl = document.getElementById('creatorPageLinks');
+      if (!slug) { linksEl.textContent = ''; return; }
+      try {
+        const [pageRes, aliasRes] = await Promise.all([
+          fetch(`${API_BASE}/api/creators/${encodeURIComponent(slug)}`),
+          fetch(`${API_BASE}/api/admin/aliases`, { headers: credentials() || {} }),
+        ]);
+        const page = await pageRes.json();
+        aliasesAll = (await aliasRes.json().catch(() => ({}))).aliases || {};
+        for (const f of PAGE_FIELDS) if (form.elements[f]) form.elements[f].value = page[f] || '';
+        const site = location.origin;
+        const mine = Object.entries(aliasesAll).filter(([, v]) => v === slug).map(([k]) => k);
+        linksEl.replaceChildren();
+        const a = document.createElement('a'); a.href = `/${slug}`; a.target = '_blank'; a.textContent = `${site}/${slug}`;
+        linksEl.append('Page: ', a);
+        const list = document.getElementById('aliasList');
+        list.replaceChildren();
+        if (!mine.length) list.textContent = 'None yet.';
+        for (const k of mine) {
+          const row = document.createElement('div'); row.className = 'crm-cell';
+          const link = document.createElement('a'); link.href = `/${k}`; link.target = '_blank'; link.textContent = `${site}/${k}`;
+          const x = document.createElement('button'); x.type = 'button'; x.className = 'btn-small'; x.textContent = 'Remove';
+          x.addEventListener('click', async () => {
+            await fetch(`${API_BASE}/api/admin/aliases`, { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify({ alias: k, slug: null }) });
+            loadCreatorPage();
+          });
+          row.append(link, x); list.appendChild(row);
+        }
+      } catch { linksEl.textContent = 'Could not load this creator.'; }
+    }
+    document.getElementById('creatorPick').addEventListener('change', loadCreatorPage);
+    document.getElementById('creatorPage').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const mark = form.querySelector('.crm-saved'); mark.textContent = '…';
+      const body = { slug: form.elements.slug.value };
+      for (const f of PAGE_FIELDS) body[f] = form.elements[f].value;
+      try {
+        const res = await fetch(`${API_BASE}/api/creator/links`, { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || 'Could not save.');
+        mark.textContent = 'Saved';
+      } catch (err) { mark.textContent = err.message; }
+    });
+    document.getElementById('aliasAdd').addEventListener('click', async () => {
+      const mark = document.getElementById('aliasMark'); mark.textContent = '…';
+      const alias = document.getElementById('aliasNew').value.trim().toLowerCase();
+      const slug = document.getElementById('creatorPick').value;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/aliases`, { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify({ alias, slug }) });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || 'Could not add that.');
+        document.getElementById('aliasNew').value = ''; mark.textContent = 'Added';
+        loadCreatorPage();
+      } catch (err) { mark.textContent = err.message; }
+    });
+
     load();
   </script>
-  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
+  <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js"); const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !window.__reloaded) { window.__reloaded = true; location.reload(); } }); }</script>
 </body>
 </html>
