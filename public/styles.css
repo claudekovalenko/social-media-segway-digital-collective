@@ -3129,3 +3129,13 @@ body.ig.jpn .site-nav {
   border-color: rgba(24, 24, 23, 0.07);
   box-shadow: 0 6px 20px rgba(24, 24, 23, 0.06);
 }
+
+/* Preview above sign out, so the creator's address gets the room instead. */
+.profile-actions.stacked { flex-direction: column; align-items: stretch; gap: 6px; text-align: center; }
+.profile-actions.stacked a { white-space: nowrap; }
+
+/* The still from a pasted video, shown under its field. */
+.vid-thumb { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; text-decoration: none; }
+.vid-thumb img { width: 96px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--ig-line, #DCD3C3); display: block; background: #EDE6D9; }
+.vid-thumb span { font-size: 0.74rem; color: #9a948a; }
+.vid-thumb:hover span { color: #A9533C; }

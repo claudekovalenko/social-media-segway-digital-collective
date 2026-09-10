@@ -101,3 +101,59 @@ export function dueLeads(leads) {
       && !['closed', 'connected'].includes(l.status))
     .sort((a, b) => a.next_follow_up.localeCompare(b.next_follow_up));
 }
+
+// ---- video thumbnails in the link editors --------------------------------
+// A creator pastes an address; seeing the actual video appear beside the field
+// is how they know they pasted the right one. YouTube serves a still for any
+// public video at a fixed address, so this needs no key and no request from us.
+export function youtubeId(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^(www|m)\./, '');
+    if (host === 'youtu.be') return u.pathname.slice(1).split('/')[0] || null;
+    if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+      if (u.pathname === '/watch') return u.searchParams.get('v');
+      if (/^\/(embed|shorts|live)\//.test(u.pathname)) return u.pathname.split('/')[2] || null;
+    }
+    return null;
+  } catch { return null; }
+}
+
+export function videoThumbUrl(url) {
+  const id = youtubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : null;
+}
+
+// Puts a live thumbnail under `input`, refreshed as the address is typed.
+export function attachVideoPreview(input) {
+  if (!input || input.dataset.preview) return;
+  input.dataset.preview = '1';
+  const box = document.createElement('a');
+  box.className = 'vid-thumb';
+  box.target = '_blank';
+  box.rel = 'noopener';
+  box.hidden = true;
+  const img = document.createElement('img');
+  const note = document.createElement('span');
+  note.textContent = 'Opens the video';
+  box.append(img, note);
+  input.insertAdjacentElement('afterend', box);
+
+  let last = null;
+  const paint = () => {
+    const url = input.value.trim();
+    const thumb = videoThumbUrl(url);
+    if (!thumb) { box.hidden = true; last = null; return; }
+    if (thumb === last) return;
+    last = thumb;
+    img.src = thumb;
+    box.href = url;
+    box.hidden = false;
+  };
+  // A failed still means the address looks like a video but isn't one.
+  img.addEventListener('error', () => { box.hidden = true; });
+  input.addEventListener('input', paint);
+  input.addEventListener('change', paint);
+  paint();
+  return paint;
+}

@@ -249,7 +249,7 @@
   </div>
 
   <script type="module">
-    import { LEAD_STATUS, statusCell, followUpCell, notesCell, saverFor, dueLeads } from './crm.js';
+    import { LEAD_STATUS, statusCell, followUpCell, notesCell, saverFor, dueLeads, attachVideoPreview } from './crm.js';
     import { mountInsights } from './insights.js';
 
     // The dashboard reads live data, so it always talks to the Worker.
@@ -686,6 +686,11 @@
         const page = await pageRes.json();
         aliasesAll = (await aliasRes.json().catch(() => ({}))).aliases || {};
         for (const f of PAGE_FIELDS) if (form.elements[f]) form.elements[f].value = page[f] || '';
+        // Attach first, then refresh: the fields have just been refilled.
+        for (const f of ['know_god_video_url', 'grow_video_url', 'find_church_video_url']) {
+          attachVideoPreview(form.elements[f]);
+          if (form.elements[f]) form.elements[f].dispatchEvent(new Event('change'));
+        }
         const site = location.origin;
         const mine = Object.entries(aliasesAll).filter(([, v]) => v === slug).map(([k]) => k);
         linksEl.replaceChildren();

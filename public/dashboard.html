@@ -35,7 +35,7 @@
           <b id="whoami"></b>
           <a id="mylink" href="#" target="_blank"></a>
         </span>
-        <span class="profile-actions">
+        <span class="profile-actions stacked">
           <a class="btn-small go" id="previewLink" href="#" target="_blank">Preview my page</a>
           <a href="#" id="signOut">Sign out</a>
         </span>
@@ -162,7 +162,7 @@
   </div>
 
   <script type="module">
-    import { statusCell, followUpCell, notesCell, saverFor, dueLeads } from './crm.js';
+    import { statusCell, followUpCell, notesCell, saverFor, dueLeads, attachVideoPreview } from './crm.js';
     import { mountInsights } from './insights.js';
 
     const API_BASE = location.hostname.endsWith('github.io')
@@ -265,6 +265,10 @@
         input.value = data.creator[field] || '';
         const fallback = (data.defaults || {})[field];
         if (fallback) input.placeholder = fallback + '  (default)';
+      }
+      for (const field of ['know_god_video_url', 'grow_video_url', 'find_church_video_url']) {
+        attachVideoPreview(form.elements[field]);
+        if (form.elements[field]) form.elements[field].dispatchEvent(new Event('change'));
       }
 
       // Analytics, scoped to this creator by the server.
