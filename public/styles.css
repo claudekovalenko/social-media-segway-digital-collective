@@ -3164,3 +3164,12 @@ body.ig.jpn ::selection { background: #EAD9C2; color: #181817; }
   html.js .hero h1 { opacity: 1; transition: none; }
   body.ig.jpn :where(.btn-primary, .step-cta, .partner-link):hover { transform: none; }
 }
+
+/* Journey arrival: fade only. The cards used to rise fourteen pixels on a
+   stagger, so the second and third arrived after the page looked settled and
+   read as a twitch. Opacity alone cannot shake anything. */
+@keyframes settle { from { opacity: 0; } to { opacity: 1; } }
+body.journey .hero, body.journey .step-card, body.journey footer {
+  animation-name: settle; transform: none;
+}
+body.journey .step-card { will-change: auto; }
