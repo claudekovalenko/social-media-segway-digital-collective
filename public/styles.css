@@ -3108,3 +3108,16 @@ body.ig .tab-row { margin-bottom: 14px; }
 .link-group label { display: block; margin-bottom: 10px; }
 .step-num { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #B28B46, #A9533C); color: #fff; font-size: 0.72rem; font-weight: 700; flex: none; }
 .endorse-logo { height: 16px; width: auto; max-width: 90px; vertical-align: -3px; margin-right: 6px; opacity: 0.9; }
+
+/* Dashboard profile bar: their photo, their address, and a way to see the
+   page a visitor sees. */
+.profile-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 14px; border: 1px solid var(--ig-line, #DCD3C3); border-radius: 14px; background: rgba(255,255,255,0.7); }
+.profile-ring { width: 44px; height: 44px; }
+.profile-ring .cc-photo, .profile-ring .cc-initial { width: 40px; height: 40px; font-size: 1rem; }
+.profile-who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.profile-who b { font-size: 0.98rem; font-weight: 600; }
+.profile-who a { font-size: 0.8rem; color: #8b857b; text-decoration: none; word-break: break-all; }
+.profile-who a:hover { color: #A9533C; }
+.profile-actions { display: flex; align-items: center; gap: 12px; }
+.profile-actions a { font-size: 0.82rem; }
+@media (max-width: 420px) { .profile-actions { width: 100%; justify-content: space-between; } }

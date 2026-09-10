@@ -37,26 +37,53 @@ const DEFAULT_LINKS = {
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
 
-// A creator can give a YouTube channel address as their photo. The channel's
-// public avatar is read from the page and cached for six hours, so when they
-// change it on YouTube the site follows within the day. Anything else is
-// treated as a direct image address.
-async function resolveAvatar(url) {
-  if (!url) return url;
-  let u;
-  try { u = new URL(url); } catch { return url; }
-  const host = u.hostname.replace(/^(www|m)\./, '');
-  if (host !== 'youtube.com' || !/^\/(@[\w.-]+|channel\/[\w-]+|c\/[\w.-]+|user\/[\w.-]+)\/?$/.test(u.pathname)) return url;
+// A creator can give a YouTube channel address as their photo. Reading that
+// page costs a second or two, which is far too slow to do while someone waits
+// for a page to load. So the resolved image address is kept in the database
+// and handed back at once; when it is stale the refresh happens after the
+// response has already been sent, and the next visitor gets the new one.
+const AVATAR_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+
+function isChannelUrl(url) {
   try {
-    const res = await fetch(`https://www.youtube.com${u.pathname}`, {
+    const u = new URL(url);
+    return u.hostname.replace(/^(www|m)\./, '') === 'youtube.com'
+      && /^\/(@[\w.-]+|channel\/[\w-]+|c\/[\w.-]+|user\/[\w.-]+)\/?$/.test(u.pathname);
+  } catch { return false; }
+}
+
+async function readChannelAvatar(url) {
+  try {
+    const res = await fetch(url, {
       headers: { 'user-agent': 'Mozilla/5.0 (compatible; DigitalCollective/1.0)', 'accept-language': 'en' },
-      cf: { cacheTtl: 21600, cacheEverything: true },
     });
-    if (!res.ok) return url;
-    const html = await res.text();
-    const m = html.match(/property="og:image" content="([^"]+)"/);
-    return m ? m[1] : url;
-  } catch { return url; }
+    if (!res.ok) return null;
+    const m = (await res.text()).match(/property="og:image" content="([^"]+)"/);
+    return m ? m[1] : null;
+  } catch { return null; }
+}
+
+// Returns straight away. `after` is given any slow refresh work to run once
+// the response has gone out, so nobody waits for it.
+function avatarFor(row, db, after) {
+  if (!row || !row.avatar_url) return row;
+  if (!isChannelUrl(row.avatar_url)) { row.avatar_url = row.avatar_url; return row; }
+  const age = row.avatar_checked_at ? Date.now() - Date.parse(row.avatar_checked_at) : Infinity;
+  if (row.avatar_cached && age < AVATAR_MAX_AGE_MS) { row.avatar_url = row.avatar_cached; return row; }
+  const channel = row.avatar_url;
+  const slug = row.slug;
+  if (after) {
+    after((async () => {
+      const found = await readChannelAvatar(channel);
+      if (!found) return;
+      await db.updateCreatorLinks(slug, { avatar_cached: found, avatar_checked_at: new Date().toISOString() })
+        .catch(() => {});
+    })());
+  }
+  // Until the first refresh lands there is nothing to show, so show nothing
+  // rather than a channel address the browser cannot draw.
+  row.avatar_url = row.avatar_cached || '';
+  return row;
 }
 
 async function endorsements(db) {
@@ -310,7 +337,8 @@ function creatorInsertError(err) {
 }
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
+    const after = (p) => { try { ctx.waitUntil(p); } catch { /* no context: skip the refresh */ } };
     const url = new URL(req.url);
     const p = url.pathname;
     const db = makeDb(env);
@@ -385,7 +413,7 @@ export default {
       // Public directory: creators who set a handle, with their topic tag.
       if (p === '/api/directory' && req.method === 'GET') {
         const creators = await db.directory();
-        await Promise.all(creators.map(async (c) => { c.avatar_url = await resolveAvatar(c.avatar_url); }));
+        for (const c of creators) avatarFor(c, db, after);
         return json({ creators });
       }
 
@@ -612,7 +640,7 @@ export default {
           out.og = (html.match(/property="og:image" content="([^"]+)"/) || [])[1] || null;
           out.head = html.slice(0, 300);
         } catch (err) { out.error = String(err && err.message || err); }
-        out.resolved = await resolveAvatar(target);
+        out.resolved = await readChannelAvatar(target);
         return json(out);
       }
 
@@ -741,6 +769,15 @@ export default {
         // Directory card: the @handle lists them on the creators page; the topic is its tag.
         if (b.handle !== undefined) fields.handle = String(b.handle || '').trim().replace(/^@/, '').slice(0, 60) || null;
         if (b.topic !== undefined) fields.topic = String(b.topic || '').trim().slice(0, 40) || null;
+        // A new photo is resolved here, once, so the page never sits blank
+        // waiting for the first background refresh. Saving is a deliberate
+        // act, so a second spent here costs nobody a page load.
+        if (fields.avatar_url !== undefined) {
+          fields.avatar_cached = isChannelUrl(fields.avatar_url)
+            ? await readChannelAvatar(fields.avatar_url)
+            : fields.avatar_url;
+          fields.avatar_checked_at = new Date().toISOString();
+        }
         if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
         await db.updateCreatorLinks(slug, fields);
         return json({ ok: true, slug, ...fields });
@@ -838,6 +875,7 @@ export default {
         ]);
         const account = me.email ? await db.adminByEmail(me.email).catch(() => null) : null;
         const { key_hash, ...creatorPublic } = creator;
+        avatarFor(creatorPublic, db, after);
         return json({
           creator: creatorPublic, leads, counts, role: me.role,
           link: `/${me.creator_slug}`, defaults: await defaultLinks(db),
@@ -856,7 +894,7 @@ export default {
         if (!row || row.status === 'suspended') return json({ error: 'creator not found' }, 404);
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
-        pub.avatar_url = await resolveAvatar(pub.avatar_url);
+        avatarFor(pub, db, after);
         return json({ ...pub, defaults: await defaultLinks(db) });
       }
 

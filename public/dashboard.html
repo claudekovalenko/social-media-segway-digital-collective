@@ -29,10 +29,14 @@
     <p class="dir-empty" id="loadError" hidden>Could not reach the server. Refresh to try again.</p>
 
     <div id="dash" hidden>
-      <div class="creator-bar">
-        <span id="whoami"></span>
-        <span class="bar-links">
+      <div class="profile-bar">
+        <span class="cc-ring profile-ring"><img class="cc-photo" id="myPhoto" alt="" hidden><span class="cc-initial" id="myInitial" aria-hidden="true"></span></span>
+        <span class="profile-who">
+          <b id="whoami"></b>
           <a id="mylink" href="#" target="_blank"></a>
+        </span>
+        <span class="profile-actions">
+          <a class="btn-small go" id="previewLink" href="#" target="_blank">Preview my page</a>
           <a href="#" id="signOut">Sign out</a>
         </span>
       </div>
@@ -217,11 +221,26 @@
     function show(data) {
       document.getElementById('dash').hidden = false;
 
-      document.getElementById('whoami').textContent =
-        data.creator.name + (data.creator.handle ? ' · ' + data.creator.handle : '');
+      document.getElementById('whoami').textContent = data.creator.name || '';
+      const pageUrl = (API_BASE ? API_BASE : location.origin) + data.link;
       const link = document.getElementById('mylink');
-      link.href = API_BASE ? API_BASE + data.link : data.link;
-      link.textContent = 'Your share link';
+      link.href = pageUrl;
+      link.textContent = pageUrl.replace(/^https?:\/\//, '');
+      document.getElementById('previewLink').href = pageUrl;
+
+      // The same photo their page shows, so this reads as their profile.
+      const photo = document.getElementById('myPhoto');
+      const initial = document.getElementById('myInitial');
+      if (data.creator.avatar_url) {
+        photo.src = data.creator.avatar_url;
+        photo.alt = data.creator.name || '';
+        photo.hidden = false;
+        photo.addEventListener('error', () => { photo.hidden = true; initial.hidden = false; }, { once: true });
+        initial.hidden = true;
+      } else {
+        initial.textContent = ((data.creator.name || '?').trim().charAt(0) || '?').toUpperCase();
+        initial.hidden = false;
+      }
 
       const stats = document.getElementById('stats');
       stats.replaceChildren();

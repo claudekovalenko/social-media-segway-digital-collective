@@ -51,7 +51,7 @@ function d1Adapter(DB) {
       await ensurePlatformColumns(DB);
       return DB.prepare(
         `SELECT slug, name, mode, know_god_video_url, know_god_next_url, grow_video_url, grow_course_url,
-                find_church_video_url, gather_url, back_url, back_label, avatar_url, status, display_name, handle, topic,
+                find_church_video_url, gather_url, back_url, back_label, avatar_url, avatar_cached, avatar_checked_at, status, display_name, handle, topic,
                 follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url
          FROM creators WHERE slug = ?`).bind(slug).first();
     },
@@ -70,7 +70,7 @@ function d1Adapter(DB) {
       await this.ensureAdmins();
       await ensurePlatformColumns(DB);
       const r = await DB.prepare(
-        `SELECT slug, name, handle, topic, back_url, avatar_url FROM creators
+        `SELECT slug, name, handle, topic, back_url, avatar_url, avatar_cached FROM creators
          WHERE handle IS NOT NULL AND handle != '' AND slug != 'default'
            AND (status IS NULL OR status != 'suspended') ORDER BY created_at ASC`).all();
       return r.results;
@@ -164,6 +164,8 @@ function d1Adapter(DB) {
         ['creators', 'grow_video_url', 'TEXT'],
         ['creators', 'back_url', 'TEXT'],
         ['creators', 'avatar_url', 'TEXT'],
+        ['creators', 'avatar_cached', 'TEXT'],
+        ['creators', 'avatar_checked_at', 'TEXT'],
         ['creators', 'back_label', 'TEXT'],
         ['creators', 'gather_url', 'TEXT'],
         ['leads', 'status', "TEXT NOT NULL DEFAULT 'new'"],
@@ -332,7 +334,7 @@ function supabaseAdapter(url, serviceKey) {
     async creatorBySlug(slug) {
       return first(await rest(
         `creators?slug=eq.${encodeURIComponent(slug)}` +
-        `&select=slug,name,mode,know_god_video_url,know_god_next_url,grow_video_url,grow_course_url,find_church_video_url,gather_url,back_url,back_label,avatar_url,status,display_name,handle,topic&limit=1`));
+        `&select=slug,name,mode,know_god_video_url,know_god_next_url,grow_video_url,grow_course_url,find_church_video_url,gather_url,back_url,back_label,avatar_url,avatar_cached,avatar_checked_at,status,display_name,handle,topic&limit=1`));
     },
 
     async creatorByKeyHash(hash) {
@@ -346,7 +348,7 @@ function supabaseAdapter(url, serviceKey) {
     },
 
     directory() {
-      return rest('creators?handle=not.is.null&slug=neq.default&select=slug,name,handle,topic,back_url,avatar_url' +
+      return rest('creators?handle=not.is.null&slug=neq.default&select=slug,name,handle,topic,back_url,avatar_url,avatar_cached' +
                   '&select=slug,name,handle,topic&order=created_at.asc');
     },
 
