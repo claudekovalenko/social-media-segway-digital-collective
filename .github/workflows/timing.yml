@@ -1,0 +1,35 @@
+name: Time the live API
+
+# Signs in, then times each endpoint the dashboards call, so slowness can be
+# traced to one request instead of guessed at.
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_email:
+        description: Admin email
+        required: true
+      admin_password:
+        description: Admin password (masked)
+        required: true
+
+jobs:
+  time:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "::add-mask::${{ inputs.admin_password }}"
+      - env:
+          SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+        run: |
+          login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+          TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
+          [ -n "$TOKEN" ] || { echo "sign-in failed"; exit 1; }
+          echo "::add-mask::$TOKEN"
+          for path in /api/admin/leads /api/creators/craigbrown /api/directory /api/analytics /api/endorsements /api/admin/aliases; do
+            for pass in 1 2; do
+              t=$(curl -s -o /tmp/o -w '%{time_total}' "$SITE$path" -H "authorization: Bearer $TOKEN")
+              printf '%-28s pass %s  %6.2fs  %s bytes\n' "$path" "$pass" "$t" "$(wc -c < /tmp/o)"
+            done
+          done
