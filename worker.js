@@ -22,7 +22,7 @@ const VALID_LEAD_STATUS = new Set([
 // An admin may edit a specific creator's links by naming the slug.
 const b_slug = (b) => (b && typeof b.slug === 'string' ? b.slug : null);
 
-// Fallbacks in code. Anything an admin saves under "Network defaults" in
+// Fallbacks in code. Anything an admin saves under "Collective defaults" in
 // the database view wins over these, so the links can be filled in later
 // without a deploy.
 const DEFAULT_LINKS = {
@@ -390,7 +390,7 @@ export default {
       }
 
       // ---- one door for everyone ------------------------------------------
-      // Join the network: an application plus a pending account, so the
+      // Join the collective: an application plus a pending account, so the
       // person can sign in and watch for the decision.
       if (p === '/api/auth/signup' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
@@ -752,7 +752,7 @@ export default {
           await db.insertGroupSignup({ lead_id: leadId, creator_slug: creatorSlug, slot: null });
         }
         // The platform record: one contact per person, one response per
-        // submission, then the network's follow-up in the creator's name.
+        // submission, then the collective's follow-up in the creator's name.
         let recorded = null;
         try {
           const pf = platform(env.DB);
@@ -797,7 +797,7 @@ export default {
         return Response.redirect(new URL(`/journey.html?creator=${encodeURIComponent(slug)}`, url).toString(), 302);
       }
 
-      // Vanity creator URLs: thejesuspeople.network/craigbrown serves the
+      // Vanity creator URLs: digitalcollective.com/craigbrown serves the
       // journey page for that creator without changing the address bar, so
       // deep links like /craigbrown#grow keep working. Only a single lowercase
       // segment that isn't a known page or asset qualifies.

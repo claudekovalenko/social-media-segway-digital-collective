@@ -2,7 +2,7 @@
 //
 // Contacts are people; responses are what they reported, each attributed to a
 // creator, a section and a session. Events are what happened on a creator's
-// page. Communications log every follow-up the network sends. The audit log
+// page. Communications log every follow-up the collective sends. The audit log
 // records sensitive changes. Everything here reads env.DB directly; the
 // Supabase adapter in db.js still serves the original tables, and the
 // matching Postgres DDL lives in supabase/schema.sql for when that move
@@ -422,7 +422,7 @@ export async function sendEmail(env, { to, subject, html, text, tags }) {
 }
 
 // Network-owned templates with creator tokens. Creators customise greeting,
-// message and the button; the network owns structure, sender and unsubscribe.
+// message and the button; the collective owns structure, sender and unsubscribe.
 export const DEFAULT_TEMPLATES = {
   reported_commitment: {
     subject: 'Your next step with {{creator_name}}',
@@ -441,7 +441,7 @@ export const DEFAULT_TEMPLATES = {
   church_connection: {
     subject: 'Finding a church near you',
     greeting: 'Hi {{first_name}},',
-    message: 'You asked for help getting connected to a healthy local church. Someone from The Jesus People Network will be in touch, and this link will point you to churches near you.',
+    message: 'You asked for help getting connected to a healthy local church. Someone from the Digital Collective team will be in touch, and this link will point you to churches near you.',
     cta_label: 'Find a church near you',
     cta_url: '{{gather_url}}',
   },

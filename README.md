@@ -91,7 +91,7 @@ a state worth keeping.
 ## Accounts, tiers, and the CRM
 
 Everyone — you and every creator — signs in at **`/login.html`**. One page, two
-tabs: **Sign in** and **Join the network**. The account's `role` decides
+tabs: **Sign in** and **Join the collective**. The account's `role` decides
 what opens next:
 
 Every account reaches the database — the tier decides how much of it:
@@ -142,7 +142,7 @@ change anyone's tier.
 
 ### What the network does and doesn't endorse
 
-The statement of faith carries a clause saying plainly that The Jesus People Network
+The statement of faith carries a clause saying plainly that Digital Collective
 is a hub, not a broadcaster: creators sign the statement, but their content is
 not vetted, and listing someone is not an endorsement of their teaching. It
 encourages people to be Bereans (Acts 17:11), to test everything against
@@ -236,7 +236,7 @@ once) and *needs admin approval*. `GET /api/slug/check` backs the live
 availability check; reserved names live in `RESERVED_PATHS` in `worker.js`.
 A verification email goes out on registration (`/api/verify?token=`).
 
-**Follow-up email.** On every submission the network sends the template for
+**Follow-up email.** On every submission the collective sends the template for
 that response type, with the creator's own greeting, message and button where
 they set them (dashboard → *Your follow-up email*). Admins edit the network
 templates on the admin page. Every send is logged in `communications`, and

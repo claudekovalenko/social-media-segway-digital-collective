@@ -31,7 +31,7 @@ export async function unsubscribeUrl(env, url, contactId) {
   return `${siteUrl(env, url)}/api/unsubscribe?c=${contactId}&s=${sig}`;
 }
 
-// Sends the network's follow-up for one response, with the creator's own
+// Sends the collective's follow-up for one response, with the creator's own
 // greeting/message/button where they set them. Always logged; never throws.
 export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, creator, step, name, email, defaults, settings }) {
   const type = RESPONSE_TYPES[step];
@@ -53,11 +53,11 @@ export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, 
   const slug = creator?.slug || 'default';
   const vars = {
     first_name: String(name || '').trim().split(/\s+/)[0] || 'friend',
-    creator_name: creator?.display_name || creator?.name || 'The Jesus People Network',
+    creator_name: creator?.display_name || creator?.name || 'Digital Collective',
     grow_url: creator?.grow_course_url || defaults.grow_course_url || `${base}/${slug}#grow`,
     gather_url: creator?.gather_url || defaults.gather_url || `${base}/${slug}#connect`,
     journey_url: `${base}/${slug}`,
-    site_name: 'The Jesus People Network',
+    site_name: 'Digital Collective',
   };
   const mail = renderEmail({
     subject: fillTokens(tpl.subject, vars), greeting: fillTokens(tpl.greeting, vars),
@@ -160,10 +160,10 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     const base = siteUrl(env, url);
     const verify = `${base}/api/verify?token=${token}`;
     const mail = renderEmail({
-      subject: 'Confirm your email for The Jesus People Network',
+      subject: 'Confirm your email for Digital Collective',
       greeting: `Hi ${name.split(/\s+/)[0]},`,
       message: `Your link is ready: ${base}/${slug}. Confirm this email address so we can send responses your way.`,
-      cta_label: 'Confirm my email', cta_url: verify, unsubscribe_url: `${base}/privacy.html`, site_name: 'The Jesus People Network',
+      cta_label: 'Confirm my email', cta_url: verify, unsubscribe_url: `${base}/privacy.html`, site_name: 'Digital Collective',
     });
     const sent = await sendEmail(env, { to: email, ...mail });
     await pf.logCommunication({ creator_slug: slug, template: 'verify_email', to_address: email, subject: mail.subject, provider: sent.provider, provider_id: sent.provider_id, status: sent.status, error: sent.error });
@@ -190,7 +190,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     if (rateLimited(`verify:${me.email}`, 3, 30 * 60_000)) return json({ error: 'Already sent recently.' }, 429);
     const token = await pf.createVerification(me.email, 'verify_email');
     const base = siteUrl(env, url);
-    const mail = renderEmail({ subject: 'Confirm your email', greeting: 'Hi,', message: 'Confirm this email address for The Jesus People Network.', cta_label: 'Confirm my email', cta_url: `${base}/api/verify?token=${token}`, unsubscribe_url: `${base}/privacy.html`, site_name: 'The Jesus People Network' });
+    const mail = renderEmail({ subject: 'Confirm your email', greeting: 'Hi,', message: 'Confirm this email address for Digital Collective.', cta_label: 'Confirm my email', cta_url: `${base}/api/verify?token=${token}`, unsubscribe_url: `${base}/privacy.html`, site_name: 'Digital Collective' });
     const sent = await sendEmail(env, { to: me.email, ...mail });
     await pf.logCommunication({ template: 'verify_email', to_address: me.email, subject: mail.subject, provider: sent.provider, provider_id: sent.provider_id, status: sent.status, error: sent.error });
     return json({ ok: true, status: sent.status });
@@ -299,7 +299,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     if (me.role !== 'admin' && !creator_slug) return json({ error: 'This account is not linked to a creator.' }, 403);
     const rows = await pf.exportRows({ creator_slug, from: url.searchParams.get('from') || null, to: url.searchParams.get('to') || null });
     await pf.audit(me.email, 'export.csv', creator_slug || 'network', { rows: rows.length });
-    const name = `jesus-people-${creator_slug || 'network'}-${new Date().toISOString().slice(0, 10)}.csv`;
+    const name = `digital-collective-${creator_slug || 'network'}-${new Date().toISOString().slice(0, 10)}.csv`;
     return new Response(toCsv(rows), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${name}"` } });
   }
 

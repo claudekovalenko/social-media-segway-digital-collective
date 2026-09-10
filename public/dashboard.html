@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your database &mdash; The Jesus People Network</title>
+  <title>Your database &mdash; Digital Collective</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,11 +14,11 @@
 <body class="wide ig jpn">
   <div class="wrap">
     <nav class="site-nav">
-      <a class="brand" href="index.html"><svg class="dc-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" fill="none"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>The Jesus People Network</a>
+      <a class="brand" href="index.html"><svg class="dc-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" fill="none"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Digital Collective</a>
     </nav>
     <header class="hero">
       <h1>Your <em>database</em></h1>
-      <p class="hero-sub">Your part of the The Jesus People Network database &mdash; the people who came through your link, and where each one is.</p>
+      <p class="hero-sub">Your part of the Digital Collective database &mdash; the people who came through your link, and where each one is.</p>
     </header>
 
     <div class="step-card open static" id="pending" hidden>
@@ -44,7 +44,7 @@
 
       <h3 class="section">Your links</h3>
       <form class="app-card" id="links">
-        <p class="app-meta">What your page shows at each step. Leave one blank to use the network&rsquo;s default.</p>
+        <p class="app-meta">What your page shows at each step. Leave one blank to use the collective&rsquo;s default.</p>
         <label>Know God &mdash; video
           <input name="know_god_video_url" type="url" placeholder="https://…">
         </label>
@@ -66,7 +66,7 @@
       <details class="fold">
       <summary class="section">Your follow-up email</summary>
       <form class="app-card" id="followup">
-        <p class="app-meta">The network sends this the moment someone responds on your page, in your name. Change the words; the structure, sender and unsubscribe stay the network&rsquo;s. Leave a field blank to use the network default.</p>
+        <p class="app-meta">The collective sends this the moment someone responds on your page, in your name. Change the words; the structure, sender and unsubscribe stay the collective&rsquo;s. Leave a field blank to use the collective default.</p>
         <label>Name to show
           <input name="display_name" type="text" maxlength="80" placeholder="How your name appears">
         </label>
@@ -105,7 +105,7 @@
     </div>
 
     <footer>
-      <a href="index.html">The Jesus People Network</a>
+      <a href="index.html">Digital Collective</a>
     </footer>
   </div>
 
@@ -190,7 +190,7 @@
         stats.appendChild(el);
       }
 
-      // Fill the link editor with what's set, showing the network default
+      // Fill the link editor with what's set, showing the collective default
       // as the placeholder wherever a creator hasn't set their own.
       const form = document.getElementById('links');
       for (const field of ['know_god_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {

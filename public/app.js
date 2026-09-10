@@ -19,7 +19,7 @@ const DEFAULT_CONTENT = {
   know_god_video_url: '',    // gospel video
   grow_course_url: '',       // discipleship course
   find_church_video_url: '', // "how to find a church" training
-  gather_url: '',            // set under "Network defaults" in the database
+  gather_url: '',            // set under "Collective defaults" in the database
   gather_label: '',
 };
 
@@ -68,7 +68,7 @@ async function loadCreator() {
     if (res.ok) {
       creator = { defaults: DEFAULT_CONTENT, ...(await res.json()) };
     } else {
-      // Unknown slug: the page still needs the network's own defaults.
+      // Unknown slug: the page still needs the collective's own defaults.
       const fallbackRes = await fetch(`${API_BASE}/api/defaults`);
       if (fallbackRes.ok) creator.defaults = (await fallbackRes.json()).defaults;
     }
@@ -251,7 +251,7 @@ applyLanguage();
 
 // ---- the Get Connected link --------------------------------------------
 // One outbound link for finding a church. A creator can point this anywhere;
-// otherwise everyone gets the network's default partner.
+// otherwise everyone gets the collective's default partner.
 function showGatherLink(url, label) {
   const link = document.getElementById('gatherLink');
   const note = document.getElementById('partnerNote');
