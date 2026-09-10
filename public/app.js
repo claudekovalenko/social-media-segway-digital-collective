@@ -9,9 +9,10 @@ const API_BASE = location.hostname.endsWith('github.io')
   : '';
 
 const params = new URLSearchParams(location.search);
-// Remember the creator across visits so the attribution survives navigation.
-const creatorSlug = window.CREATOR_SLUG || params.get('creator') || localStorage.getItem('creator') || 'default';
-localStorage.setItem('creator', creatorSlug);
+// The address decides whose page this is, and nothing else. It used to fall
+// back to the last creator saved in the browser, which meant /journey showed
+// the previous creator's videos instead of staying the plain example.
+const creatorSlug = window.CREATOR_SLUG || params.get('creator') || 'default';
 
 // Used only if the API can't be reached; the server sends these as `defaults`
 // on every creator config, and that copy is the one to change.
