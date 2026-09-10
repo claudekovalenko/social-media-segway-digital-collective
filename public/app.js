@@ -108,8 +108,8 @@ async function loadCreator() {
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
   // Buttons under the videos: each points where the creator (or the
   // collective) says the next step is.
-  showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url);
-  showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url);
+  showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow');
+  showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect');
   showGatherLink(
     creator.gather_url || fallback.gather_url,
     creator.gather_url ? null : (fallback.gather_label || null)
@@ -275,10 +275,25 @@ applyLanguage();
 // ---- the Get Connected link --------------------------------------------
 // One outbound link for finding a church. A creator can point this anywhere;
 // otherwise everyone gets the collective's default partner.
-function showStepButton(id, url) {
+// Every video gets a button. With a destination set it opens there in a new
+// tab; without one it moves the person on to the next step on this page.
+function showStepButton(id, url, nextStepId) {
   const a = document.getElementById(id);
   if (!a) return;
-  if (url) { a.href = url; a.hidden = false; } else { a.hidden = true; }
+  a.hidden = false;
+  if (url) {
+    a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.onclick = null;
+  } else {
+    a.href = '#' + nextStepId; a.removeAttribute('target');
+    a.onclick = (e) => {
+      e.preventDefault();
+      const next = document.getElementById(nextStepId);
+      if (!next) return;
+      document.querySelectorAll('.step-card.open').forEach((c) => c.classList.remove('open'));
+      next.classList.add('open');
+      setTimeout(() => next.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
+    };
+  }
 }
 
 function showGatherLink(url, label) {
