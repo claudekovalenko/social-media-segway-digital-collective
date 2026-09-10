@@ -20,6 +20,12 @@ on:
         default: admin
         type: choice
         options: [admin, creator, pending]
+      name:
+        description: Full name (optional)
+        required: false
+      creator_slug:
+        description: Link name for a creator (optional, e.g. craigbrown)
+        required: false
       admin_email:
         description: An existing admin's email (to authorize this)
         required: true
@@ -45,12 +51,14 @@ jobs:
           EMAIL: ${{ inputs.email }}
           PASSWORD: ${{ inputs.password }}
           ROLE: ${{ inputs.role }}
+          NAME: ${{ inputs.name }}
+          SLUG: ${{ inputs.creator_slug }}
         run: |
           login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
           TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
           [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
           echo "::add-mask::$TOKEN"
-          body=$(jq -nc --arg e "$EMAIL" --arg p "$PASSWORD" --arg r "$ROLE" '{email:$e,password:$p,role:$r}')
+          body=$(jq -nc --arg e "$EMAIL" --arg p "$PASSWORD" --arg r "$ROLE" --arg n "$NAME" --arg s "$SLUG" '{email:$e,password:$p,role:$r,name:$n,creator_slug:$s}')
           code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
             -H "content-type: application/json" -H "authorization: Bearer $TOKEN" --data "$body")
           echo "create: $code $(jq -c 'del(.token)' /tmp/out 2>/dev/null || cat /tmp/out)"
