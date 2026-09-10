@@ -3173,3 +3173,16 @@ body.journey .hero, body.journey .step-card, body.journey footer {
   animation-name: settle; transform: none;
 }
 body.journey .step-card { will-change: auto; }
+
+/* Nothing on the page fades in until its typeface is ready, so no title is
+   ever redrawn in front of the reader. The wait is bounded in the head at
+   under half a second, after which everything arrives in whatever face the
+   browser has. Without scripts, there is no hold at all. */
+html.js:not(.fonts-in) body.journey :is(.hero, .step-card, footer),
+html.js:not(.fonts-in) body.landing :is(.site-nav, .hero, .land-section, .step-card, .tab-row, .topic-filter, .directory, footer),
+html.js:not(.fonts-in) body.prose :is(.site-nav, .hero, .prose-body, footer),
+html.js:not(.fonts-in) body.wide :is(.site-nav, .hero, #dash, #pending, .step-card, footer) {
+  animation-play-state: paused;
+}
+/* The journey headline is covered by the hero hold; no second fade needed. */
+html.js body.journey .hero h1 { opacity: 1; transition: none; }
