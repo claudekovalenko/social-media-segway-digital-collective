@@ -172,7 +172,7 @@
           const who = document.createElement('b'); who.textContent = e.org || e.name;
           el.appendChild(who);
           const behind = e.org ? (e.person || e.name) : e.person;
-          if (behind) { const p = document.createElement('span'); p.textContent = ' with ' + behind; el.appendChild(p); }
+          if (behind) { const p = document.createElement('span'); p.textContent = ', hosted by ' + behind; el.appendChild(p); }
           return el;
         });
         // Two copies so the loop is seamless; a short list gets padded out.
