@@ -267,6 +267,13 @@ async function isAdmin(req, url, env, db) {
   return { ok: false, email: me.email, denied: me.denied || Boolean(me.role) };
 }
 
+// A duplicate slug is the caller's problem; anything else is ours and should say so.
+function creatorInsertError(err) {
+  const msg = String(err && err.message || err);
+  if (/UNIQUE|unique/.test(msg)) return json({ error: 'That link name is already taken.' }, 409);
+  return json({ error: 'Could not create the creator: ' + msg }, 500);
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -367,8 +374,8 @@ export default {
                 key_hash: await sha256hex(accessKey),
                 know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
               });
-            } catch {
-              return json({ error: 'That link name is already taken.' }, 409);
+            } catch (err) {
+              return creatorInsertError(err);
             }
           }
         }
@@ -498,8 +505,8 @@ export default {
               key_hash: await sha256hex(accessKey),
               know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
             });
-          } catch {
-            return json({ error: 'That link name is already taken.' }, 409);
+          } catch (err) {
+            return creatorInsertError(err);
           }
         }
         await db.setAccountRole(application.email, 'creator', slug);
@@ -571,8 +578,8 @@ export default {
                 handle: null, topic: null, key_hash: await sha256hex(newAccessKey()),
                 know_god_video_url: null, grow_course_url: null, find_church_video_url: null,
               });
-            } catch {
-              return json({ error: 'That link name is already taken.' }, 409);
+            } catch (err) {
+              return creatorInsertError(err);
             }
           }
         }
