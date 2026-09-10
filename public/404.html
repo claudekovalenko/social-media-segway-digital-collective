@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Collective</title>
+  <meta name="robots" content="noindex">
+  <script>
+    // GitHub Pages serves files only, so /craig has nothing to hit and lands
+    // here. The last path segment is treated as a creator name and the
+    // journey page is opened for it; the Worker resolves short names.
+    (function () {
+      var parts = location.pathname.replace(/\/+$/, '').split('/');
+      var slug = parts[parts.length - 1] || '';
+      var base = parts.slice(0, -1).join('/') + '/';
+      if (!/^[a-z0-9][a-z0-9._-]{1,39}$/i.test(slug) || slug.indexOf('.') >= 0) {
+        location.replace(base + 'index.html');
+        return;
+      }
+      location.replace(base + 'journey.html?creator=' + encodeURIComponent(slug.toLowerCase()) + location.hash);
+    })();
+  </script>
+</head>
+<body style="margin:0;background:#F5F0E7"></body>
+</html>

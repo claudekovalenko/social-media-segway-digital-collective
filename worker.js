@@ -898,7 +898,9 @@ export default {
       }
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
-        const row = await db.creatorBySlug(p.split('/')[3]);
+        const asked = p.split('/')[3];
+        const aliases = await creatorAliases(db);
+        const row = await db.creatorBySlug(aliases[asked] || asked);
         if (!row || row.status === 'suspended') return json({ error: 'creator not found' }, 404);
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;

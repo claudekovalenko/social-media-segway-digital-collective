@@ -12,7 +12,7 @@ const params = new URLSearchParams(location.search);
 // The address decides whose page this is, and nothing else. It used to fall
 // back to the last creator saved in the browser, which meant /journey showed
 // the previous creator's videos instead of staying the plain example.
-const creatorSlug = window.CREATOR_SLUG || params.get('creator') || 'default';
+let creatorSlug = window.CREATOR_SLUG || params.get('creator') || 'default';
 
 // Used only if the API can't be reached; the server sends these as `defaults`
 // on every creator config, and that copy is the one to change.
@@ -94,6 +94,9 @@ async function loadCreator() {
     }
   } catch { /* fall back to the built-in blanks */ }
 
+  // A short name in the address resolves to the creator's real one here, so
+  // every response and event is filed under the same creator either way.
+  if (creator.slug && creator.slug !== creatorSlug) { creatorSlug = creator.slug; window.CREATOR_SLUG = creator.slug; }
   if (creator.name && creator.slug !== 'default') {
   }
 
