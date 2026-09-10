@@ -161,9 +161,18 @@
           el.className = 'endorse-item';
           if (e.url) { el.href = e.url; el.target = '_blank'; el.rel = 'noopener'; }
           const lead = document.createElement('em'); lead.textContent = 'Endorsed by';
-          const who = document.createElement('b'); who.textContent = e.name;
-          el.append(lead, ' ', who);
-          if (e.org) { const org = document.createElement('span'); org.textContent = ' · ' + e.org; el.appendChild(org); }
+          el.append(lead, ' ');
+          if (e.logo) {
+            const img = document.createElement('img');
+            img.className = 'endorse-logo'; img.src = e.logo; img.alt = ''; img.loading = 'lazy';
+            img.addEventListener('error', () => img.remove(), { once: true });
+            el.appendChild(img);
+          }
+          // The organisation is the endorsement; the person behind it follows.
+          const who = document.createElement('b'); who.textContent = e.org || e.name;
+          el.appendChild(who);
+          const behind = e.org ? (e.person || e.name) : e.person;
+          if (behind) { const p = document.createElement('span'); p.textContent = ' with ' + behind; el.appendChild(p); }
           return el;
         });
         // Two copies so the loop is seamless; a short list gets padded out.

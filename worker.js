@@ -625,10 +625,13 @@ export default {
         const who = await isAdmin(req, url, env, db);
         if (!who.ok) return json({ error: 'unauthorized' }, 401);
         const b = await req.json().catch(() => ({}));
+        const link = (v) => (/^https?:\/\//i.test(String(v || '')) ? String(v).trim().slice(0, 300) : '');
         const list = (Array.isArray(b.endorsements) ? b.endorsements : []).slice(0, 20).map((e) => ({
           name: String(e.name || '').trim().slice(0, 80),
           org: String(e.org || '').trim().slice(0, 80),
-          url: /^https?:\/\//i.test(String(e.url || '')) ? String(e.url).trim().slice(0, 300) : '',
+          person: String(e.person || '').trim().slice(0, 80),
+          logo: link(e.logo),
+          url: link(e.url),
         })).filter((e) => e.name || e.org);
         await db.setSetting('endorsements', JSON.stringify(list));
         return json({ ok: true, endorsements: list });

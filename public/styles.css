@@ -3107,3 +3107,4 @@ body.ig .tab-row { margin-bottom: 14px; }
 .link-group .pick-hint { font-weight: 400; font-size: 0.76rem; color: #9a948a; }
 .link-group label { display: block; margin-bottom: 10px; }
 .step-num { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #B28B46, #A9533C); color: #fff; font-size: 0.72rem; font-weight: 700; flex: none; }
+.endorse-logo { height: 16px; width: auto; max-width: 90px; vertical-align: -3px; margin-right: 6px; opacity: 0.9; }

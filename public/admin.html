@@ -143,12 +143,23 @@
       <form class="app-card" id="endorseForm">
         <p class="app-meta">The quiet strip at the bottom of the home page. Leave it empty and the strip disappears.</p>
         <div id="endorseList"></div>
-        <div class="crm-cell">
-          <input type="text" id="endName" placeholder="Name (Ryan Miller)" maxlength="80">
-          <input type="text" id="endOrg" placeholder="Organization (optional)" maxlength="80">
-          <input type="url" id="endUrl" placeholder="Link (optional)" maxlength="300">
-          <button type="button" class="btn-small go" id="endAdd">Add</button>
-          <span class="crm-saved" id="endMark"></span>
+        <div class="link-group">
+          <label>Organization <span class="pick-hint">shown first</span>
+            <input type="text" id="endOrg" placeholder="The Jesus People Network" maxlength="80">
+          </label>
+          <label>Person behind it <span class="pick-hint">follows as &ldquo;with …&rdquo;</span>
+            <input type="text" id="endName" placeholder="Ryan Miller" maxlength="80">
+          </label>
+          <label>Logo <span class="pick-hint">optional, a link to their image</span>
+            <input type="url" id="endLogo" placeholder="https://…/logo.png" maxlength="300">
+          </label>
+          <label>Link <span class="pick-hint">optional, where the name goes</span>
+            <input type="url" id="endUrl" placeholder="https://…" maxlength="300">
+          </label>
+          <div class="app-actions">
+            <button type="button" class="btn-small go" id="endAdd">Add</button>
+            <span class="crm-saved" id="endMark"></span>
+          </div>
         </div>
       </form>
     </details>
@@ -735,7 +746,8 @@
       box.className = '';
       endorseList.forEach((e, i) => {
         const row = document.createElement('div'); row.className = 'crm-cell';
-        const t = document.createElement('span'); t.textContent = `${e.name}${e.org ? ' · ' + e.org : ''}${e.url ? ' → ' + e.url : ''}`;
+        const label = (e.org || e.name) + ((e.org && (e.person || e.name)) ? ' with ' + (e.person || e.name) : '');
+        const t = document.createElement('span'); t.textContent = label + (e.url ? ' → ' + e.url : '');
         const x = document.createElement('button'); x.type = 'button'; x.className = 'btn-small'; x.textContent = 'Remove';
         x.addEventListener('click', () => saveEndorsements(endorseList.filter((_, j) => j !== i)));
         row.append(t, x); box.appendChild(row);
@@ -751,12 +763,13 @@
       } catch (err) { mark.textContent = err.message; }
     }
     document.getElementById('endAdd').addEventListener('click', () => {
-      const name = document.getElementById('endName').value.trim();
+      const person = document.getElementById('endName').value.trim();
       const org = document.getElementById('endOrg').value.trim();
       const url = document.getElementById('endUrl').value.trim();
-      if (!name && !org) return;
-      saveEndorsements([...endorseList, { name, org, url }]);
-      for (const id of ['endName', 'endOrg', 'endUrl']) document.getElementById(id).value = '';
+      const logo = document.getElementById('endLogo').value.trim();
+      if (!person && !org) return;
+      saveEndorsements([...endorseList, { name: org || person, org, person, logo, url }]);
+      for (const id of ['endName', 'endOrg', 'endUrl', 'endLogo']) document.getElementById(id).value = '';
     });
     loadEndorsements();
 
