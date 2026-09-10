@@ -571,6 +571,24 @@ export default {
         return json({ ok: true, defaults: await defaultLinks(db) });
       }
 
+      // Admin check: what does the Worker actually get from a channel page?
+      if (p === '/api/admin/avatar-test' && req.method === 'GET') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        const target = url.searchParams.get('url') || '';
+        const out = { target, resolved: null, status: null, bytes: 0, og: null, error: null };
+        try {
+          const res = await fetch(target, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; DigitalCollective/1.0)', 'accept-language': 'en' }, redirect: 'follow' });
+          out.status = res.status; out.final_url = res.url;
+          const html = await res.text();
+          out.bytes = html.length;
+          out.og = (html.match(/property="og:image" content="([^"]+)"/) || [])[1] || null;
+          out.head = html.slice(0, 300);
+        } catch (err) { out.error = String(err && err.message || err); }
+        out.resolved = await resolveAvatar(target);
+        return json(out);
+      }
+
       // Endorsements: the quiet strip at the foot of the home page.
       // GET is public; POST { endorsements: [{ name, org, url }] } replaces the list.
       if (p === '/api/endorsements' && req.method === 'GET') {
