@@ -105,6 +105,8 @@
       }
     });
   </script>
-  <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js"); const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !window.__reloaded) { window.__reloaded = true; location.reload(); } }); }</script>
+  <script>// Registered only so any device still holding the old cache picks up sw.js,
+    // which now clears itself out. Nothing here caches anything.
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 </body>
 </html>
