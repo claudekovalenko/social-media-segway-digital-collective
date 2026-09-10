@@ -212,7 +212,7 @@
       // A brand new site has no account yet, so the first tab creates one.
       document.getElementById('toCreate').hidden = true;
       renderProviders();
-      showTab('signin');
+      showTab(params.get('join') ? 'join' : 'signin');
 
       // Coming back from Google, Apple, or the emailed link.
       const hash = new URLSearchParams(location.hash.slice(1));
