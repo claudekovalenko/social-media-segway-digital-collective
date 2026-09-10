@@ -99,16 +99,47 @@
             <label class="pick"><input type="checkbox" name="platform" value="Instagram"><span>Instagram</span></label>
             <label class="pick"><input type="checkbox" name="platform" value="TikTok"><span>TikTok</span></label>
             <label class="pick"><input type="checkbox" name="platform" value="YouTube"><span>YouTube</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Facebook"><span>Facebook</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="X"><span>X</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Threads"><span>Threads</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Snapchat"><span>Snapchat</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Pinterest"><span>Pinterest</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="LinkedIn"><span>LinkedIn</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Twitch"><span>Twitch</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Rumble"><span>Rumble</span></label>
             <label class="pick"><input type="checkbox" name="platform" value="Podcast"><span>Podcast</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Blog or newsletter"><span>Blog / newsletter</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Website"><span>Website</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="In person"><span>In person</span></label>
             <label class="pick"><input type="checkbox" name="platform" value="Other"><span>Other</span></label>
           </div>
         </fieldset>
         <label>What you create about <span class="pick-hint">optional</span>
           <input name="topic" type="text" placeholder="Testimonies, apologetics, worship…">
         </label>
+        <label>Roughly how many people follow you <span class="pick-hint">optional</span>
+          <select name="audience">
+            <option value="">Prefer not to say</option>
+            <option value="Under 1,000">Under 1,000</option>
+            <option value="1,000 to 10,000">1,000 to 10,000</option>
+            <option value="10,000 to 100,000">10,000 to 100,000</option>
+            <option value="Over 100,000">Over 100,000</option>
+          </select>
+        </label>
+        <label>Why do you want a link? <span class="pick-hint">this is the part we read most closely</span>
+          <textarea name="why" rows="4" required maxlength="1000" placeholder="What you are hoping this does for the people who follow you."></textarea>
+        </label>
         <label class="check">
-          <input type="checkbox" name="agreed" required>
-          <span>I have read the <a href="beliefs.html" target="_blank">Statement of Faith</a> and agree with it, and accept the <a href="terms.html" target="_blank">Terms</a>.</span>
+          <input type="checkbox" name="agree_faith" required>
+          <span>I have read the <a href="beliefs.html" target="_blank">Statement of Faith</a> and agree to teach in agreement with it.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="agree_commitments" required>
+          <span>I will point people to a local church, handle every response with care, and keep my content my own responsibility.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="agree_terms" required>
+          <span>I accept the <a href="terms.html" target="_blank">Terms</a> and the <a href="privacy.html" target="_blank">Privacy &amp; Consent</a> policy.</span>
         </label>
         <button type="submit" id="joinBtn">Send my application</button>
         <div class="success" id="applied"></div>
@@ -402,7 +433,7 @@
       const form = new FormData(f);
       const data = Object.fromEntries(form.entries());
       data.platform = form.getAll('platform');
-      data.agreed = form.get('agreed') === 'on';
+      data.agreed = ['agree_faith', 'agree_commitments', 'agree_terms'].every((k) => form.get(k) === 'on');
       const error = f.querySelector('.error');
       const btn = document.getElementById('joinBtn');
       error.style.display = 'none';

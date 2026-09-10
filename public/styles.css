@@ -3121,3 +3121,11 @@ body.ig .tab-row { margin-bottom: 14px; }
 .profile-actions { display: flex; align-items: center; gap: 12px; }
 .profile-actions a { font-size: 0.82rem; }
 @media (max-width: 420px) { .profile-actions { width: 100%; justify-content: space-between; } }
+
+/* The top pill: one height on every page, whether or not it carries a button,
+   and an edge that reads as a soft rim rather than a drawn outline. */
+body.ig.jpn .site-nav {
+  min-height: 62px;
+  border-color: rgba(24, 24, 23, 0.07);
+  box-shadow: 0 6px 20px rgba(24, 24, 23, 0.06);
+}
