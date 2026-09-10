@@ -37,6 +37,12 @@ const DEFAULT_LINKS = {
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
 
+async function endorsements(db) {
+  const saved = await db.settings().catch(() => ({}));
+  try { const a = JSON.parse(saved.endorsements || '[]'); return Array.isArray(a) ? a : []; }
+  catch { return []; }
+}
+
 async function creatorAliases(db) {
   const saved = await db.settings().catch(() => ({}));
   try { const a = JSON.parse(saved.creator_aliases || '{}'); return a && typeof a === 'object' ? a : {}; }
@@ -539,6 +545,24 @@ export default {
           await db.setSetting(key, value);
         }
         return json({ ok: true, defaults: await defaultLinks(db) });
+      }
+
+      // Endorsements: the quiet strip at the foot of the home page.
+      // GET is public; POST { endorsements: [{ name, org, url }] } replaces the list.
+      if (p === '/api/endorsements' && req.method === 'GET') {
+        return json({ endorsements: await endorsements(db) });
+      }
+      if (p === '/api/admin/endorsements' && req.method === 'POST') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        const b = await req.json().catch(() => ({}));
+        const list = (Array.isArray(b.endorsements) ? b.endorsements : []).slice(0, 20).map((e) => ({
+          name: String(e.name || '').trim().slice(0, 80),
+          org: String(e.org || '').trim().slice(0, 80),
+          url: /^https?:\/\//i.test(String(e.url || '')) ? String(e.url).trim().slice(0, 300) : '',
+        })).filter((e) => e.name || e.org);
+        await db.setSetting('endorsements', JSON.stringify(list));
+        return json({ ok: true, endorsements: list });
       }
 
       // Short links: POST { alias: "craig", slug: "craigbrown" } adds one,

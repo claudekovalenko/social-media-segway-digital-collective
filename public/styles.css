@@ -3056,3 +3056,14 @@ body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
 .dir-wrap .dir-row { flex: 1; min-width: 0; }
 .dir-ig { display: inline-flex; align-items: center; padding: 0 14px; border-radius: 14px; background: #fff; border: 1px solid var(--ig-line, #DCD3C3); color: #A9533C; font-size: 0.82rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .dir-ig:hover { background: #F5F0E7; }
+
+/* Endorsements strip: quiet, slow, and easy to remove. */
+.endorse { margin: 28px -18px 4px; padding: 10px 0; overflow: hidden; border-top: 1px solid var(--ig-line, #DCD3C3); border-bottom: 1px solid var(--ig-line, #DCD3C3); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.endorse-track { display: flex; width: max-content; gap: 40px; padding-left: 40px; animation: endorse-slide linear infinite; will-change: transform; }
+.endorse:hover .endorse-track, .endorse:active .endorse-track { animation-play-state: paused; }
+.endorse-item { white-space: nowrap; font-size: 0.82rem; color: #6b675f; text-decoration: none; }
+.endorse-item em { font-style: normal; color: #9a948a; }
+.endorse-item b { color: #181817; font-weight: 600; }
+a.endorse-item:hover b { color: #A9533C; }
+@keyframes endorse-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .endorse-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; } }

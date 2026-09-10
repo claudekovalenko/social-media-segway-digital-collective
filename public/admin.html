@@ -110,6 +110,20 @@
       </form>
     </details>
     <details class="fold">
+      <summary class="section">Endorsements</summary>
+      <form class="app-card" id="endorseForm">
+        <p class="app-meta">The quiet strip at the bottom of the home page. Leave it empty and the strip disappears.</p>
+        <div id="endorseList"></div>
+        <div class="crm-cell">
+          <input type="text" id="endName" placeholder="Name (Ryan Miller)" maxlength="80">
+          <input type="text" id="endOrg" placeholder="Organization (optional)" maxlength="80">
+          <input type="url" id="endUrl" placeholder="Link (optional)" maxlength="300">
+          <button type="button" class="btn-small go" id="endAdd">Add</button>
+          <span class="crm-saved" id="endMark"></span>
+        </div>
+      </form>
+    </details>
+    <details class="fold">
       <summary class="section">Collective defaults</summary>
       <form class="app-card" id="defaults">
         <p class="app-meta">What every creator&rsquo;s page shows unless they set their own. Fill the Get Connected link in when the Visitor Reach connection is ready &mdash; it goes live everywhere at once.</p>
@@ -678,6 +692,44 @@
         loadCreatorPage();
       } catch (err) { mark.textContent = err.message; }
     });
+
+    // ---- Endorsements strip ----------------------------------------------
+    let endorseList = [];
+    async function loadEndorsements() {
+      try { endorseList = (await (await fetch(API_BASE + '/api/endorsements')).json()).endorsements || []; } catch { endorseList = []; }
+      renderEndorsements();
+    }
+    function renderEndorsements() {
+      const box = document.getElementById('endorseList');
+      box.replaceChildren();
+      if (!endorseList.length) { box.textContent = 'None yet.'; box.className = 'app-meta'; return; }
+      box.className = '';
+      endorseList.forEach((e, i) => {
+        const row = document.createElement('div'); row.className = 'crm-cell';
+        const t = document.createElement('span'); t.textContent = `${e.name}${e.org ? ' · ' + e.org : ''}${e.url ? ' → ' + e.url : ''}`;
+        const x = document.createElement('button'); x.type = 'button'; x.className = 'btn-small'; x.textContent = 'Remove';
+        x.addEventListener('click', () => saveEndorsements(endorseList.filter((_, j) => j !== i)));
+        row.append(t, x); box.appendChild(row);
+      });
+    }
+    async function saveEndorsements(list) {
+      const mark = document.getElementById('endMark'); mark.textContent = '…';
+      try {
+        const res = await fetch(API_BASE + '/api/admin/endorsements', { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify({ endorsements: list }) });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || 'Could not save.');
+        endorseList = out.endorsements || []; renderEndorsements(); mark.textContent = 'Saved';
+      } catch (err) { mark.textContent = err.message; }
+    }
+    document.getElementById('endAdd').addEventListener('click', () => {
+      const name = document.getElementById('endName').value.trim();
+      const org = document.getElementById('endOrg').value.trim();
+      const url = document.getElementById('endUrl').value.trim();
+      if (!name && !org) return;
+      saveEndorsements([...endorseList, { name, org, url }]);
+      for (const id of ['endName', 'endOrg', 'endUrl']) document.getElementById(id).value = '';
+    });
+    loadEndorsements();
 
     load();
   </script>

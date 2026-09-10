@@ -124,6 +124,9 @@
       </div>
     </section>
 
+    <div class="endorse" id="endorse" hidden aria-label="Endorsements">
+      <div class="endorse-track" id="endorseTrack"></div>
+    </div>
     <footer>
       <a href="creators.html">Creators</a> &middot;
       <a href="beliefs.html">Statement of Faith</a> &middot;
@@ -136,5 +139,32 @@
   </div>
   <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js"); const had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !window.__reloaded) { window.__reloaded = true; location.reload(); } }); }</script>
   <script src="reveal.js" defer></script>
+  <script>
+    // Endorsements strip: names slide by slowly; hover or touch pauses it.
+    (async () => {
+      const API_BASE = location.hostname.endsWith('github.io') ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev' : '';
+      try {
+        const res = await fetch(API_BASE + '/api/endorsements');
+        const list = ((await res.json()).endorsements || []).filter((e) => e.name || e.org);
+        if (!list.length) return;
+        const track = document.getElementById('endorseTrack');
+        const items = () => list.map((e) => {
+          const el = document.createElement(e.url ? 'a' : 'span');
+          el.className = 'endorse-item';
+          if (e.url) { el.href = e.url; el.target = '_blank'; el.rel = 'noopener'; }
+          const lead = document.createElement('em'); lead.textContent = 'Endorsed by';
+          const who = document.createElement('b'); who.textContent = e.name;
+          el.append(lead, ' ', who);
+          if (e.org) { const org = document.createElement('span'); org.textContent = ' · ' + e.org; el.appendChild(org); }
+          return el;
+        });
+        // Two copies so the loop is seamless; a short list gets padded out.
+        const copies = Math.max(2, Math.ceil(8 / list.length));
+        for (let i = 0; i < copies; i += 1) for (const el of items()) track.appendChild(el);
+        track.style.animationDuration = Math.max(20, track.children.length * 6) + 's';
+        document.getElementById('endorse').hidden = false;
+      } catch { /* no strip, no harm */ }
+    })();
+  </script>
 </body>
 </html>
