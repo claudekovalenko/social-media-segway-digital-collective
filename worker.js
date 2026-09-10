@@ -609,6 +609,8 @@ export default {
           }
           fields[key] = value || null;
         }
+        // The name shown on the page ("Shared by …") can be set the same way.
+        if (b.name !== undefined) fields.name = String(b.name || '').trim().slice(0, 100) || null;
         if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
         await db.updateCreatorLinks(slug, fields);
         return json({ ok: true, slug, ...fields });
