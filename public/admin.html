@@ -65,6 +65,12 @@
         <label>Name on the page
           <input name="name" type="text" maxlength="100">
         </label>
+        <label>Instagram handle (lists them on the creators page)
+          <input name="handle" type="text" maxlength="60" placeholder="@handle">
+        </label>
+        <label>Topic tag on the creators page
+          <input name="topic" type="text" maxlength="40" placeholder="Discipleship">
+        </label>
         <label>Know God &mdash; video
           <input name="know_god_video_url" type="url" placeholder="https://…">
         </label>
@@ -598,7 +604,7 @@
 
     }
     // ---- Creator pages: edit any creator's links and short names ----------
-    const PAGE_FIELDS = ['name', 'know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url', 'back_label'];
+    const PAGE_FIELDS = ['name', 'handle', 'topic', 'know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url', 'back_label'];
     let aliasesAll = {};
     function fillCreatorPick(creators) {
       const pick = document.getElementById('creatorPick');

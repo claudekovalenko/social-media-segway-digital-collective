@@ -86,9 +86,11 @@
         return;
       }
       for (const c of shown) {
+        // The whole row opens their page; a small pill on the right opens
+        // their Instagram (or wherever their back link points).
         const row = document.createElement(c.example ? 'div' : 'a');
         row.className = 'dir-row' + (c.example ? ' dir-example' : '');
-        if (!c.example) row.href = 'journey.html?creator=' + encodeURIComponent(c.slug);
+        if (!c.example) row.href = '/' + encodeURIComponent(c.slug);
 
         // An initial in a ring, like a profile row.
         const av = document.createElement('span');
@@ -109,7 +111,18 @@
         tag.textContent = c.topic || 'creator';
 
         row.append(av, left, tag);
-        list.appendChild(row);
+        if (!c.example && c.back_url) {
+          const wrap = document.createElement('div');
+          wrap.className = 'dir-wrap';
+          const ig = document.createElement('a');
+          ig.className = 'dir-ig';
+          ig.href = c.back_url; ig.target = '_blank'; ig.rel = 'noopener';
+          ig.textContent = /instagram\.com/i.test(c.back_url) ? 'Instagram' : 'Their page';
+          wrap.append(row, ig);
+          list.appendChild(wrap);
+        } else {
+          list.appendChild(row);
+        }
       }
     }
 

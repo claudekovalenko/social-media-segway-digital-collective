@@ -642,6 +642,9 @@ export default {
         // The name shown on the page ("Shared by …") can be set the same way.
         if (b.name !== undefined) fields.name = String(b.name || '').trim().slice(0, 100) || null;
         if (b.back_label !== undefined) fields.back_label = String(b.back_label || '').trim().slice(0, 60) || null;
+        // Directory card: the @handle lists them on the creators page; the topic is its tag.
+        if (b.handle !== undefined) fields.handle = String(b.handle || '').trim().replace(/^@/, '').slice(0, 60) || null;
+        if (b.topic !== undefined) fields.topic = String(b.topic || '').trim().slice(0, 40) || null;
         if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
         await db.updateCreatorLinks(slug, fields);
         return json({ ok: true, slug, ...fields });

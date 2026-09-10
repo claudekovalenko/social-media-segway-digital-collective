@@ -3050,3 +3050,9 @@ body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
 .back-link { display: inline-block; margin-top: 10px; font-size: 0.92rem; font-weight: 600; color: #A9533C; text-decoration: none; }
 .back-link:hover { text-decoration: underline; }
 .back-link.foot { margin-top: 0; font-size: 0.95rem; }
+
+/* Directory row with a side link to the creator's own page. */
+.dir-wrap { display: flex; align-items: stretch; gap: 8px; }
+.dir-wrap .dir-row { flex: 1; min-width: 0; }
+.dir-ig { display: inline-flex; align-items: center; padding: 0 14px; border-radius: 14px; background: #fff; border: 1px solid var(--ig-line, #DCD3C3); color: #A9533C; font-size: 0.82rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.dir-ig:hover { background: #F5F0E7; }

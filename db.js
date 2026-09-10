@@ -67,9 +67,12 @@ function d1Adapter(DB) {
     },
 
     async directory() {
+      await this.ensureAdmins();
+      await ensurePlatformColumns(DB);
       const r = await DB.prepare(
-        `SELECT slug, name, handle, topic FROM creators
-         WHERE handle IS NOT NULL AND slug != 'default' ORDER BY created_at ASC`).all();
+        `SELECT slug, name, handle, topic, back_url FROM creators
+         WHERE handle IS NOT NULL AND handle != '' AND slug != 'default'
+           AND (status IS NULL OR status != 'suspended') ORDER BY created_at ASC`).all();
       return r.results;
     },
 
@@ -342,7 +345,7 @@ function supabaseAdapter(url, serviceKey) {
     },
 
     directory() {
-      return rest('creators?handle=not.is.null&slug=neq.default' +
+      return rest('creators?handle=not.is.null&slug=neq.default&select=slug,name,handle,topic,back_url' +
                   '&select=slug,name,handle,topic&order=created_at.asc');
     },
 
