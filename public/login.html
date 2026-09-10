@@ -135,20 +135,8 @@
           <span>I have read the <a href="beliefs.html" target="_blank">Statement of Faith</a> and agree to teach in agreement with it.</span>
         </label>
         <label class="check">
-          <input type="checkbox" name="agree_church" required>
-          <span>I will point people to a local church.</span>
-        </label>
-        <label class="check">
-          <input type="checkbox" name="agree_care" required>
-          <span>I will handle every response with care, and keep what people tell me private.</span>
-        </label>
-        <label class="check">
-          <input type="checkbox" name="agree_content" required>
-          <span>My content is my own responsibility. It isn&rsquo;t vetted or endorsed by the collective.</span>
-        </label>
-        <label class="check">
           <input type="checkbox" name="agree_terms" required>
-          <span>I accept the <a href="terms.html" target="_blank">Terms</a> and the <a href="privacy.html" target="_blank">Privacy &amp; Consent</a> policy.</span>
+          <span>I accept the <a href="terms.html" target="_blank">Terms</a>, including the <a href="terms.html#creator-commitments" target="_blank">creator commitments</a>, and the <a href="privacy.html" target="_blank">Privacy &amp; Consent</a> policy.</span>
         </label>
         <button type="submit" id="joinBtn">Send my application</button>
         <div class="success" id="applied"></div>
@@ -444,7 +432,7 @@
       data.platform = form.getAll('platform');
       // Each commitment is its own box, and every one of them has to be
       // ticked before this counts as agreed.
-      const AGREEMENTS = ['agree_faith', 'agree_church', 'agree_care', 'agree_content', 'agree_terms'];
+      const AGREEMENTS = ['agree_faith', 'agree_terms'];
       data.agreed = AGREEMENTS.every((k) => form.get(k) === 'on');
       data.agreements = AGREEMENTS.filter((k) => form.get(k) === 'on');
       const error = f.querySelector('.error');
