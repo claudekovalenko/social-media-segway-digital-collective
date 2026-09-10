@@ -48,6 +48,9 @@
         <label>Know God &mdash; video
           <input name="know_god_video_url" type="url" placeholder="https://…">
         </label>
+        <label>Know God &mdash; where the button goes
+          <input name="know_god_next_url" type="url" placeholder="https://…">
+        </label>
         <label>Grow with God &mdash; course
           <input name="grow_course_url" type="url" placeholder="https://…">
         </label>
@@ -193,7 +196,7 @@
       // Fill the link editor with what's set, showing the collective default
       // as the placeholder wherever a creator hasn't set their own.
       const form = document.getElementById('links');
-      for (const field of ['know_god_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {
+      for (const field of ['know_god_video_url', 'know_god_next_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {
         const input = form.elements[field];
         input.value = data.creator[field] || '';
         const fallback = (data.defaults || {})[field];

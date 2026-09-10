@@ -12,7 +12,7 @@ let platformColsOnce = null;
 async function ensurePlatformColumns(DB) {
   if (!platformColsOnce) platformColsOnce = (async () => {
     for (const [table, col, type] of [
-      ['creators', 'status', "TEXT NOT NULL DEFAULT 'active'"], ['creators', 'display_name', 'TEXT'],
+      ['creators', 'status', "TEXT NOT NULL DEFAULT 'active'"], ['creators', 'display_name', 'TEXT'], ['creators', 'know_god_next_url', 'TEXT'],
       ['creators', 'phone', 'TEXT'], ['creators', 'socials', 'TEXT'], ['creators', 'agreements_version', 'TEXT'],
       ['creators', 'agreed_at', 'TEXT'], ['creators', 'follow_up_greeting', 'TEXT'], ['creators', 'follow_up_message', 'TEXT'],
       ['creators', 'follow_up_cta_label', 'TEXT'], ['creators', 'follow_up_cta_url', 'TEXT'],
@@ -50,7 +50,7 @@ function d1Adapter(DB) {
       await this.ensureAdmins();
       await ensurePlatformColumns(DB);
       return DB.prepare(
-        `SELECT slug, name, mode, know_god_video_url, grow_course_url,
+        `SELECT slug, name, mode, know_god_video_url, know_god_next_url, grow_course_url,
                 find_church_video_url, gather_url, status, display_name, handle, topic,
                 follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url
          FROM creators WHERE slug = ?`).bind(slug).first();
