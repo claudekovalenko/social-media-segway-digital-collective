@@ -596,11 +596,10 @@ export default {
         if (me.role !== 'creator' && me.role !== 'admin') {
           return json({ error: 'unauthorized' }, 401);
         }
-        const slug = me.role === 'admin' && b_slug(await req.clone().json().catch(() => ({})))
-          ? b_slug(await req.clone().json().catch(() => ({})))
-          : me.creator_slug;
-        if (!slug) return json({ error: 'This account has no creator link.' }, 400);
         const b = await req.json().catch(() => ({}));
+        // An admin names the creator in the body; a creator edits their own.
+        const slug = (me.role === 'admin' && b_slug(b)) || me.creator_slug;
+        if (!slug) return json({ error: 'This account has no creator link.' }, 400);
         const fields = {};
         for (const key of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url']) {
           if (b[key] === undefined) continue;
