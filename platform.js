@@ -86,6 +86,26 @@ export function platform(DB) {
           actor TEXT, action TEXT NOT NULL, target TEXT, detail TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )`),
+        // Consent is evidence, so it is never overwritten: every grant and
+        // every revocation is its own row, with the exact words the person
+        // was shown, where they were, and when. A contact row tells you the
+        // current state; this tells you how it got there, which is what a
+        // regulator or a court actually asks for.
+        DB.prepare(`CREATE TABLE IF NOT EXISTS consents (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          contact_id INTEGER,
+          email TEXT, phone TEXT,
+          channel TEXT NOT NULL,
+          action TEXT NOT NULL,
+          text_shown TEXT,
+          version TEXT,
+          source_url TEXT,
+          creator_slug TEXT,
+          ip TEXT,
+          user_agent TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )`),
+        DB.prepare(`CREATE INDEX IF NOT EXISTS idx_consents_contact ON consents(contact_id)`),
         DB.prepare(`CREATE TABLE IF NOT EXISTS verifications (
           token TEXT PRIMARY KEY, email TEXT NOT NULL, kind TEXT NOT NULL,
           expires_at TEXT NOT NULL, used_at TEXT,
@@ -93,6 +113,15 @@ export function platform(DB) {
         )`),
       ]);
       for (const [table, col, type] of [
+        // Consent is tracked per channel: a phone number given so somebody can
+        // be called back is not permission to send marketing texts, and the
+        // two are revoked separately.
+        ['contacts', 'sms_consent_at', 'TEXT'],
+        ['contacts', 'sms_revoked_at', 'TEXT'],
+        ['contacts', 'email_revoked_at', 'TEXT'],
+        ['contacts', 'consent_text', 'TEXT'],
+        ['contacts', 'consent_ip', 'TEXT'],
+        ['contacts', 'consent_source_url', 'TEXT'],
         ['creators', 'status', "TEXT NOT NULL DEFAULT 'active'"],
         ['creators', 'display_name', 'TEXT'],
         ['creators', 'know_god_next_url', 'TEXT'],
@@ -149,6 +178,65 @@ export function platform(DB) {
         .bind(email, phone, c.name || null, c.creator_slug || 'default', c.city || null,
           c.country || null, c.language || null, c.consent_version || null, c.consent_at || null).run();
       return { id: r.meta.last_row_id, created: true };
+    },
+
+    // Records one grant or revocation. Called for every channel separately.
+    async logConsent(c) {
+      await ensure();
+      await DB.prepare(`INSERT INTO consents
+          (contact_id, email, phone, channel, action, text_shown, version, source_url, creator_slug, ip, user_agent)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
+        .bind(c.contact_id || null, normEmail(c.email) || null, normPhone(c.phone) || null,
+          c.channel, c.action, (c.text_shown || '').slice(0, 2000), c.version || null,
+          (c.source_url || '').slice(0, 500) || null, c.creator_slug || null,
+          c.ip || null, (c.user_agent || '').slice(0, 300) || null).run();
+    },
+
+    async setSmsConsent(contactId) {
+      await ensure();
+      await DB.prepare(`UPDATE contacts SET sms_consent_at = COALESCE(sms_consent_at, datetime('now')),
+          sms_revoked_at = NULL, updated_at = datetime('now') WHERE id = ?`).bind(contactId).run();
+    },
+
+    async consentsFor(contactId) {
+      await ensure();
+      const r = await DB.prepare(
+        `SELECT * FROM consents WHERE contact_id = ? ORDER BY created_at DESC`).bind(contactId).all();
+      return r.results || [];
+    },
+
+    // The single gate. Nothing may send to a person without asking this first,
+    // so a revocation cannot be missed by one code path that forgot to check.
+    async mayContact(contactId, channel) {
+      await ensure();
+      const row = await DB.prepare(`SELECT * FROM contacts WHERE id = ?`).bind(contactId).first();
+      if (!row) return { ok: false, reason: 'no such contact' };
+      if (row.unsubscribed_at) return { ok: false, reason: 'unsubscribed' };
+      if (channel === 'email') {
+        if (row.email_revoked_at) return { ok: false, reason: 'email revoked' };
+        if (!row.email) return { ok: false, reason: 'no email address' };
+        if (!row.consent_at) return { ok: false, reason: 'no consent on record' };
+        return { ok: true };
+      }
+      if (channel === 'sms') {
+        if (row.sms_revoked_at) return { ok: false, reason: 'texts stopped' };
+        if (!row.phone) return { ok: false, reason: 'no phone number' };
+        // A phone number alone is never permission. Texting without this is
+        // what the Telephone Consumer Protection Act penalises per message.
+        if (!row.sms_consent_at) return { ok: false, reason: 'no written consent to text' };
+        return { ok: true };
+      }
+      return { ok: false, reason: 'unknown channel' };
+    },
+
+    async revokeConsent(contactId, channel, reason = 'requested') {
+      await ensure();
+      const col = channel === 'sms' ? 'sms_revoked_at' : 'email_revoked_at';
+      await DB.prepare(`UPDATE contacts SET ${col} = datetime('now'), suppressed_reason = ?, updated_at = datetime('now') WHERE id = ?`)
+        .bind(reason, contactId).run();
+      const row = await DB.prepare(`SELECT email, phone FROM contacts WHERE id = ?`).bind(contactId).first();
+      await this.logConsent({ contact_id: contactId, email: row && row.email, phone: row && row.phone,
+        channel, action: 'revoked', text_shown: reason });
     },
 
     async insertResponse(r) {

@@ -941,6 +941,24 @@ export default {
             session_id: String(b.session_id || '').slice(0, 64) || null,
             source: String(b.utm_source || b.platform || '').slice(0, 80) || null,
           });
+          // What they were shown, where, and from which address: the evidence
+          // that has to exist before anyone is contacted, and which cannot be
+          // reconstructed later if it was never captured.
+          const evidence = {
+            contact_id: recorded.contact_id, email, phone: b.phone,
+            version: String(b.consent_version || '').slice(0, 40) || undefined,
+            source_url: String(b.page_url || '').slice(0, 500),
+            creator_slug: creatorSlug, ip: clientIp(req),
+            user_agent: req.headers.get('user-agent') || '',
+          };
+          await pf.logConsent({ ...evidence, channel: 'email', action: 'granted',
+            text_shown: String(b.consent_text || '').slice(0, 2000) }).catch(() => {});
+          // Texting needs its own written permission, ticked on purpose.
+          if (b.sms_consent) {
+            await pf.setSmsConsent(recorded.contact_id).catch(() => {});
+            await pf.logConsent({ ...evidence, channel: 'sms', action: 'granted',
+              text_shown: String(b.sms_consent_text || '').slice(0, 2000) }).catch(() => {});
+          }
           const creator = creatorSlug !== 'default' ? await db.creatorBySlug(creatorSlug).catch(() => null) : null;
           await sendFollowUp(env, url, db, pf, {
             contact_id: recorded.contact_id, response_id: recorded.response_id, creator, step, name, email,

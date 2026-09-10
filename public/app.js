@@ -173,6 +173,12 @@ function applyLanguage() {
     if (text.includes('**')) setRich(el, text);
     else el.textContent = text;
   });
+  // The wording for texting is its own string. It carries disclosures the
+  // email line does not, so it must never be overwritten by that one.
+  document.querySelectorAll('.sms-consent-text').forEach((el) => {
+    const text = t('sms_consent');
+    if (text) el.textContent = text;
+  });
   document.querySelectorAll('.consent-text').forEach((el) => {
     const text = t('consent');
     if (!text) return;
@@ -367,6 +373,15 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     data.creator_slug = creatorSlug;
     data.country = locale.country || null;
     data.language = locale.language || null;
+    // Send the exact words this person was shown, not a reference to them.
+    // Wording changes over time; the record has to say what *they* agreed to.
+    const consentText = (el) => (el ? el.closest('label').textContent.trim().replace(/\s+/g, ' ') : '');
+    data.consent_text = consentText(form.querySelector('[name=consent]'));
+    const sms = form.querySelector('[name=sms_consent]');
+    data.sms_consent = Boolean(sms && sms.checked);
+    data.sms_consent_text = consentText(sms);
+    data.consent_version = window.CONSENT_VERSION || '';
+    data.page_url = location.href;
     data.interested_in_group = form.querySelector('[name=interested_in_group]')?.checked || false;
     data.consent = form.querySelector('[name=consent]')?.checked || false;
     // Attribution and the two spam checks the server expects.

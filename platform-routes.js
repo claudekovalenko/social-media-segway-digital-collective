@@ -35,11 +35,15 @@ export async function unsubscribeUrl(env, url, contactId) {
 // greeting/message/button where they set them. Always logged; never throws.
 export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, creator, step, name, email, defaults, settings }) {
   const type = RESPONSE_TYPES[step];
-  const contact = await pf.contactById(contact_id).catch(() => null);
-  if (!contact || contact.unsubscribed_at) {
-    await pf.logCommunication({ contact_id, response_id, creator_slug: creator?.slug, template: type, to_address: email, status: 'suppressed' });
+  // One gate for every channel, so a revocation cannot be missed by a code
+  // path that forgot to check for it.
+  const allowed = await pf.mayContact(contact_id, 'email').catch(() => ({ ok: false, reason: 'check failed' }));
+  if (!allowed.ok) {
+    await pf.logCommunication({ contact_id, response_id, creator_slug: creator?.slug, template: type, to_address: email, status: 'suppressed', error: allowed.reason });
     return;
   }
+  const contact = await pf.contactById(contact_id).catch(() => null);
+  if (!contact) return;
   const tpl = { ...DEFAULT_TEMPLATES[type] };
   for (const k of Object.keys(tpl)) {
     const override = settings[`tpl_${type}_${k}`];
