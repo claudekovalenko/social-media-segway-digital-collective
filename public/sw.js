@@ -1,7 +1,11 @@
 // Service worker: network-first, so a fresh deploy shows up on the very next
 // open instead of one load later. The cache is a fallback for slow or absent
 // connections, not the default source.
+<<<<<<< HEAD
 const CACHE_VERSION = 'dc-1';
+=======
+const CACHE_VERSION = 'dc-2';
+>>>>>>> claude/jpn-dev
 const CACHE_NAME = `faith-journey-${CACHE_VERSION}`;
 const NETWORK_TIMEOUT = 2500;
 // Clean URLs, not the .html paths: the Worker answers /journey.html with a

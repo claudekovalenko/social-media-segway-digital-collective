@@ -87,6 +87,10 @@ async function loadCreator() {
   embed('video-know_god', creator.know_god_video_url || fallback.know_god_video_url, t('vid1'));
   embed('video-grow_with_god', creator.grow_course_url || fallback.grow_course_url, t('vid2'));
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
+  // Buttons under the videos: each points where the creator (or the
+  // collective) says the next step is.
+  showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url);
+  showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url);
   showGatherLink(
     creator.gather_url || fallback.gather_url,
     creator.gather_url ? null : (fallback.gather_label || null)
@@ -252,6 +256,12 @@ applyLanguage();
 // ---- the Get Connected link --------------------------------------------
 // One outbound link for finding a church. A creator can point this anywhere;
 // otherwise everyone gets the collective's default partner.
+function showStepButton(id, url) {
+  const a = document.getElementById(id);
+  if (!a) return;
+  if (url) { a.href = url; a.hidden = false; } else { a.hidden = true; }
+}
+
 function showGatherLink(url, label) {
   const link = document.getElementById('gatherLink');
   const note = document.getElementById('partnerNote');
@@ -274,7 +284,10 @@ function showGatherLink(url, label) {
 document.querySelectorAll('.step-card').forEach((card) => {
   card.addEventListener('click', (e) => {
     if (e.target.closest('.step-body')) return;
-    card.classList.toggle('open');
+    const opening = !card.classList.contains('open');
+    // One step at a time: opening a step closes the others.
+    document.querySelectorAll('.step-card.open').forEach((c) => { if (c !== card) c.classList.remove('open'); });
+    card.classList.toggle('open', opening);
   });
 });
 

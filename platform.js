@@ -95,6 +95,7 @@ export function platform(DB) {
       for (const [table, col, type] of [
         ['creators', 'status', "TEXT NOT NULL DEFAULT 'active'"],
         ['creators', 'display_name', 'TEXT'],
+        ['creators', 'know_god_next_url', 'TEXT'],
         ['creators', 'phone', 'TEXT'],
         ['creators', 'socials', 'TEXT'],
         ['creators', 'agreements_version', 'TEXT'],

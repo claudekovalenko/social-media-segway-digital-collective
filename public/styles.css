@@ -3040,3 +3040,8 @@ body.ig .audit ul { padding: 0; margin: 0; }
 body.ig.jpn .wrap-narrow label input, body.ig.jpn .wrap-narrow label select, body.ig.jpn .wrap-narrow textarea { background: #fff; border-color: var(--ig-line); color: var(--ig-text); }
 body.ig.jpn .wrap-narrow input::placeholder { color: #9a958a; }
 body.ig .wrap-narrow label .pick-hint { display: inline; margin-left: 6px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+
+/* Journey in button mode: one button under each video, no forms. */
+body.journey.buttons form[data-step], body.journey.buttons .gather-help { display: none !important; }
+body.journey.buttons .step-cta { display: block; margin-top: 12px; text-align: center; }
+body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
