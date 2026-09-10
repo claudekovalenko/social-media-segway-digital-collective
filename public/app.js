@@ -200,7 +200,6 @@ function setupLocale() {
   const btn = document.getElementById('globeBtn');
   const panel = document.getElementById('localePanel');
   const flag = document.getElementById('globeFlag');
-  const countrySelect = document.getElementById('countrySelect');
   const languageSelect = document.getElementById('languageSelect');
   if (!btn || !panel) return;
 
@@ -210,22 +209,17 @@ function setupLocale() {
     return o;
   };
 
-  countrySelect.append(option('', t('country_prompt'), !locale.country));
-  for (const [code, emoji, name] of COUNTRIES) {
-    countrySelect.append(option(code, `${emoji}  ${name}`, locale.country === code));
-  }
   languageSelect.append(option('', t('language_prompt'), !locale.language));
   for (const [code, name] of LANGUAGES) {
     languageSelect.append(option(code, name, locale.language === code));
   }
 
-  // Once a country is picked, its flag replaces the globe on the button.
-  function paintFlag() {
-    const match = COUNTRIES.find((c) => c[0] === locale.country);
-    if (match && match[0] !== 'OTHER') flag.textContent = match[1];
-    else if (match) flag.textContent = '🌍';
+  // The button shows the language code (EN, ES, PT…); the globe only until
+  // one is known.
+  function paintLang() {
+    if (locale.language) { flag.textContent = locale.language.toUpperCase(); flag.classList.add('is-code'); }
   }
-  paintFlag();
+  paintLang();
 
   // Guess both from the browser so most people never open this panel.
   if (!locale.language) {
@@ -235,15 +229,7 @@ function setupLocale() {
       languageSelect.value = guess;
     }
   }
-  if (!locale.country) {
-    const region = (navigator.language || '').split('-')[1];
-    const guess = region && region.toUpperCase();
-    if (guess && COUNTRIES.some(([code]) => code === guess)) {
-      locale.country = guess;
-      countrySelect.value = guess;
-      paintFlag();
-    }
-  }
+  paintLang();
 
   const close = () => { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
   btn.addEventListener('click', (e) => {
@@ -256,15 +242,11 @@ function setupLocale() {
   document.addEventListener('click', close);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 
-  countrySelect.addEventListener('change', () => {
-    locale.country = countrySelect.value;
-    localStorage.setItem('country', locale.country);
-    paintFlag();
-  });
   languageSelect.addEventListener('change', () => {
     locale.language = languageSelect.value;
     localStorage.setItem('language', locale.language);
     applyLanguage();
+    paintLang();
   });
 }
 setupLocale();

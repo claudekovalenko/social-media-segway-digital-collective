@@ -53,7 +53,7 @@ async function resolveAvatar(url) {
       cf: { cacheTtl: 21600, cacheEverything: true },
     });
     if (!res.ok) return url;
-    const html = (await res.text()).slice(0, 400000);
+    const html = await res.text();
     const m = html.match(/property="og:image" content="([^"]+)"/);
     return m ? m[1] : url;
   } catch { return url; }

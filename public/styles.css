@@ -3091,3 +3091,6 @@ body.journey.ig footer::before { content: ""; position: absolute; top: 0; left: 
 body.journey.ig footer .footer-quiet { margin-top: 6px; opacity: 0.75; }
 body.journey.ig .creator-card { box-shadow: 0 1px 2px rgba(24,24,23,0.05); margin-bottom: 8px; }
 body.journey.ig .step-card:last-child { margin-bottom: 0; }
+
+/* Language button: two letters instead of a flag. */
+.globe-flag.is-code { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; font-family: inherit; }
