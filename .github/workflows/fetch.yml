@@ -1,0 +1,31 @@
+name: Fetch a live page
+
+# Run from the Actions tab to see exactly what the live site serves for a
+# path: status, headers, and the parts of the HTML that matter.
+
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: Path to fetch (e.g. /craigbrown or /styles.css)
+        required: true
+        default: /
+      grep:
+        description: Regex to filter lines (optional)
+        required: false
+        default: ""
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          APIPATH: ${{ inputs.path }}
+          PATTERN: ${{ inputs.grep }}
+        run: |
+          curl -s -D /tmp/h -o /tmp/b -L "$SITE$APIPATH"
+          echo "== headers"; cat /tmp/h
+          echo "== size: $(wc -c < /tmp/b) bytes, sha: $(sha256sum /tmp/b | cut -c1-12)"
+          echo "== body"
+          if [ -n "$PATTERN" ]; then grep -nE "$PATTERN" /tmp/b | head -80; else head -c 4000 /tmp/b; fi
