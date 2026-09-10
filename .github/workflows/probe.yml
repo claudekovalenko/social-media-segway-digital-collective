@@ -1,0 +1,33 @@
+name: Probe a public URL
+
+# A one-off check of what an outside server actually gets back from a public
+# page. Used to test whether a profile photo can be read without an API key.
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Full URL to fetch
+        required: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TARGET: ${{ inputs.url }}
+        run: |
+          echo "== plain curl"
+          curl -s -o /tmp/a -w 'status %{http_code}, %{size_download} bytes\n' -L "$TARGET"
+          echo "og:image present: $(grep -c 'og:image' /tmp/a || true)"
+          grep -o 'property="og:image" content="[^"]\{0,160\}' /tmp/a | head -2
+          grep -o 'profile_pic_url[^,]\{0,120\}' /tmp/a | head -2
+          echo "login wall: $(grep -c -i 'loginForm\|Log in to Instagram\|login_required' /tmp/a || true)"
+          echo
+          echo "== with a browser user agent"
+          curl -s -o /tmp/b -w 'status %{http_code}, %{size_download} bytes\n' -L \
+            -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' \
+            -H 'accept-language: en-US,en;q=0.9' "$TARGET"
+          echo "og:image present: $(grep -c 'og:image' /tmp/b || true)"
+          grep -o 'property="og:image" content="[^"]\{0,160\}' /tmp/b | head -2
+          echo "login wall: $(grep -c -i 'loginForm\|Log in to Instagram\|login_required' /tmp/b || true)"
