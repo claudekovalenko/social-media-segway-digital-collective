@@ -655,7 +655,7 @@ export default {
         const slug = (me.role === 'admin' && b_slug(b)) || me.creator_slug;
         if (!slug) return json({ error: 'This account has no creator link.' }, 400);
         const fields = {};
-        for (const key of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url']) {
+        for (const key of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url', 'avatar_url']) {
           if (b[key] === undefined) continue;
           const value = String(b[key] || '').trim().slice(0, 500);
           if (value && !/^https?:\/\//i.test(value)) {

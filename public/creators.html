@@ -71,6 +71,8 @@
       { handle: '@yourhandle', name: 'Your name here', topic: 'Youth & students', example: true },
     ];
 
+    const initialOf = (c) => ((c.name || c.handle || '?').replace('@', '').trim().charAt(0) || '?').toUpperCase();
+
     let all = [];
     let activeTopic = null;
 
@@ -95,7 +97,14 @@
         // An initial in a ring, like a profile row.
         const av = document.createElement('span');
         av.className = 'dir-av';
-        av.textContent = ((c.name || c.handle || '?').replace('@', '').trim().charAt(0) || '?').toUpperCase();
+        if (c.avatar_url) {
+          const img = document.createElement('img');
+          img.src = c.avatar_url; img.alt = c.name || c.handle || '';
+          img.addEventListener('error', () => { img.remove(); av.textContent = initialOf(c); }, { once: true });
+          av.appendChild(img);
+        } else {
+          av.textContent = initialOf(c);
+        }
         const left = document.createElement('span');
         left.className = 'dir-person';
         const handle = document.createElement('span');

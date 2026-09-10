@@ -231,6 +231,7 @@ alter table creators add column if not exists display_name text;
 alter table creators add column if not exists know_god_next_url text;
 alter table creators add column if not exists grow_video_url text;
 alter table creators add column if not exists back_url text;
+alter table creators add column if not exists avatar_url text;
 alter table creators add column if not exists back_label text;
 alter table creators add column if not exists phone text;
 alter table creators add column if not exists socials jsonb;

@@ -49,8 +49,6 @@
     <header class="hero">
       <h1><span data-i18n="hero_1">Take your</span><br><em data-i18n="hero_2">next step</em></h1>
       <p class="hero-sub" data-i18n="hero_sub">Wherever you are in your journey &mdash; start here.</p>
-      <span class="creator-badge" id="creatorBadge" hidden></span>
-      <a class="back-link" id="backLink" href="#" rel="noopener" hidden></a>
     </header>
 
     <div class="steps">
@@ -141,7 +139,10 @@
     </div>
 
     <footer>
-      <p><a class="back-link foot" id="backLinkFoot" href="#" rel="noopener" hidden></a></p>
+      <a class="creator-card" id="creatorCard" hidden>
+        <span class="cc-ring"><img class="cc-photo" id="creatorPhoto" alt="" hidden><span class="cc-initial" id="creatorInitial" aria-hidden="true"></span></span>
+        <span class="cc-text"><b id="creatorCardName"></b><span id="creatorCardHandle"></span></span>
+      </a>
       <p><a href="login.html" data-i18n="footer">Creators &mdash; sign in</a></p>
       <p class="footer-quiet">
         <a href="index.html">

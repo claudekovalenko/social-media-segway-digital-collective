@@ -94,9 +94,6 @@ async function loadCreator() {
   } catch { /* fall back to the built-in blanks */ }
 
   if (creator.name && creator.slug !== 'default') {
-    const badge = document.getElementById('creatorBadge');
-    badge.textContent = t('shared_by', { name: creator.name });
-    badge.hidden = false;
   }
 
   // Custom mode uses the creator's own videos; default mode uses platform content.
@@ -110,7 +107,7 @@ async function loadCreator() {
   // collective) says the next step is.
   showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow');
   showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect');
-  showBackLink(creator);
+  showCreatorCard(creator);
   showGatherLink(
     creator.gather_url || fallback.gather_url,
     creator.gather_url ? null : (fallback.gather_label || null)
@@ -297,17 +294,34 @@ function showStepButton(id, url, nextStepId) {
   }
 }
 
-// "Back to Craig on Instagram": the creator's own page, shown under the
-// badge and again at the foot so people can return when they're done.
-function showBackLink(creator) {
-  const url = creator.back_url;
-  const label = creator.back_label || t('back_to', { name: creator.name || '' });
-  for (const id of ['backLink', 'backLinkFoot']) {
-    const a = document.getElementById(id);
-    if (!a) continue;
-    a.hidden = !url;
-    if (url) { a.href = url; a.textContent = '\u2190 ' + label; }
+// One small profile card at the foot: the creator's photo, their name, and
+// their handle. Tapping it goes back to their own page. Shown once, never in
+// the header, so the journey itself stays the first thing a visitor reads.
+function showCreatorCard(creator) {
+  const card = document.getElementById('creatorCard');
+  if (!card || !creator.name || creator.slug === 'default') return;
+  const photo = document.getElementById('creatorPhoto');
+  const initial = document.getElementById('creatorInitial');
+  if (creator.avatar_url) {
+    photo.src = creator.avatar_url;
+    photo.alt = creator.name;
+    photo.hidden = false;
+    photo.addEventListener('error', () => { photo.hidden = true; initial.hidden = false; }, { once: true });
+    initial.hidden = true;
+  } else {
+    initial.textContent = (creator.name.trim().charAt(0) || '?').toUpperCase();
+    initial.hidden = false;
   }
+  document.getElementById('creatorCardName').textContent = creator.name;
+  const handle = document.getElementById('creatorCardHandle');
+  handle.textContent = creator.handle ? '@' + String(creator.handle).replace(/^@/, '') : '';
+  if (creator.back_url) {
+    card.href = creator.back_url;
+    card.target = '_blank';
+    card.rel = 'noopener';
+    card.classList.add('is-link');
+  }
+  card.hidden = false;
 }
 
 function showGatherLink(url, label) {

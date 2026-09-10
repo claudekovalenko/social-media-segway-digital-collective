@@ -3067,3 +3067,17 @@ body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
 a.endorse-item:hover b { color: #A9533C; }
 @keyframes endorse-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .endorse-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; } }
+
+/* One small profile card at the foot of a creator's journey page. */
+.creator-card { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 8px 14px 8px 8px; border-radius: 999px; background: #fff; border: 1px solid var(--ig-line, #DCD3C3); text-decoration: none; max-width: 100%; }
+.creator-card.is-link:hover { border-color: #C9A98C; }
+.cc-ring { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, #B28B46, #A9533C); display: grid; place-items: center; }
+.cc-photo, .cc-initial { width: 36px; height: 36px; border-radius: 50%; display: block; object-fit: cover; background: #F5F0E7; }
+.cc-initial { display: grid; place-items: center; font-weight: 600; font-size: 0.95rem; color: #A9533C; }
+.cc-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; text-align: left; }
+.cc-text b { font-size: 0.9rem; font-weight: 600; color: #181817; }
+.cc-text span { font-size: 0.8rem; color: #8b857b; }
+.creator-card.is-link:hover .cc-text b { color: #A9533C; }
+
+/* The same photo in a directory row, in place of the initial. */
+.dir-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
