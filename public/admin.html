@@ -42,10 +42,7 @@
         <p class="app-meta">How new creators get in, and the emails the collective sends in their name.</p>
         <p class="notice" id="emailState"></p>
         <h4>New creators</h4>
-        <div class="seg" id="regMode">
-          <button type="button" data-mode="open">Open — link is live at once</button>
-          <button type="button" data-mode="approval">Needs admin approval</button>
-        </div>
+        <p class="app-meta">There is no public sign-up. Add creators and staff under "Who has access" below; each creator gets their link the moment their account is made.</p>
         <h4 style="margin-top:16px">Follow-up templates</h4>
         <form id="templates" class="tpl-grid"></form>
         <div class="app-actions">
@@ -213,7 +210,6 @@
       document.getElementById('emailState').textContent = d.email_configured
         ? 'Email is connected. Follow-ups and verification emails are being sent.'
         : 'Email is not connected yet: add RESEND_API_KEY and EMAIL_FROM as repository secrets. Until then every send is logged as skipped.';
-      for (const b of document.querySelectorAll('#regMode button')) b.classList.toggle('on', b.dataset.mode === d.registration_mode);
       const form = document.getElementById('templates');
       form.replaceChildren();
       for (const [type, name] of Object.entries(TPL_NAMES)) {
@@ -238,11 +234,6 @@
         ul.appendChild(li);
       }
     }
-    document.getElementById('regMode').addEventListener('click', async (e) => {
-      const b = e.target.closest('button[data-mode]'); if (!b) return;
-      await fetch(API_BASE + '/api/admin/platform', { method: 'POST', headers: { ...(credentials() || {}), 'Content-Type': 'application/json' }, body: JSON.stringify({ registration_mode: b.dataset.mode }) });
-      for (const x of document.querySelectorAll('#regMode button')) x.classList.toggle('on', x === b);
-    });
     document.getElementById('saveTemplates').addEventListener('click', async () => {
       const mark = document.getElementById('platformSaved'); mark.textContent = '…';
       const templates = {};

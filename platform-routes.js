@@ -112,6 +112,9 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
   }
 
   if (p === '/api/register' && req.method === 'POST') {
+    // Public sign-up is closed: creators and staff are added from the database.
+    return json({ error: 'Sign-up is closed. Creators are added by the collective.' }, 403);
+    // eslint-disable-next-line no-unreachable
     if (rateLimited(`reg:${clientIp(req)}`, 5, 10 * 60_000)) return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
     const b = await req.json().catch(() => ({}));
     if (b.website) return json({ ok: true }, 201); // honeypot: bots fill it, people never see it
