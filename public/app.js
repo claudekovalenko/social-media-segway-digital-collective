@@ -109,6 +109,7 @@ async function loadCreator() {
   showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow');
   showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect');
   showCreatorCard(creator);
+  showGatherAlt(creator.gather_alt_url || fallback.gather_alt_url, creator.gather_alt_label || fallback.gather_alt_label);
   showGatherLink(
     creator.gather_url || fallback.gather_url,
     creator.gather_url ? null : (fallback.gather_label || null)
@@ -311,6 +312,15 @@ function showCreatorCard(creator) {
     card.classList.add('is-link');
   }
   card.hidden = false;
+}
+
+// The quieter option: for someone who would rather sit in a living room than
+// a sanctuary. Shown only when a destination exists.
+function showGatherAlt(url, label) {
+  const a = document.getElementById('gatherAlt');
+  if (!a) return;
+  a.hidden = !url;
+  if (url) { a.href = url; a.textContent = label || t('gather_alt'); }
 }
 
 function showGatherLink(url, label) {

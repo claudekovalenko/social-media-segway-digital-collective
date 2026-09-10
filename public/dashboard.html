@@ -97,6 +97,12 @@
           <label>Button under the video <span class="pick-hint">your church finder</span>
             <input name="gather_url" type="url" placeholder="https://…">
           </label>
+          <label>A quieter second option <span class="pick-hint">a small line under the button, for house churches</span>
+            <input name="gather_alt_url" type="url" placeholder="https://…">
+          </label>
+          <label>What that line says
+            <input name="gather_alt_label" type="text" maxlength="80" placeholder="Prefer something smaller? Find a house church">
+          </label>
         </div>
 
         <div class="link-group">
@@ -261,7 +267,7 @@
       // Fill the link editor with what's set, showing the collective default
       // as the placeholder wherever a creator hasn't set their own.
       const form = document.getElementById('links');
-      for (const field of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url', 'back_label', 'avatar_url', 'handle', 'topic']) {
+      for (const field of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'gather_alt_url', 'gather_alt_label', 'back_url', 'back_label', 'avatar_url', 'handle', 'topic']) {
         const input = form.elements[field];
         input.value = data.creator[field] || '';
         const fallback = (data.defaults || {})[field];

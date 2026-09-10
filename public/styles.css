@@ -3186,3 +3186,7 @@ html.js:not(.fonts-in) body.wide :is(.site-nav, .hero, #dash, #pending, .step-ca
 }
 /* The journey headline is covered by the hero hold; no second fade needed. */
 html.js body.journey .hero h1 { opacity: 1; transition: none; }
+
+/* The quieter option under the church finder. */
+.gather-alt { display: block; margin: 8px 0 2px; text-align: center; font-size: 0.82rem; color: #8b857b; text-decoration: none; }
+.gather-alt:hover { color: #A9533C; text-decoration: underline; }

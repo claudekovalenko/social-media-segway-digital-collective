@@ -21,6 +21,7 @@ const I18N = {
     group2: 'Walk through it with others, not alone',
     group3: 'Connect me with others near me who want to gather',
     gather_cta: 'Find a church near you',
+    gather_alt: 'Prefer something smaller? Find a house church',
     cta1: 'Take the next step', cta2: 'Start the course',
     gather_help: 'Tell us your city and we\u2019ll point you to a healthy church near you.',
     pick_time: 'Pick a time', choose_time: 'Choose a meeting time',

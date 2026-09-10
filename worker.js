@@ -33,6 +33,8 @@ const DEFAULT_LINKS = {
   find_church_video_url: '', // "how to find a church" training
   gather_url: '',            // where Gather Locally sends people
   gather_label: 'In partnership with Visitor Reach — helping people find a church home.',
+  gather_alt_label: 'Prefer something smaller? Find a house church',
+  gather_alt_url: '',       // a quieter second option under the church finder
 };
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
@@ -759,7 +761,7 @@ export default {
         const slug = (me.role === 'admin' && b_slug(b)) || me.creator_slug;
         if (!slug) return json({ error: 'This account has no creator link.' }, 400);
         const fields = {};
-        for (const key of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url', 'avatar_url']) {
+        for (const key of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'gather_alt_url', 'back_url', 'avatar_url']) {
           if (b[key] === undefined) continue;
           const value = String(b[key] || '').trim().slice(0, 500);
           if (value && !/^https?:\/\//i.test(value)) {
@@ -770,6 +772,7 @@ export default {
         // The name shown on the page ("Shared by …") can be set the same way.
         if (b.name !== undefined) fields.name = String(b.name || '').trim().slice(0, 100) || null;
         if (b.back_label !== undefined) fields.back_label = String(b.back_label || '').trim().slice(0, 60) || null;
+        if (b.gather_alt_label !== undefined) fields.gather_alt_label = String(b.gather_alt_label || '').trim().slice(0, 80) || null;
         // Directory card: the @handle lists them on the creators page; the topic is its tag.
         if (b.handle !== undefined) fields.handle = String(b.handle || '').trim().replace(/^@/, '').slice(0, 60) || null;
         if (b.topic !== undefined) fields.topic = String(b.topic || '').trim().slice(0, 40) || null;

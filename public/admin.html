@@ -116,6 +116,12 @@
           <label>Button under the video <span class="pick-hint">their church finder</span>
             <input name="gather_url" type="url" placeholder="https://vreach.co/…">
           </label>
+          <label>A quieter second option <span class="pick-hint">a small line under the button, for house churches</span>
+            <input name="gather_alt_url" type="url" placeholder="https://…">
+          </label>
+          <label>What that line says
+            <input name="gather_alt_label" type="text" maxlength="80" placeholder="Prefer something smaller? Find a house church">
+          </label>
         </div>
 
         <div class="link-group">
@@ -192,6 +198,12 @@
         </label>
         <label>Get Connected &mdash; note under the form
           <input name="gather_label" type="text" maxlength="200">
+        </label>
+        <label>Get Connected &mdash; a quieter second option (house churches)
+          <input name="gather_alt_url" type="url" placeholder="https://…">
+        </label>
+        <label>Get Connected &mdash; what that line says
+          <input name="gather_alt_label" type="text" maxlength="80" placeholder="Prefer something smaller? Find a house church">
         </label>
         <div class="app-actions">
           <button type="submit" class="btn-small go">Save defaults</button>
@@ -664,7 +676,7 @@
 
     }
     // ---- Creator pages: edit any creator's links and short names ----------
-    const PAGE_FIELDS = ['name', 'handle', 'topic', 'know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'back_url', 'back_label', 'avatar_url'];
+    const PAGE_FIELDS = ['name', 'handle', 'topic', 'know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'gather_alt_url', 'gather_alt_label', 'back_url', 'back_label', 'avatar_url'];
     let aliasesAll = {};
     function fillCreatorPick(creators) {
       const pick = document.getElementById('creatorPick');
