@@ -137,9 +137,14 @@
     </footer>
     </div>
   </div>
-  <script>// Registered only so any device still holding the old cache picks up sw.js,
-    // which now clears itself out. Nothing here caches anything.
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
+  <script>// Nothing is cached on the device any more. This only re-registers where a
+    // worker is already installed, so that device picks up sw.js and clears
+    // itself out. A first-time visitor registers nothing and loads once.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then((regs) => { if (regs.length) navigator.serviceWorker.register("sw.js"); })
+        .catch(() => {});
+    }</script>
   <script src="reveal.js" defer></script>
   <script>
     // Endorsements strip: names slide by slowly; hover or touch pauses it.
