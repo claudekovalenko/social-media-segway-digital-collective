@@ -883,6 +883,7 @@ export default {
         return json({
           creator: creatorPublic, leads, counts, role: me.role,
           link: `/${me.creator_slug}`, defaults: await defaultLinks(db),
+          email_configured: Boolean(env.RESEND_API_KEY && env.EMAIL_FROM),
           email_verified: account ? Boolean(account.email_verified_at) : null,
         });
       }

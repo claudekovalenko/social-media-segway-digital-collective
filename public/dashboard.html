@@ -115,7 +115,7 @@
         </div>
       </form>
 
-      <details class="fold">
+      <details class="fold" id="followupFold" hidden>
       <summary class="section">Your follow-up email</summary>
       <form class="app-card" id="followup">
         <p class="app-meta">The collective sends this the moment someone responds on your page, in your name. Change the words; the structure, sender and unsubscribe stay the collective&rsquo;s. Leave a field blank to use the collective default.</p>
@@ -284,7 +284,11 @@
       }
       const q = new URLSearchParams(location.search);
       if (q.get('welcome')) document.getElementById('welcome').hidden = false;
-      if (data.email_verified === false) document.getElementById('verifyNote').hidden = false;
+      // Email is off until a provider is connected. Until then the site says
+      // nothing about it rather than promising a message it cannot send.
+      const emailOn = data.email_configured === true;
+      document.getElementById('followupFold').hidden = !emailOn;
+      if (emailOn && data.email_verified === false) document.getElementById('verifyNote').hidden = false;
 
       renderLeads('#leadsTable tbody', data.leads);
       renderLeads('#dueTable tbody', dueLeads(data.leads));

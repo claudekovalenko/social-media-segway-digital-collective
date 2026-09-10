@@ -44,11 +44,15 @@
         <p class="notice" id="emailState"></p>
         <h4>New creators</h4>
         <p class="app-meta">There is no public sign-up. Add creators and staff under "Who has access" below; each creator gets their link the moment their account is made.</p>
-        <h4 style="margin-top:16px">Follow-up templates</h4>
-        <form id="templates" class="tpl-grid"></form>
+        <div id="emailBlock" hidden>
+          <h4 style="margin-top:16px">Follow-up templates</h4>
+          <form id="templates" class="tpl-grid"></form>
+          <div class="app-actions">
+            <button type="button" class="btn-small go" id="saveTemplates">Save templates</button>
+            <button type="button" class="btn-small" id="testFollowup">Send me a test</button>
+          </div>
+        </div>
         <div class="app-actions">
-          <button type="button" class="btn-small go" id="saveTemplates">Save templates</button>
-          <button type="button" class="btn-small" id="testFollowup">Send me a test</button>
           <button type="button" class="btn-small" id="migrate">Fold old leads into contacts</button>
           <span class="crm-saved" id="platformSaved"></span>
         </div>
@@ -316,9 +320,10 @@
       const res = await fetch(API_BASE + '/api/admin/platform', { headers: credentials() || {} }).catch(() => null);
       if (!res || !res.ok) return;
       const d = await res.json();
+      document.getElementById('emailBlock').hidden = !d.email_configured;
       document.getElementById('emailState').textContent = d.email_configured
         ? 'Email is connected. Follow-ups and verification emails are being sent.'
-        : 'Email is not connected yet: add RESEND_API_KEY and EMAIL_FROM as repository secrets. Until then every send is logged as skipped.';
+        : 'Email is not connected, so no messages are sent and nothing about follow-up email is shown to creators. To turn it on, add RESEND_API_KEY and EMAIL_FROM as repository secrets.';
       const form = document.getElementById('templates');
       form.replaceChildren();
       for (const [type, name] of Object.entries(TPL_NAMES)) {
