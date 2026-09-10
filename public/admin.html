@@ -147,7 +147,7 @@
           <label>Organization <span class="pick-hint">shown first</span>
             <input type="text" id="endOrg" placeholder="The Jesus People Network" maxlength="80">
           </label>
-          <label>Person behind it <span class="pick-hint">follows as &ldquo;with …&rdquo;</span>
+          <label>Person behind it <span class="pick-hint">follows as &ldquo;hosted by …&rdquo;</span>
             <input type="text" id="endName" placeholder="Ryan Miller" maxlength="80">
           </label>
           <label>Logo <span class="pick-hint">optional, a link to their image</span>
@@ -746,7 +746,7 @@
       box.className = '';
       endorseList.forEach((e, i) => {
         const row = document.createElement('div'); row.className = 'crm-cell';
-        const label = (e.org || e.name) + ((e.org && (e.person || e.name)) ? ' with ' + (e.person || e.name) : '');
+        const label = (e.org || e.name) + ((e.org && (e.person || e.name)) ? ', hosted by ' + (e.person || e.name) : '');
         const t = document.createElement('span'); t.textContent = label + (e.url ? ' → ' + e.url : '');
         const x = document.createElement('button'); x.type = 'button'; x.className = 'btn-small'; x.textContent = 'Remove';
         x.addEventListener('click', () => saveEndorsements(endorseList.filter((_, j) => j !== i)));
