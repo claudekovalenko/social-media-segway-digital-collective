@@ -12,7 +12,8 @@
   <meta name="twitter:card" content="summary">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap"></noscript>
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0b0b0b">
@@ -146,9 +147,9 @@
       </p>
     </footer>
   </div>
-  <script src="i18n.js"></script>
-  <script src="app.js"></script>
-  <script src="track.js"></script>
+  <script src="i18n.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="track.js" defer></script>
   <script>// Nothing is cached on the device any more. This only re-registers where a
     // worker is already installed, so that device picks up sw.js and clears
     // itself out. A first-time visitor registers nothing and loads once.
