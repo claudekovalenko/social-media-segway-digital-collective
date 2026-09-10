@@ -3098,3 +3098,12 @@ body.journey.ig .step-card:last-child { margin-bottom: 0; }
 /* Sign-in page: the card sits closer to the foot. */
 body.landing footer { margin-top: 26px; }
 body.ig .tab-row { margin-bottom: 14px; }
+
+/* Link editors: one block per step, so it is obvious which video and which
+   button each address belongs to. */
+.link-group { border: 1px solid var(--ig-line, #DCD3C3); border-radius: 12px; padding: 14px 14px 4px; margin: 14px 0; background: rgba(255,255,255,0.5); }
+.link-group h4 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 600; }
+.link-group .group-note { margin: 4px 0 10px; font-size: 0.78rem; color: #8b857b; }
+.link-group .pick-hint { font-weight: 400; font-size: 0.76rem; color: #9a948a; }
+.link-group label { display: block; margin-bottom: 10px; }
+.step-num { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #B28B46, #A9533C); color: #fff; font-size: 0.72rem; font-weight: 700; flex: none; }
