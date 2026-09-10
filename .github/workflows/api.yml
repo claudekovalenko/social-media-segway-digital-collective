@@ -50,8 +50,9 @@ jobs:
           TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
           [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
           echo "::add-mask::$TOKEN"
+          [ -n "$BODY" ] || BODY='{}'
           if [ "$METHOD" = "GET" ]; then
             curl -s "$SITE$APIPATH" -H "authorization: Bearer $TOKEN" | jq "${FILTER:-.}"
           else
-            curl -s -X "$METHOD" "$SITE$APIPATH" -H "authorization: Bearer $TOKEN" -H "content-type: application/json" --data "${BODY:-{}}" | jq "${FILTER:-.}"
+            curl -s -X "$METHOD" "$SITE$APIPATH" -H "authorization: Bearer $TOKEN" -H "content-type: application/json" --data "$BODY" | jq "${FILTER:-.}"
           fi
