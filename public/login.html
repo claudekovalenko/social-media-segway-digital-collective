@@ -26,6 +26,11 @@
       <p class="hero-sub" id="why">Sign in to your dashboard.</p>
     </header>
 
+    <div class="tab-row" id="tabs">
+      <button type="button" class="tab on" data-tab="signin">Sign in</button>
+      <button type="button" class="tab" data-tab="join">Join the collective</button>
+    </div>
+
 
     <section class="step-card open static">
       <form id="passwordForm" hidden>
@@ -75,6 +80,39 @@
 
 
       <p class="aside-link" id="loading">Loading sign-in options&hellip;</p>
+      <form id="joinForm" hidden>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+        <p class="aside-link">Tell us about your work. We read every one and reply by email.</p>
+        <label>Your name
+          <input name="name" type="text" required placeholder="Sam Rivera" autocomplete="name">
+        </label>
+        <label>Email
+          <input name="email" type="email" required placeholder="you@example.com" autocomplete="email">
+        </label>
+        <label>Your main handle or profile link
+          <input name="handle" type="text" placeholder="@yourhandle or https://…">
+        </label>
+        <fieldset class="pick-set">
+          <legend>Where you create <span class="pick-hint">pick all that apply</span></legend>
+          <div class="pick-row">
+            <label class="pick"><input type="checkbox" name="platform" value="Instagram"><span>Instagram</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="TikTok"><span>TikTok</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="YouTube"><span>YouTube</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Podcast"><span>Podcast</span></label>
+            <label class="pick"><input type="checkbox" name="platform" value="Other"><span>Other</span></label>
+          </div>
+        </fieldset>
+        <label>What you create about <span class="pick-hint">optional</span>
+          <input name="topic" type="text" placeholder="Testimonies, apologetics, worship…">
+        </label>
+        <label class="check">
+          <input type="checkbox" name="agreed" required>
+          <span>I have read the <a href="beliefs.html" target="_blank">Statement of Faith</a> and agree with it, and accept the <a href="terms.html" target="_blank">Terms</a>.</span>
+        </label>
+        <button type="submit" id="joinBtn">Send my application</button>
+        <div class="success" id="applied"></div>
+        <div class="error"></div>
+      </form>
     </section>
 
     <footer>
@@ -288,8 +326,8 @@
     // sense, so it starts there.
     let creating = false;
 
-    // Animate the card's height between the two tabs' contents so the page
-    // below glides instead of jumping.
+    // Glide the card between the two tabs' heights so the page below moves
+    // smoothly instead of jumping.
     function glideHeight(card, change) {
       const h0 = card.offsetHeight;
       change();
@@ -300,28 +338,44 @@
       void card.offsetHeight;
       card.style.transition = 'height .42s cubic-bezier(.22,.8,.18,1)';
       card.style.height = h1 + 'px';
-      card.addEventListener('transitionend', () => {
+      // Always release the height, even where transitions never run (reduced
+      // motion, or a browser that skips the animation) — otherwise the card
+      // stays frozen at the old height with its content cut off.
+      let released = false;
+      const release = () => {
+        if (released) return;
+        released = true;
         card.style.height = ''; card.style.transition = ''; card.style.overflow = '';
-      }, { once: true });
+      };
+      card.addEventListener('transitionend', release, { once: true });
+      setTimeout(release, 600);
     }
 
     function showTab(which) {
       if (!ready) return;
       const card = document.querySelector('.step-card.static');
-      if (card && !card.dataset.gliding) { glideHeight(card, () => { card.dataset.gliding = '1'; showTab(which); delete card.dataset.gliding; }); return; }
+      if (card && !card.dataset.gliding) {
+        glideHeight(card, () => { card.dataset.gliding = '1'; showTab(which); delete card.dataset.gliding; });
+        return;
+      }
       const join = which === 'join';
       const signUp = !hasAccounts || creating;
-            document.getElementById('passwordForm').hidden = join || signUp;
+      document.getElementById('joinForm').hidden = !join;
+      document.getElementById('tabs').classList.toggle('join', join);
+      for (const t of document.querySelectorAll('.tab')) t.classList.toggle('on', t.dataset.tab === which);
+      document.getElementById('passwordForm').hidden = join || signUp;
       document.getElementById('createForm').hidden = join || !signUp;
       document.getElementById('realAuth').hidden = join || signUp || !auth.magic_link;
       document.getElementById('orRow').hidden = join || signUp || !auth.magic_link;
       // The very first account owns the database; later ones need an invite.
       document.getElementById('createNote').hidden = hasAccounts;
-      document.getElementById('approvalNote').hidden = !hasAccounts;
+      document.getElementById('approvalNote').hidden = true;
       document.getElementById('toSignIn').hidden = !hasAccounts;
-      document.getElementById('why').textContent = signUp
-        ? 'No account exists yet — create the owner account for the database.'
-        : 'Sign in to your dashboard.';
+      document.getElementById('why').textContent = join
+        ? 'Tell us about your work and we\u2019ll be in touch.'
+        : (signUp
+          ? 'No account exists yet — create the owner account for the database.'
+          : 'Sign in to your dashboard.');
     }
 
     document.getElementById('createLink').addEventListener('click', (e) => {
@@ -336,6 +390,38 @@
       showTab('signin');
     });
 
+
+    for (const t of document.querySelectorAll('.tab')) {
+      t.addEventListener('click', () => showTab(t.dataset.tab));
+    }
+
+    document.getElementById('joinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const form = new FormData(f);
+      const data = Object.fromEntries(form.entries());
+      data.platform = form.getAll('platform');
+      data.agreed = form.get('agreed') === 'on';
+      const error = f.querySelector('.error');
+      const btn = document.getElementById('joinBtn');
+      error.style.display = 'none';
+      btn.disabled = true;
+      try {
+        const res = await fetch(API_BASE + '/api/apply', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || 'Could not send that.');
+        f.querySelectorAll('label, fieldset, button').forEach((el) => { el.hidden = true; });
+        const ok = document.getElementById('applied');
+        ok.textContent = 'Thank you. We have your application and will email you soon.';
+        ok.style.display = 'block';
+      } catch (err) {
+        error.textContent = err.message === 'Failed to fetch' ? 'Could not reach the server — try again.' : err.message;
+        error.style.display = 'block';
+        btn.disabled = false;
+      }
+    });
 
     setup();
   </script>

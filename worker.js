@@ -329,6 +329,33 @@ export default {
         return new Response(null, { status: 204, headers: CORS });
       }
 
+      // Apply to join. This does not create an account: it files an
+      // application an admin reviews, which is how creators get added.
+      if (p === '/api/apply' && req.method === 'POST') {
+        if (rateLimited(`apply:${clientIp(req)}`, 5, 10 * 60_000)) {
+          return json({ error: 'Too many attempts. Please try again in a few minutes.' }, 429);
+        }
+        const b = await req.json().catch(() => ({}));
+        if (b.website) return json({ ok: true }, 201); // honeypot
+        const email = String(b.email || '').trim().toLowerCase().slice(0, 200);
+        const name = String(b.name || '').trim().slice(0, 100);
+        if (!name || !/.+@.+\..+/.test(email)) {
+          return json({ error: 'A name and a real email address are needed.' }, 400);
+        }
+        if (!b.agreed) return json({ error: 'Please agree to the Statement of Faith and the terms.' }, 400);
+        const platforms = Array.isArray(b.platform) ? b.platform.join(', ').slice(0, 200) : null;
+        await db.insertApplication({
+          email, name,
+          handle: String(b.handle || '').trim().slice(0, 100) || null,
+          platform: platforms,
+          audience: String(b.audience || '').trim().slice(0, 60) || null,
+          topic: String(b.topic || '').trim().slice(0, 100) || null,
+          why: String(b.why || '').trim().slice(0, 1000) || null,
+          agreed: true,
+        });
+        return json({ ok: true }, 201);
+      }
+
       if (p === '/api/creators/register' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
         const slug = String(b.slug || '').toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').slice(0, 40);

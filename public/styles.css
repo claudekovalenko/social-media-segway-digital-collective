@@ -3094,3 +3094,7 @@ body.journey.ig .step-card:last-child { margin-bottom: 0; }
 
 /* Language button: two letters instead of a flag. */
 .globe-flag.is-code { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; font-family: inherit; }
+
+/* Sign-in page: the card sits closer to the foot. */
+body.landing footer { margin-top: 26px; }
+body.ig .tab-row { margin-bottom: 14px; }
