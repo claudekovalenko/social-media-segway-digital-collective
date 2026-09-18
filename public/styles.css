@@ -3325,3 +3325,9 @@ body.ig .phone-frame { cursor: pointer; }
   body.ig .pscreen, body.ig .pj-body, body.ig .pj-chev { transition: none; }
   body.ig .tap-dot { display: none; }
 }
+
+/* Lead score from the enrichment pipeline (admin table). */
+.score-pill { display: inline-block; min-width: 2.2em; text-align: center; padding: 0.1em 0.5em; border-radius: 999px; font-size: 0.78rem; font-weight: 700; }
+.score-pill.hot { background: rgba(200, 255, 120, 0.22); color: var(--lime); }
+.score-pill.warm { background: rgba(255, 210, 120, 0.2); color: #f6c46a; }
+.score-pill.cold { background: rgba(255, 255, 255, 0.08); color: var(--muted, #aaa); }

@@ -213,6 +213,64 @@ Edit `DEFAULT_CONTENT` at the top of `public/app.js` with your embed URLs (e.g. 
 - `GET /api/creators/:slug` — public creator config
 - `GET /api/admin/leads` — all leads, group signups, creators, and per-step counts (requires an allow-listed magic-link `Authorization: Bearer` token or the `x-admin-key` header)
 
+## Architecture: from the page to the lead database
+
+```
+Frontend (public/*.html, app.js, track.js)
+   ↓  POST /api/leads, /api/events            (Cloudflare Worker: worker.js)
+Supabase: Postgres + Auth + RLS               (supabase/schema.sql; D1 until a project exists)
+   ↓  contacts, responses, consents, events
+External data sources / APIs                  (enrich.js → ENRICH_PROVIDER_URL, optional)
+   ↓
+Enrichment pipeline: identify → clean → deduplicate → score   (enrich.js)
+   ↓
+Lead database                                 (contacts + responses; `lead_database` view)
+```
+
+**Frontend.** The journey page collects name, email, phone, city and the
+consent text that was shown. Nothing is enriched in the browser.
+
+**Supabase.** `supabase/schema.sql` is the full Postgres schema, including
+the `consents` evidence table, the enrichment columns on `contacts`, a
+`lead_database` view (contact + latest response + score) and row-level
+security: admins see everything, a signed-in creator sees only their own
+responses and the contacts behind them, consent evidence is admin-only. The
+Worker talks to Postgres with the service key when `SUPABASE_URL` and
+`SUPABASE_SERVICE_KEY` are set and to D1 otherwise; the pipeline is the same
+on both.
+
+**External data sources.** `enrich.js` has one generic hook: if
+`ENRICH_PROVIDER_URL` (and optionally `ENRICH_API_KEY`) is set, the cleaned
+contact is POSTed there and the JSON that comes back is stored in
+`contacts.enrichment`; a `score` field in that JSON is added to ours. This
+is where a business/contact data API plugs in. Property data does not apply
+to this product (people, not addresses), so nothing is built for it. Without
+a provider the pipeline still runs end to end.
+
+**Enrichment pipeline.** Runs on every submission after the reply is sent
+(`ctx.waitUntil`), and on demand from the admin page (*Score and clean
+contacts*, `POST /api/admin/enrich`, batches of 200):
+
+1. *Identify* — normalised email and phone, the email's domain, free mailbox
+   or not.
+2. *Clean* — email syntax, common typo fixes (`gmial.com` → `gmail.com`),
+   disposable domains, an MX lookup for non-free domains (DNS over HTTPS),
+   phone to E.164, name and city casing. Result in `email_status`:
+   `valid | fixed | disposable | invalid | no_mx | unknown`.
+3. *Deduplicate* — same email or phone as an existing contact sets `dup_of`;
+   same name in the same city is flagged in the reasons, never merged
+   automatically.
+4. *Score* — 0–100 in `contacts.score`, with every point explained in
+   `score_reasons`: deliverable email, phone, full name, city, which steps
+   they responded to (commitment 40, discipleship 30, church 30), more than
+   one step, responded this week, quiet 90+ days, SMS yes, page engagement,
+   unsubscribed or undeliverable → 0.
+
+**Lead database.** `contacts` + `responses` (+ `consents`, `events`,
+`communications`). The admin table shows the score next to each lead; hover
+for the reasons. `/api/admin/leads` returns `scores`, `/api/export.csv`
+and the creator dashboard read the same rows.
+
 ## The platform layer
 
 Everything below was added to match the developer proposal. It runs on D1

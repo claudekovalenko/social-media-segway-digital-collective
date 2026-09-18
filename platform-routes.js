@@ -6,6 +6,7 @@ import {
   platform, sendEmail, renderEmail, fillTokens, DEFAULT_TEMPLATES, RESPONSE_TYPES,
   EVENT_TYPES, rateLimited, clientIp, toCsv, TERMS_VERSION, FAITH_VERSION, CONSENT_VERSION,
 } from './platform.js';
+import { enrichContact } from './enrich.js';
 
 const VALID_SLUG = /^[a-z0-9][a-z0-9-]{2,39}$/;
 const VALID_STATUS = new Set(['new', 'contacted', 'following_up', 'in_group', 'connected', 'no_response', 'closed']);
@@ -384,6 +385,23 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     const result = await pf.migrateLeads();
     await pf.audit(me.email, 'migrate.leads', 'contacts+responses', result);
     return json({ ok: true, ...result });
+  }
+
+  // Run the enrichment pipeline over contacts that were never scored (or, with
+  // {all:true}, every contact). Batches of up to 200 per call.
+  if (p === '/api/admin/enrich' && req.method === 'POST') {
+    const me = await whoami(req, url, env, db);
+    if (me.role !== 'admin') return json({ error: 'unauthorized' }, 401);
+    const b = await req.json().catch(() => ({}));
+    const ids = b.contact_id ? [Number(b.contact_id)]
+      : await pf.contactsToEnrich({ limit: Math.min(Number(b.limit) || 200, 200), staleBefore: b.all ? '9999' : null });
+    const results = [];
+    for (const id of ids) {
+      try { const r = await enrichContact(pf, id, { env, fetchFn: fetch }); if (r) results.push({ id, score: r.score, email_status: r.email_status, dup_of: r.dup_of }); }
+      catch (e) { results.push({ id, error: e.message }); }
+    }
+    await pf.audit(me.email, 'enrich.run', `${results.length} contacts`);
+    return json({ ok: true, enriched: results.length, results });
   }
 
   if (p === '/api/admin/test-followup' && req.method === 'POST') {

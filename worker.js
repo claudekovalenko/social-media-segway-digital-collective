@@ -1,5 +1,6 @@
 import { makeDb, usingSupabase, emailFromToken } from './db.js';
 import { handlePlatform, sendFollowUp } from './platform-routes.js';
+import { enrichContact } from './enrich.js';
 import { platform, rateLimited, clientIp } from './platform.js';
 
 // Cloudflare Worker backend for the Faith Journey funnel.
@@ -976,6 +977,8 @@ export default {
             await pf.logConsent({ ...evidence, channel: 'sms', action: 'granted',
               text_shown: String(b.sms_consent_text || '').slice(0, 2000) }).catch(() => {});
           }
+          // Identify, clean, deduplicate, score: runs after the reply goes out.
+          after(enrichContact(pf, recorded.contact_id, { env, fetchFn: fetch }).catch((e) => console.error('enrich failed', e.message)));
           const creator = creatorSlug !== 'default' ? await db.creatorBySlug(creatorSlug).catch(() => null) : null;
           await sendFollowUp(env, url, db, pf, {
             contact_id: recorded.contact_id, response_id: recorded.response_id, creator, step, name, email,
@@ -1002,6 +1005,8 @@ export default {
           defaults: await defaultLinks(db),
           applications: await db.applications().catch(() => []),
           accounts: await db.listAdmins().catch(() => []),
+          // Enrichment output per contact, keyed by email on the admin page.
+          scores: await platform(env.DB).scoreIndex().catch(() => []),
         });
       }
 

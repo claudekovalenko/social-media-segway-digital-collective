@@ -244,12 +244,88 @@ alter table creators add column if not exists follow_up_cta_url text;
 alter table admins add column if not exists email_verified_at timestamptz;
 alter table admins add column if not exists phone text;
 
+-- Consent evidence (TCPA): one append-only row per grant or revocation.
+create table if not exists consents (
+  id bigint generated always as identity primary key,
+  contact_id bigint, email text, phone text,
+  channel text not null, action text not null,
+  text_shown text, version text, source_url text, creator_slug text,
+  ip text, user_agent text,
+  created_at timestamptz not null default now()
+);
+create index if not exists consents_contact on consents (contact_id);
+alter table contacts add column if not exists sms_consent_at timestamptz;
+alter table contacts add column if not exists sms_revoked_at timestamptz;
+alter table contacts add column if not exists email_revoked_at timestamptz;
+alter table contacts add column if not exists consent_text text;
+alter table contacts add column if not exists consent_ip text;
+alter table contacts add column if not exists consent_source_url text;
+
+-- Enrichment pipeline output (enrich.js): identify, clean, deduplicate, score.
+alter table contacts add column if not exists email_status text;
+alter table contacts add column if not exists email_domain text;
+alter table contacts add column if not exists phone_e164 text;
+alter table contacts add column if not exists dup_of bigint;
+alter table contacts add column if not exists score integer;
+alter table contacts add column if not exists score_reasons jsonb;
+alter table contacts add column if not exists enrichment jsonb;
+alter table contacts add column if not exists enriched_at timestamptz;
+create index if not exists contacts_score on contacts (score desc);
+create index if not exists contacts_name_city on contacts (lower(name), lower(city));
+
+-- The lead database, as one view: contact + latest response + score.
+create or replace view lead_database as
+  select c.id as contact_id, c.name, c.email, c.email_status, c.phone_e164, c.city, c.country,
+         c.score, c.score_reasons, c.dup_of, c.enriched_at, c.unsubscribed_at,
+         c.sms_consent_at, c.sms_revoked_at,
+         r.creator_slug, r.response_type, r.status, r.created_at as responded_at
+  from contacts c
+  left join lateral (select * from responses r where r.contact_id = c.id order by created_at desc limit 1) r on true;
+
 alter table contacts enable row level security;
 alter table responses enable row level security;
 alter table events enable row level security;
 alter table communications enable row level security;
 alter table audit_log enable row level security;
 alter table verifications enable row level security;
--- The Worker uses the service key; creator-scoped reads go through it and
--- are filtered by creator_slug server-side. Add per-creator RLS policies here
--- when a browser client ever reads these tables directly.
+alter table consents enable row level security;
+
+-- Row-level security. The Worker uses the service key, which bypasses RLS,
+-- and filters by creator_slug server-side. These policies cover the day a
+-- browser client (Supabase Auth) reads the tables directly:
+--   admins   -> everything
+--   creators -> their own creator row, their responses, and the contacts
+--               behind those responses; consent evidence is admin-only.
+create or replace function auth_email() returns text language sql stable as $$
+  select coalesce(current_setting('request.jwt.claims', true)::jsonb ->> 'email', '')
+$$;
+create or replace function is_admin() returns boolean language sql stable security definer as $$
+  select exists (select 1 from admins a where a.email = auth_email() and a.role = 'admin')
+$$;
+create or replace function my_creator_slugs() returns setof text language sql stable security definer as $$
+  select slug from creators where email = auth_email()
+$$;
+
+drop policy if exists admins_all_contacts on contacts;
+create policy admins_all_contacts on contacts for all using (is_admin());
+drop policy if exists creators_own_contacts on contacts;
+create policy creators_own_contacts on contacts for select using (
+  exists (select 1 from responses r where r.contact_id = contacts.id and r.creator_slug in (select my_creator_slugs()))
+);
+drop policy if exists admins_all_responses on responses;
+create policy admins_all_responses on responses for all using (is_admin());
+drop policy if exists creators_own_responses on responses;
+create policy creators_own_responses on responses for all using (creator_slug in (select my_creator_slugs()));
+drop policy if exists admins_all_events on events;
+create policy admins_all_events on events for all using (is_admin());
+drop policy if exists creators_own_events on events;
+create policy creators_own_events on events for select using (creator_slug in (select my_creator_slugs()));
+drop policy if exists admins_all_communications on communications;
+create policy admins_all_communications on communications for all using (is_admin());
+drop policy if exists creators_own_communications on communications;
+create policy creators_own_communications on communications for select using (creator_slug in (select my_creator_slugs()));
+drop policy if exists admins_all_consents on consents;
+create policy admins_all_consents on consents for all using (is_admin());
+drop policy if exists admins_all_audit on audit_log;
+create policy admins_all_audit on audit_log for select using (is_admin());
+-- verifications: no policy on purpose; only the service key reads tokens.

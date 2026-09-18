@@ -122,6 +122,15 @@ export function platform(DB) {
         ['contacts', 'consent_text', 'TEXT'],
         ['contacts', 'consent_ip', 'TEXT'],
         ['contacts', 'consent_source_url', 'TEXT'],
+        // Enrichment pipeline output (enrich.js): identify, clean, deduplicate, score.
+        ['contacts', 'email_status', 'TEXT'],
+        ['contacts', 'email_domain', 'TEXT'],
+        ['contacts', 'phone_e164', 'TEXT'],
+        ['contacts', 'dup_of', 'INTEGER'],
+        ['contacts', 'score', 'INTEGER'],
+        ['contacts', 'score_reasons', 'TEXT'],
+        ['contacts', 'enrichment', 'TEXT'],
+        ['contacts', 'enriched_at', 'TEXT'],
         ['creators', 'status', "TEXT NOT NULL DEFAULT 'active'"],
         ['creators', 'display_name', 'TEXT'],
         ['creators', 'know_god_next_url', 'TEXT'],
@@ -297,10 +306,67 @@ export function platform(DB) {
       if (type) { where.push('r.response_type = ?'); args.push(type); }
       if (status) { where.push('r.status = ?'); args.push(status); }
       if (q) { where.push('(c.name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?)'); args.push(`%${q}%`, `%${q}%`, `%${q}%`); }
-      const sql = `SELECT r.*, c.name, c.email, c.phone, c.city, c.country, c.language, c.unsubscribed_at
+      const sql = `SELECT r.*, c.name, c.email, c.phone, c.city, c.country, c.language, c.unsubscribed_at,
+          c.score, c.score_reasons, c.email_status, c.dup_of
         FROM responses r JOIN contacts c ON c.id = r.contact_id
         ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY r.created_at DESC LIMIT ?`;
       return (await DB.prepare(sql).bind(...args, Math.min(limit, 5000)).all()).results || [];
+    },
+
+    // ---- enrichment store (what enrich.js reads and writes) -----------------
+    async contactById(id) {
+      await ensure();
+      return DB.prepare(`SELECT * FROM contacts WHERE id = ?`).bind(id).first();
+    },
+    async contactSignals(id) {
+      await ensure();
+      const [c, r, e] = await Promise.all([
+        DB.prepare(`SELECT sms_consent_at, sms_revoked_at, unsubscribed_at FROM contacts WHERE id = ?`).bind(id).first(),
+        DB.prepare(`SELECT response_type, created_at FROM responses WHERE contact_id = ?`).bind(id).all(),
+        DB.prepare(`SELECT COUNT(*) AS n FROM events WHERE session_id IN
+            (SELECT session_id FROM responses WHERE contact_id = ? AND session_id IS NOT NULL)`).bind(id).first(),
+      ]);
+      return {
+        responses: r.results || [], events: Number(e?.n || 0),
+        sms_consent: Boolean(c?.sms_consent_at && !c?.sms_revoked_at),
+        unsubscribed: Boolean(c?.unsubscribed_at),
+      };
+    },
+    // Contacts that could be the same person: same email or phone, or same
+    // name in the same city. Small, indexed reads.
+    async dupCandidates(c) {
+      await ensure();
+      const where = []; const args = [];
+      if (c.email) { where.push('email = ?'); args.push(c.email); }
+      if (c.phone_e164) { where.push('phone = ?'); args.push(c.phone_e164); }
+      if (c.name && c.city) { where.push('(name = ? COLLATE NOCASE AND city = ? COLLATE NOCASE)'); args.push(c.name, c.city); }
+      if (!where.length) return [];
+      return (await DB.prepare(`SELECT id, email, phone, name, city FROM contacts WHERE ${where.join(' OR ')} ORDER BY id LIMIT 50`)
+        .bind(...args).all()).results || [];
+    },
+    async saveEnrichment(id, fields) {
+      await ensure();
+      const allowed = ['name', 'city', 'email', 'email_status', 'email_domain', 'phone_e164', 'dup_of',
+        'score', 'score_reasons', 'enrichment', 'enriched_at'];
+      const sets = []; const args = [];
+      for (const k of allowed) if (fields[k] !== undefined) { sets.push(`${k} = ?`); args.push(fields[k]); }
+      if (!sets.length) return;
+      sets.push(`updated_at = datetime('now')`);
+      await DB.prepare(`UPDATE contacts SET ${sets.join(', ')} WHERE id = ?`).bind(...args, id).run();
+    },
+    async scoreIndex() {
+      await ensure();
+      return (await DB.prepare(`SELECT id, email, score, score_reasons, email_status, dup_of FROM contacts
+          WHERE score IS NOT NULL ORDER BY id DESC LIMIT 5000`).all()).results || [];
+    },
+    // Ids that have never been scored, or were scored before `staleBefore`.
+    async contactsToEnrich({ limit = 200, staleBefore = null } = {}) {
+      await ensure();
+      const sql = staleBefore
+        ? `SELECT id FROM contacts WHERE enriched_at IS NULL OR enriched_at < ? ORDER BY id LIMIT ?`
+        : `SELECT id FROM contacts WHERE enriched_at IS NULL ORDER BY id LIMIT ?`;
+      const stmt = staleBefore ? DB.prepare(sql).bind(staleBefore, limit) : DB.prepare(sql).bind(limit);
+      return ((await stmt.all()).results || []).map((r) => r.id);
     },
 
     async responseById(id) {
@@ -486,6 +552,7 @@ export function platform(DB) {
         city: r.city, country: r.country, language: r.language, campaign: r.campaign,
         next_follow_up: r.next_follow_up, last_contacted_at: r.last_contacted_at,
         unsubscribed: r.unsubscribed_at ? 'yes' : '', notes: r.notes,
+        score: r.score ?? '', email_status: r.email_status || '', duplicate_of: r.dup_of || '',
       }));
     },
   };
