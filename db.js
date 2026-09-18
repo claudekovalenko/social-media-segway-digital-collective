@@ -78,7 +78,8 @@ function d1Adapter(DB) {
       await ensurePlatformColumns(DB);
       return DB.prepare(
         `SELECT slug, name, mode, know_god_video_url, know_god_next_url, grow_video_url, grow_course_url,
-                find_church_video_url, gather_url, gather_alt_label, gather_alt_url, back_url, back_label, avatar_url, avatar_cached, avatar_checked_at, status, display_name, handle, topic,
+                find_church_video_url, gather_url, gather_alt_label, gather_alt_url,
+                know_god_cta_label, grow_cta_label, gather_cta_label, back_url, back_label, avatar_url, avatar_cached, avatar_checked_at, status, display_name, handle, topic,
                 follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url
          FROM creators WHERE slug = ?`).bind(slug).first();
     },
@@ -195,6 +196,9 @@ function d1Adapter(DB) {
         ['creators', 'avatar_cached', 'TEXT'],
         ['creators', 'avatar_checked_at', 'TEXT'],
         ['creators', 'gather_alt_label', 'TEXT'],
+        ['creators', 'know_god_cta_label', 'TEXT'],
+        ['creators', 'grow_cta_label', 'TEXT'],
+        ['creators', 'gather_cta_label', 'TEXT'],
         ['creators', 'gather_alt_url', 'TEXT'],
         ['creators', 'back_label', 'TEXT'],
         ['creators', 'gather_url', 'TEXT'],
@@ -362,7 +366,7 @@ function supabaseAdapter(url, serviceKey) {
     async creatorBySlug(slug) {
       return first(await rest(
         `creators?slug=eq.${encodeURIComponent(slug)}` +
-        `&select=slug,name,mode,know_god_video_url,know_god_next_url,grow_video_url,grow_course_url,find_church_video_url,gather_url,gather_alt_label,gather_alt_url,back_url,back_label,avatar_url,avatar_cached,avatar_checked_at,status,display_name,handle,topic&limit=1`));
+        `&select=slug,name,mode,know_god_video_url,know_god_next_url,grow_video_url,grow_course_url,find_church_video_url,gather_url,gather_alt_label,gather_alt_url,know_god_cta_label,grow_cta_label,gather_cta_label,back_url,back_label,avatar_url,avatar_cached,avatar_checked_at,status,display_name,handle,topic&limit=1`));
     },
 
     async creatorByKeyHash(hash) {

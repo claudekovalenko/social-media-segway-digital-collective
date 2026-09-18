@@ -22,7 +22,7 @@ const I18N = {
     group3: 'Connect me with others near me who want to gather',
     gather_cta: 'Find a church near you',
     gather_alt: 'Other ways to gather locally',
-    cta1: 'Take the next step', cta2: 'Start the course',
+    cta1: 'I made a commitment', cta2: 'Start the course',
     gather_help: 'Tell us your city and we\u2019ll point you to a healthy church near you.',
     pick_time: 'Pick a time', choose_time: 'Choose a meeting time',
     propose: 'None of these — propose a time',
@@ -54,6 +54,7 @@ const I18N = {
   },
 
   es: {
+    cta1: 'Tomé una decisión', cta2: 'Empezar el curso',
     hero_1: 'Da tu', hero_2: 'siguiente paso',
     hero_sub: 'Estés donde estés en tu camino, empieza aquí.',
     locale_note: 'Opcional: nos ayuda a conectarte con un grupo cercano.',
@@ -97,6 +98,7 @@ const I18N = {
   },
 
   pt: {
+    cta1: 'Eu tomei uma decisão', cta2: 'Começar o curso',
     hero_1: 'Dê o seu', hero_2: 'próximo passo',
     hero_sub: 'Onde quer que você esteja na sua caminhada, comece aqui.',
     locale_note: 'Opcional — ajuda a conectar você com um grupo perto de você.',
@@ -140,6 +142,7 @@ const I18N = {
   },
 
   fr: {
+    cta1: 'J’ai pris un engagement', cta2: 'Commencer le parcours',
     hero_1: 'Faites votre', hero_2: 'prochain pas',
     hero_sub: 'Où que vous en soyez dans votre cheminement, commencez ici.',
     locale_note: 'Facultatif — cela nous aide à vous proposer un groupe près de chez vous.',
@@ -179,6 +182,7 @@ const I18N = {
   },
 
   de: {
+    cta1: 'Ich habe mich entschieden', cta2: 'Kurs starten',
     hero_1: 'Geh deinen', hero_2: 'nächsten Schritt',
     hero_sub: 'Wo du auch stehst — fang hier an.',
     locale_note: 'Optional — hilft uns, dir eine Gruppe in deiner Nähe vorzuschlagen.',
@@ -218,6 +222,7 @@ const I18N = {
   },
 
   it: {
+    cta1: 'Ho preso un impegno', cta2: 'Inizia il corso',
     hero_1: 'Fai il tuo', hero_2: 'prossimo passo',
     hero_sub: 'Ovunque tu sia nel tuo cammino, comincia da qui.',
     locale_note: 'Facoltativo — ci aiuta a trovarti un gruppo vicino a te.',
@@ -257,6 +262,7 @@ const I18N = {
   },
 
   pl: {
+    cta1: 'Podjąłem decyzję', cta2: 'Rozpocznij kurs',
     hero_1: 'Zrób swój', hero_2: 'następny krok',
     hero_sub: 'Gdziekolwiek jesteś na swojej drodze — zacznij tutaj.',
     locale_note: 'Opcjonalne — pomaga dobrać grupę blisko Ciebie.',
@@ -296,6 +302,7 @@ const I18N = {
   },
 
   uk: {
+    cta1: 'Я прийняв рішення', cta2: 'Почати курс',
     hero_1: 'Зроби свій', hero_2: 'наступний крок',
     hero_sub: 'Де б ти не був на своєму шляху — почни звідси.',
     locale_note: 'Необов’язково — допоможе підібрати групу поруч із тобою.',
@@ -335,6 +342,7 @@ const I18N = {
   },
 
   ar: {
+    cta1: 'لقد اتخذت قراري', cta2: 'ابدأ الدورة',
     hero_1: 'اخطُ', hero_2: 'خطوتك التالية',
     hero_sub: 'أينما كنت في رحلتك، ابدأ من هنا.',
     locale_note: 'اختياري — يساعدنا في ربطك بمجموعة قريبة منك.',
@@ -374,6 +382,7 @@ const I18N = {
   },
 
   hi: {
+    cta1: 'मैंने निर्णय लिया', cta2: 'कोर्स शुरू करें',
     hero_1: 'बढ़ाइए अपना', hero_2: 'अगला कदम',
     hero_sub: 'आप अपनी यात्रा में कहीं भी हों — यहीं से शुरू कीजिए।',
     locale_note: 'वैकल्पिक — इससे आपके पास का समूह ढूँढने में मदद मिलती है।',
@@ -413,6 +422,7 @@ const I18N = {
   },
 
   tl: {
+    cta1: 'Nagpasya ako', cta2: 'Simulan ang kurso',
     hero_1: 'Gawin ang iyong', hero_2: 'susunod na hakbang',
     hero_sub: 'Nasaan ka man sa iyong paglalakbay — magsimula rito.',
     locale_note: 'Opsyonal — nakakatulong ito para mahanap ka ng grupong malapit sa iyo.',
@@ -452,6 +462,7 @@ const I18N = {
   },
 
   id: {
+    cta1: 'Saya sudah memutuskan', cta2: 'Mulai kursus',
     hero_1: 'Ambil', hero_2: 'langkah berikutnya',
     hero_sub: 'Di mana pun kamu dalam perjalananmu — mulai dari sini.',
     locale_note: 'Opsional — membantu kami mencarikan kelompok di dekatmu.',
@@ -491,6 +502,7 @@ const I18N = {
   },
 
   ko: {
+    cta1: '결단했습니다', cta2: '과정 시작하기',
     hero_1: '다음 걸음을', hero_2: '내딛으세요',
     hero_sub: '어디쯤에 있든, 여기서 시작하세요.',
     locale_note: '선택 사항 — 가까운 모임을 찾는 데 도움이 됩니다.',
@@ -530,6 +542,7 @@ const I18N = {
   },
 
   ja: {
+    cta1: '決心しました', cta2: 'コースを始める',
     hero_1: '次の一歩を', hero_2: '踏み出そう',
     hero_sub: 'どんな途中でも、ここから始めましょう。',
     locale_note: '任意 — お近くのグループをご案内するのに役立ちます。',
@@ -569,6 +582,7 @@ const I18N = {
   },
 
   zh: {
+    cta1: '我已作出决定', cta2: '开始课程',
     hero_1: '迈出你的', hero_2: '下一步',
     hero_sub: '无论你走到哪一步，都可以从这里开始。',
     locale_note: '选填 — 有助于为你匹配就近的小组。',

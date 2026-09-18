@@ -49,7 +49,7 @@ function toEmbedUrl(url) {
     }
     if (!id) return url;
     const start = u.searchParams.get('t') || u.searchParams.get('start') || u.searchParams.get('time_continue');
-    return `https://www.youtube-nocookie.com/embed/${id}?rel=0` + (start ? `&start=${parseInt(start, 10) || 0}` : '');
+    return `https://www.youtube-nocookie.com/embed/${id}?rel=0&enablejsapi=1` + (start ? `&start=${parseInt(start, 10) || 0}` : '');
   } catch { return url; }
 }
 
@@ -109,13 +109,16 @@ async function loadCreator() {
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
   // Buttons under the videos: each points where the creator (or the
   // collective) says the next step is.
-  showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow');
-  showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect');
+  showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow',
+    creator.know_god_cta_label || fallback.know_god_cta_label || t('cta1'));
+  showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect',
+    creator.grow_cta_label || fallback.grow_cta_label || t('cta2'));
   showCreatorCard(creator);
   showGatherAlt(creator.gather_alt_url || fallback.gather_alt_url, creator.gather_alt_label || fallback.gather_alt_label);
   showGatherLink(
     creator.gather_url || fallback.gather_url,
-    creator.gather_url ? null : (fallback.gather_label || null)
+    creator.gather_url ? null : (fallback.gather_label || null),
+    creator.gather_cta_label || fallback.gather_cta_label || null
   );
 }
 
@@ -268,10 +271,17 @@ applyLanguage();
 // otherwise everyone gets the collective's default partner.
 // Every video gets a button. With a destination set it opens there in a new
 // tab; without one it moves the person on to the next step on this page.
-function showStepButton(id, url, nextStepId) {
+function showStepButton(id, url, nextStepId, label) {
   const a = document.getElementById(id);
   if (!a) return;
   a.hidden = false;
+  // A creator's own wording wins, and it must survive a language change, so
+  // the translated default is dropped once their own words are in place.
+  if (label) {
+    const span = a.querySelector('[data-i18n]') || a;
+    span.removeAttribute('data-i18n');
+    span.textContent = label;
+  }
   if (url) {
     a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.onclick = null;
   } else {
@@ -280,7 +290,7 @@ function showStepButton(id, url, nextStepId) {
       e.preventDefault();
       const next = document.getElementById(nextStepId);
       if (!next) return;
-      document.querySelectorAll('.step-card.open').forEach((c) => c.classList.remove('open'));
+      document.querySelectorAll('.step-card.open').forEach((c) => closeStep(c));
       next.classList.add('open');
       setTimeout(() => next.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
     };
@@ -326,8 +336,13 @@ function showGatherAlt(url, label) {
   if (url) { a.href = url; a.textContent = label || t('gather_alt'); }
 }
 
-function showGatherLink(url, label) {
+function showGatherLink(url, label, cta) {
   const link = document.getElementById('gatherLink');
+  if (cta && link) {
+    const span = link.querySelector('[data-i18n]') || link;
+    span.removeAttribute('data-i18n');
+    span.textContent = cta;
+  }
   const note = document.getElementById('partnerNote');
   const help = document.getElementById('gatherHelp');
   if (!link) return;
@@ -345,13 +360,33 @@ function showGatherLink(url, label) {
 
 // Toggle a step open/closed when its header area is clicked.
 // Clicks inside the expanded body (video, form fields) never collapse it.
+// A hidden video keeps playing unless it is told to stop, so a closing step
+// pauses whatever is inside it. Anything that is not a YouTube player is
+// paused directly; the players are asked over the channel they listen on.
+function pauseVideosIn(card) {
+  if (!card) return;
+  card.querySelectorAll('video').forEach((v) => { try { v.pause(); } catch { /* nothing playing */ } });
+  card.querySelectorAll('iframe').forEach((f) => {
+    try {
+      f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+    } catch { /* another origin, nothing to do */ }
+  });
+}
+
+function closeStep(card) {
+  if (!card || !card.classList.contains('open')) return;
+  card.classList.remove('open');
+  pauseVideosIn(card);
+}
+
 document.querySelectorAll('.step-card').forEach((card) => {
   card.addEventListener('click', (e) => {
     if (e.target.closest('.step-body')) return;
     const opening = !card.classList.contains('open');
-    // One step at a time: opening a step closes the others.
-    document.querySelectorAll('.step-card.open').forEach((c) => { if (c !== card) c.classList.remove('open'); });
-    card.classList.toggle('open', opening);
+    // One step at a time: opening a step closes the others, and closing a
+    // step stops its video rather than leaving it playing out of sight.
+    document.querySelectorAll('.step-card.open').forEach((c) => { if (c !== card) closeStep(c); });
+    if (opening) card.classList.add('open'); else closeStep(card);
   });
 });
 

@@ -33,6 +33,9 @@ const DEFAULT_LINKS = {
   find_church_video_url: '', // "how to find a church" training
   gather_url: '',            // where Gather Locally sends people
   gather_label: 'In partnership with Visitor Reach — helping people find a church home.',
+  know_god_cta_label: '',   // the words on each button, if the built-in ones
+  grow_cta_label: '',       // are not the right ones
+  gather_cta_label: '',
   gather_alt_label: 'Other ways to gather locally',
   gather_alt_url: '',       // a quieter second option under the church finder
 };
@@ -773,6 +776,10 @@ export default {
         if (b.name !== undefined) fields.name = String(b.name || '').trim().slice(0, 100) || null;
         if (b.back_label !== undefined) fields.back_label = String(b.back_label || '').trim().slice(0, 60) || null;
         if (b.gather_alt_label !== undefined) fields.gather_alt_label = String(b.gather_alt_label || '').trim().slice(0, 80) || null;
+        // What each button says, in the creator's own words.
+        for (const key of ['know_god_cta_label', 'grow_cta_label', 'gather_cta_label']) {
+          if (b[key] !== undefined) fields[key] = String(b[key] || '').trim().slice(0, 60) || null;
+        }
         // Directory card: the @handle lists them on the creators page; the topic is its tag.
         if (b.handle !== undefined) fields.handle = String(b.handle || '').trim().replace(/^@/, '').slice(0, 60) || null;
         if (b.topic !== undefined) fields.topic = String(b.topic || '').trim().slice(0, 40) || null;
