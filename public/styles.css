@@ -3278,13 +3278,14 @@ body.ig .phone-frame[data-at="open"] .pj-1 { border-color: #C9A98C; }
 /* The opened step: a video and the button under it. */
 body.ig .pj-body {
   display: grid; grid-template-rows: 0fr; opacity: 0;
-  transition: grid-template-rows .42s var(--ease-soft, ease), opacity .3s ease;
-  margin-bottom: 6px;
+  transition: grid-template-rows .42s var(--ease-soft, ease), opacity .3s ease, margin .42s var(--ease-soft, ease);
 }
 /* One wrapper only: the collapsing-rows trick needs a single child, or the
    extra children land in implicit rows that never collapse. */
 body.ig .pj-inner { min-height: 0; overflow: hidden; }
-body.ig .phone-frame[data-at="open"] .pj-body { grid-template-rows: 1fr; opacity: 1; }
+/* The gap under the opened step only exists while it is open, so a closed
+   step leaves no extra space between the first and second cards. */
+body.ig .phone-frame[data-at="open"] .pj-body { grid-template-rows: 1fr; opacity: 1; margin-bottom: 6px; }
 body.ig .pj-vid {
   display: grid; place-items: center; height: 62px; margin: 0 0 6px;
   border-radius: 10px; background: #2a2a28;
