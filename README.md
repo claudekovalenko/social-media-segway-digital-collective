@@ -79,6 +79,26 @@ ADMIN_KEY=your-secret npm start
 
 Data is stored in `data/funnel.db` (SQLite). Set `PORT`, `DB_PATH`, and `ADMIN_KEY` via environment variables.
 
+## The front-end checker
+
+`tests/smoke.mjs` opens every page in a real browser (Playwright, phone size)
+and clicks through what people actually do: home links, the phone demo,
+opening each step on a creator page, the language picker, the creators
+directory, both sign-in tabs and the join form, the legal pages, the
+dashboard and admin shells. Any script error, failed request, sideways
+scroll, or missing element fails the run, and a screenshot of every page
+lands in `tests/out/`.
+
+- `npm test` — this commit's pages with a mocked API (no network needed)
+- `npm run test:live` — the live Worker with the real API
+
+`.github/workflows/checks.yml` runs it on every push (mocked), again against
+the live site as soon as the Worker deploy finishes, and on demand from the
+Actions tab with any URL. A failure opens one issue, **Front-end checks
+failed**, with the list of what broke and a link to the screenshots; the
+next green run closes it. Add a check by copying any `check('…', async (page)
+=> { … })` block in `tests/smoke.mjs`.
+
 ## Versions and rolling back
 
 Stable states live on `versions/*` branches — `versions/v1.0` is the first.

@@ -6,3 +6,4 @@ data/
 .env
 .wrangler/
 .dev.vars
+tests/out/

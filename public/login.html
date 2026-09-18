@@ -358,9 +358,9 @@
     // Glide the card between the two tabs' heights so the page below moves
     // smoothly instead of jumping.
     function glideHeight(card, change) {
-      const h0 = card.offsetHeight;
+      const h0 = Math.round(card.getBoundingClientRect().height);
       change();
-      const h1 = card.offsetHeight;
+      const h1 = Math.round(card.getBoundingClientRect().height);
       if (h0 === h1) return;
       card.style.overflow = 'hidden';
       card.style.height = h0 + 'px';

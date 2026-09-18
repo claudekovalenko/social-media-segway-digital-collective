@@ -1973,7 +1973,12 @@ body.ig .tab-row .tab.on {
   box-shadow: 0 6px 18px rgba(220,39,67,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
-body.ig .wrap-narrow .step-card.static { position: relative; isolation: isolate; padding: 22px 20px; }
+body.ig .wrap-narrow .step-card.static {
+  position: relative; isolation: isolate; padding: 22px 20px;
+  /* Its own layer, so iOS Safari repaints the whole card after the height
+     glide instead of leaving a seam of the old bottom border behind. */
+  transform: translateZ(0); backface-visibility: hidden; background-clip: padding-box;
+}
 body.ig .wrap-narrow .step-card.static::after {
   content: ''; position: absolute; inset: 10% -6% -8%; z-index: -1; border-radius: 40px;
   filter: blur(40px); pointer-events: none; opacity: 0.8;
