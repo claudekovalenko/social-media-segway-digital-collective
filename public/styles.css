@@ -3325,3 +3325,35 @@ body.ig .phone-frame { cursor: pointer; }
   body.ig .pscreen, body.ig .pj-body, body.ig .pj-chev { transition: none; }
   body.ig .tap-dot { display: none; }
 }
+
+/* ---- opening the next step inside the page ------------------------------
+   Some creators would rather a visitor never left the journey. The
+   destination opens in a sheet over the page, and the way out to a real tab
+   is always on screen: an embedded page that will not load must never be a
+   dead end. */
+.embed-sheet { position: fixed; inset: 0; z-index: 60; display: grid; }
+.es-backdrop { position: absolute; inset: 0; background: rgba(24,24,23,0.55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.es-panel {
+  position: relative; align-self: end; width: 100%; max-width: 640px; margin: 0 auto;
+  height: min(88vh, 900px); display: flex; flex-direction: column;
+  background: var(--ig-bg, #F5F0E7); border-radius: 20px 20px 0 0; overflow: hidden;
+  box-shadow: 0 -12px 40px rgba(24,24,23,0.25);
+  animation: es-rise .34s cubic-bezier(.22,.8,.18,1);
+}
+@keyframes es-rise { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+.es-bar { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--ig-line, #DCD3C3); background: rgba(255,255,255,0.7); }
+.es-bar b { flex: 1; font-size: 0.92rem; font-weight: 600; color: #181817; min-width: 0; }
+.es-out { font-size: 0.78rem; color: #A9533C; text-decoration: none; white-space: nowrap; }
+.es-out:hover { text-decoration: underline; }
+.es-close { flex: none; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(24,24,23,0.07); color: #181817; font-size: 20px; line-height: 1; cursor: pointer; }
+.es-close:hover { background: rgba(24,24,23,0.14); }
+.es-body { position: relative; flex: 1; min-height: 0; }
+.es-body iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.es-wait, .es-fail { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; color: #8b857b; font-size: 0.9rem; }
+.es-fail p { margin: 0; color: #181817; }
+body.sheet-open { overflow: hidden; }
+
+/* Inline: the page sits under the button rather than over the whole screen. */
+.embed-inline { margin-top: 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--ig-line, #DCD3C3); background: #fff; }
+.embed-inline iframe { width: 100%; height: 460px; border: 0; display: block; }
+.embed-hint { margin: 6px 0 0; text-align: center; font-size: 0.76rem; color: #9a948a; }

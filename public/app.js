@@ -27,6 +27,10 @@ const DEFAULT_CONTENT = {
 
 const PLACEHOLDER_KEYS = { know_god: 'vid1', grow_with_god: 'vid2', find_church: 'vid3' };
 
+// off: a new tab, as now. sheet: over the page. inline: under the button.
+const EMBED_MODES = new Set(['off', 'sheet', 'inline']);
+let EMBED_MODE = 'off';
+
 // Re-label any placeholder that is still showing, after a language change.
 function refreshVideoPlaceholders() {
   for (const [step, key] of Object.entries(PLACEHOLDER_KEYS)) {
@@ -109,6 +113,8 @@ async function loadCreator() {
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
   // Buttons under the videos: each points where the creator (or the
   // collective) says the next step is.
+  EMBED_MODE = EMBED_MODES.has(creator.embed_mode) ? creator.embed_mode
+    : (EMBED_MODES.has(fallback.embed_mode) ? fallback.embed_mode : 'off');
   showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow',
     creator.know_god_cta_label || fallback.know_god_cta_label || t('cta1'));
   showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect',
@@ -271,6 +277,80 @@ applyLanguage();
 // otherwise everyone gets the collective's default partner.
 // Every video gets a button. With a destination set it opens there in a new
 // tab; without one it moves the person on to the next step on this page.
+// ---- opening a next step inside the page ---------------------------------
+// A creator can choose to keep people on the journey: the destination opens
+// in a sheet, or under the button, instead of a new tab. Whether that works
+// is the other site's decision, not ours, so every path keeps a real link
+// out. A frame that has not loaded in a few seconds is treated as refused.
+const EMBED_WAIT_MS = 6000;
+
+function openEmbedSheet(url, title) {
+  const sheet = document.getElementById('embedSheet');
+  const frame = document.getElementById('embedFrame');
+  if (!sheet || !frame) { window.open(url, '_blank', 'noopener'); return; }
+  const wait = document.getElementById('embedWait');
+  const fail = document.getElementById('embedFail');
+  document.getElementById('embedTitle').textContent = title || 'Your next step';
+  document.getElementById('embedOut').href = url;
+  document.getElementById('embedFailOut').href = url;
+  wait.hidden = false; fail.hidden = true; frame.hidden = true;
+  sheet.hidden = false; sheet.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('sheet-open');
+
+  let settled = false;
+  const giveUp = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    wait.hidden = true; frame.hidden = true; fail.hidden = false;
+  }, EMBED_WAIT_MS);
+  frame.addEventListener('load', () => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(giveUp);
+    wait.hidden = true; fail.hidden = true; frame.hidden = false;
+  }, { once: true });
+  frame.src = url;
+}
+
+function closeEmbedSheet() {
+  const sheet = document.getElementById('embedSheet');
+  const frame = document.getElementById('embedFrame');
+  if (!sheet || sheet.hidden) return;
+  sheet.hidden = true; sheet.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('sheet-open');
+  // Blank the frame so nothing keeps running or playing behind the page.
+  if (frame) { frame.removeAttribute('src'); frame.hidden = true; }
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close]')) closeEmbedSheet();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeEmbedSheet(); });
+
+// Under the button, for a creator who would rather it were simply there.
+function showInlineEmbed(afterEl, url) {
+  if (!afterEl || !url || afterEl.nextElementSibling?.classList.contains('embed-inline')) return;
+  const box = document.createElement('div');
+  box.className = 'embed-inline';
+  const frame = document.createElement('iframe');
+  frame.title = 'Your next step';
+  frame.referrerPolicy = 'no-referrer-when-downgrade';
+  box.appendChild(frame);
+  const hint = document.createElement('p');
+  hint.className = 'embed-hint';
+  afterEl.insertAdjacentElement('afterend', box);
+  box.insertAdjacentElement('afterend', hint);
+  let settled = false;
+  const giveUp = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    box.remove();
+    hint.textContent = '';
+  }, EMBED_WAIT_MS);
+  frame.addEventListener('load', () => { settled = true; clearTimeout(giveUp); }, { once: true });
+  frame.src = url;
+}
+
 function showStepButton(id, url, nextStepId, label) {
   const a = document.getElementById(id);
   if (!a) return;
@@ -284,6 +364,16 @@ function showStepButton(id, url, nextStepId, label) {
   }
   if (url) {
     a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.onclick = null;
+    if (EMBED_MODE === 'sheet') {
+      a.onclick = (e) => {
+        // A modified click still means "give me a real tab".
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+        e.preventDefault();
+        openEmbedSheet(url, (a.textContent || '').trim());
+      };
+    } else if (EMBED_MODE === 'inline') {
+      showInlineEmbed(a, url);
+    }
   } else {
     a.href = '#' + nextStepId; a.removeAttribute('target');
     a.onclick = (e) => {

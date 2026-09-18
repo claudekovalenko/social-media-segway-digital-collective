@@ -106,6 +106,13 @@
           <label>What that button says <span class="pick-hint">leave blank for the standard wording</span>
             <input name="gather_cta_label" type="text" maxlength="60" placeholder="Find a church near you">
           </label>
+          <label>Where the buttons open <span class="pick-hint">some sites refuse to be embedded; there is always a way out to a real tab</span>
+            <select name="embed_mode">
+              <option value="off">A new tab (safest)</option>
+              <option value="sheet">In a sheet over this page</option>
+              <option value="inline">Under the button, on the page</option>
+            </select>
+          </label>
           <label>A second way to gather <span class="pick-hint">a small line under the button</span>
             <input name="gather_alt_url" type="url" placeholder="https://…">
           </label>
@@ -277,7 +284,7 @@
       // as the placeholder wherever a creator hasn't set their own.
       const form = document.getElementById('links');
       for (const field of ['know_god_video_url', 'know_god_next_url', 'grow_video_url', 'grow_course_url', 'find_church_video_url', 'gather_url', 'gather_alt_url', 'gather_alt_label',
-        'know_god_cta_label', 'grow_cta_label', 'gather_cta_label',
+        'know_god_cta_label', 'grow_cta_label', 'gather_cta_label', 'embed_mode',
         'back_url', 'back_label', 'avatar_url', 'handle', 'topic']) {
         const input = form.elements[field];
         input.value = data.creator[field] || '';

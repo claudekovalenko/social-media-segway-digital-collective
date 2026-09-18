@@ -36,6 +36,7 @@ const DEFAULT_LINKS = {
   know_god_cta_label: '',   // the words on each button, if the built-in ones
   grow_cta_label: '',       // are not the right ones
   gather_cta_label: '',
+  embed_mode: 'off',        // off | sheet | inline: where a button opens
   gather_alt_label: 'Other ways to gather locally',
   gather_alt_url: '',       // a quieter second option under the church finder
 };
@@ -779,6 +780,10 @@ export default {
         // What each button says, in the creator's own words.
         for (const key of ['know_god_cta_label', 'grow_cta_label', 'gather_cta_label']) {
           if (b[key] !== undefined) fields[key] = String(b[key] || '').trim().slice(0, 60) || null;
+        }
+        if (b.embed_mode !== undefined) {
+          const mode = String(b.embed_mode || 'off');
+          fields.embed_mode = ['off', 'sheet', 'inline'].includes(mode) ? mode : 'off';
         }
         // Directory card: the @handle lists them on the creators page; the topic is its tag.
         if (b.handle !== undefined) fields.handle = String(b.handle || '').trim().replace(/^@/, '').slice(0, 60) || null;
