@@ -70,10 +70,13 @@
     </section>
 
     <section class="land-section" id="bio">
+      <p class="sec-step">Where it lives</p>
       <h2 class="land-title">In your bio</h2>
-      <p class="land-copy">Add one link. Everything else stays the same.</p>
-      <div class="phone-frame" aria-label="Example of a creator profile with the link in the bio">
+      <p class="land-copy">Add one link. Everything else stays the same. Watch what happens when someone taps it.</p>
+      <div class="phone-frame" id="phoneDemo" role="img" aria-label="A phone showing a creator profile, then the journey page that opens from the link in their bio">
       <span class="phone-tag">Example</span>
+      <div class="phone-screens">
+      <div class="pscreen ps-bio">
       <div class="bio-sample">
         <div class="bs-top">
           <span class="bs-avatar" aria-hidden="true">JD</span>
@@ -89,6 +92,33 @@
         <div class="bs-actions"><span>Follow</span><span>Message</span></div>
       </div>
       </div>
+
+      <div class="pscreen ps-journey" aria-hidden="true">
+        <p class="pj-h">Take your <em>next step</em></p>
+        <p class="pj-sub">Shared with you by Jordan</p>
+        <div class="pj-card pj-1">
+          <span class="pj-ring"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 5.5h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <b>Know God</b><i class="pj-chev" aria-hidden="true"></i>
+        </div>
+        <div class="pj-body">
+          <div class="pj-inner">
+            <div class="pj-vid"><span class="pj-play" aria-hidden="true"></span></div>
+            <div class="pj-btn">Take the next step</div>
+          </div>
+        </div>
+        <div class="pj-card pj-2">
+          <span class="pj-ring"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 14V7M8 7C8 4.8 6.2 3 4 3c0 2.2 1.8 4 4 4Zm0 0c0-2.2 1.8-4 4-4 0 2.2-1.8 4-4 4Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <b>Grow with God</b><i class="pj-chev" aria-hidden="true"></i>
+        </div>
+        <div class="pj-card pj-3">
+          <span class="pj-ring"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="6" r="2.3" stroke="currentColor" stroke-width="1.6"/><path d="M2 13c0-2.2 1.8-3.6 4-3.6S10 10.8 10 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+          <b>Get Connected</b><i class="pj-chev" aria-hidden="true"></i>
+        </div>
+      </div>
+      </div>
+      <span class="tap-dot" aria-hidden="true"></span>
+      </div>
+      <p class="phone-caption" id="phoneCaption">One link in the bio</p>
     </section>
 
     <section class="land-section" id="yours">
@@ -167,6 +197,51 @@
         .catch(() => {});
     }</script>
   <script src="reveal.js" defer></script>
+  <script>
+    // The phone walks through what a visitor actually does: sees the bio,
+    // taps the link, lands on the journey page, opens a step. It runs only
+    // while it is on screen, stops while someone is reading it, and a tap
+    // moves it on by hand. With reduced motion it just shows the page.
+    (function () {
+      var phone = document.getElementById('phoneDemo');
+      var caption = document.getElementById('phoneCaption');
+      if (!phone) return;
+      var SCENES = [
+        { at: 'bio', hold: 2000, say: 'One link in the bio' },
+        { at: 'tap', hold: 700, say: 'Someone taps it' },
+        { at: 'journey', hold: 1700, say: 'Your page opens' },
+        { at: 'open', hold: 3000, say: 'They take a step' }
+      ];
+      var i = 0, timer = null, paused = false;
+      function show(n) {
+        i = ((n % SCENES.length) + SCENES.length) % SCENES.length;
+        phone.setAttribute('data-at', SCENES[i].at);
+        if (caption) caption.textContent = SCENES[i].say;
+      }
+      function queue() {
+        clearTimeout(timer);
+        if (paused) return;
+        timer = setTimeout(function () { show(i + 1); queue(); }, SCENES[i].hold);
+      }
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        show(3);
+        return;
+      }
+      show(0);
+      // Only animate while it can be seen, so it is never running off screen.
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            paused = !e.isIntersecting;
+            if (e.isIntersecting) queue(); else clearTimeout(timer);
+          });
+        }, { threshold: 0.35 }).observe(phone);
+      } else { queue(); }
+      phone.addEventListener('click', function () { paused = false; show(i + 1); queue(); });
+      phone.addEventListener('mouseenter', function () { paused = true; clearTimeout(timer); });
+      phone.addEventListener('mouseleave', function () { paused = false; queue(); });
+    })();
+  </script>
   <script>
     // Endorsements strip: names slide by slowly; hover or touch pauses it.
     (async () => {

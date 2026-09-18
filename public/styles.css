@@ -3234,3 +3234,94 @@ body.ig.jpn .hero-url b { color: #A9533C; }
   body.ig .how-row .how-ring i { font-size: 0.85rem; }
   body.ig .how-row li b { font-size: 0.56rem; }
 }
+
+/* ---- the phone that plays the flow --------------------------------------
+   Describing a link-in-bio takes a paragraph nobody reads. Showing the tap,
+   and the page that opens, takes two seconds and no words at all. The phone
+   steps through: the bio, the tap, the journey page, one step opening. */
+/* Both screens share one grid cell, so the phone is always as tall as the
+   taller of the two and neither is ever clipped. */
+body.ig .phone-screens { display: grid; margin-top: 12px; }
+body.ig .pscreen { grid-area: 1 / 1; align-self: start; transition: opacity .5s var(--ease-soft, ease), transform .5s var(--ease-soft, ease); }
+body.ig .ps-journey {
+  opacity: 0; transform: translateY(10px) scale(.98);
+  pointer-events: none; padding: 14px 12px; border-radius: 22px;
+  background: var(--ig-bg, #F5F0E7); align-self: stretch;
+}
+body.ig .phone-frame[data-at="journey"] .ps-bio,
+body.ig .phone-frame[data-at="open"] .ps-bio { opacity: 0; transform: translateY(-8px) scale(.98); }
+body.ig .phone-frame[data-at="journey"] .ps-journey,
+body.ig .phone-frame[data-at="open"] .ps-journey { opacity: 1; transform: none; }
+
+/* The journey page, in miniature. */
+body.ig .pj-h { margin: 2px 0 0; font-family: Fraunces, Georgia, serif; font-size: 17px; line-height: 1.15; color: #181817; font-weight: 600; }
+body.ig .pj-h em { font-style: italic; color: #A9533C; }
+body.ig .pj-sub { margin: 4px 0 10px; font-size: 9.5px; color: #8b857b; }
+body.ig .pj-card {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  padding: 9px 10px; border-radius: 12px; background: #fff;
+  border: 1px solid var(--ig-line, #DCD3C3); box-shadow: 0 1px 3px rgba(24,24,23,0.05);
+}
+body.ig .pj-card b { flex: 1; font-size: 11.5px; font-weight: 600; color: #181817; }
+body.ig .pj-ring {
+  flex: none; display: grid; place-items: center; width: 22px; height: 22px;
+  border-radius: 50%; border: 1.5px solid #B28B46; color: #A9533C;
+}
+body.ig .pj-chev {
+  flex: none; width: 7px; height: 7px; border-right: 1.5px solid #b3ada2;
+  border-bottom: 1.5px solid #b3ada2; transform: rotate(45deg) translate(-1px,-1px);
+  transition: transform .35s var(--ease-soft, ease);
+}
+body.ig .phone-frame[data-at="open"] .pj-1 .pj-chev { transform: rotate(-135deg) translate(-2px,-2px); }
+body.ig .phone-frame[data-at="open"] .pj-1 { border-color: #C9A98C; }
+
+/* The opened step: a video and the button under it. */
+body.ig .pj-body {
+  display: grid; grid-template-rows: 0fr; opacity: 0;
+  transition: grid-template-rows .42s var(--ease-soft, ease), opacity .3s ease;
+  margin-bottom: 6px;
+}
+/* One wrapper only: the collapsing-rows trick needs a single child, or the
+   extra children land in implicit rows that never collapse. */
+body.ig .pj-inner { min-height: 0; overflow: hidden; }
+body.ig .phone-frame[data-at="open"] .pj-body { grid-template-rows: 1fr; opacity: 1; }
+body.ig .pj-vid {
+  display: grid; place-items: center; height: 62px; margin: 0 0 6px;
+  border-radius: 10px; background: #2a2a28;
+}
+body.ig .pj-play {
+  width: 0; height: 0; border-left: 11px solid rgba(255,255,255,0.92);
+  border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+  margin-left: 3px;
+}
+body.ig .pj-btn {
+  padding: 8px; border-radius: 10px; background: #181817; color: #F5F0E7;
+  font-size: 10.5px; font-weight: 600; text-align: center;
+}
+
+/* The tap: a ripple on the bio link, just before the page opens. */
+body.ig .tap-dot {
+  position: absolute; left: 50%; top: 63%; width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  border-radius: 50%; background: rgba(255,255,255,0.5); opacity: 0; pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255,255,255,0.35);
+}
+body.ig .phone-frame[data-at="tap"] .tap-dot { animation: tap-ripple .55s ease-out forwards; }
+@keyframes tap-ripple {
+  0% { opacity: 0; transform: scale(.4); box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+  35% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); box-shadow: 0 0 0 16px rgba(255,255,255,0); }
+}
+body.ig .phone-frame[data-at="tap"] .bs-link { border-color: #A9533C; background: rgba(169,83,60,0.18); }
+
+/* A line under the phone that names whichever moment is on screen. */
+body.ig .phone-caption {
+  margin: 12px 0 0; text-align: center; font-size: 0.8rem; color: #8b857b;
+  min-height: 1.2em; transition: opacity .25s ease;
+}
+body.ig .phone-frame { cursor: pointer; }
+
+/* Without animation the phone simply shows the page the link opens. */
+@media (prefers-reduced-motion: reduce) {
+  body.ig .pscreen, body.ig .pj-body, body.ig .pj-chev { transition: none; }
+  body.ig .tap-dot { display: none; }
+}
