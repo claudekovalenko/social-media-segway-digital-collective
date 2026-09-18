@@ -17,6 +17,10 @@ jobs:
       - env:
           TARGET: ${{ inputs.url }}
         run: |
+          echo "== headers that decide whether a page can be embedded"
+          curl -s -o /dev/null -D /tmp/h -L "$TARGET"
+          grep -i -E "^(x-frame-options|content-security-policy|permissions-policy):" /tmp/h || echo "(no embedding restriction in the headers)"
+          echo
           echo "== plain curl"
           curl -s -o /tmp/a -w 'status %{http_code}, %{size_download} bytes\n' -L "$TARGET"
           echo "og:image present: $(grep -c 'og:image' /tmp/a || true)"
