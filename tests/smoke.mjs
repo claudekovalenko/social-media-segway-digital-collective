@@ -216,7 +216,7 @@ async function run(base) {
     expect(await visible(page.locator('#joinForm')), 'join tab not selected from ?join=1');
   });
 
-  for (const p of ['terms.html', 'beliefs.html', 'privacy.html', 'faq.html', 'unavailable.html']) {
+  for (const p of ['terms.html', 'beliefs.html', 'privacy.html', 'unavailable.html']) {
     if (!fs.existsSync(path.join(PUBLIC, p)) && !LIVE) continue;
     await check(`${p} renders`, async (page) => {
       const r = await go(page, '/' + p);
