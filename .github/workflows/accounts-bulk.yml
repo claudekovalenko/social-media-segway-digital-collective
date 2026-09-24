@@ -1,7 +1,7 @@
 name: Create creator accounts in bulk
 
-# Runs when accounts/people.txt changes on this branch, or from the Actions
-# tab with a pasted list. One person per line:
+# Run from the Actions tab (Run workflow) with an admin's email and password.
+# Uses accounts/people.txt unless a list is pasted. One person per line:
 #
 #   First Last @instagramhandle [photo: YouTube channel or Instagram profile]
 #
@@ -17,9 +17,6 @@ name: Create creator accounts in bulk
 # workflow does.
 
 on:
-  push:
-    branches: [claude/bulk-account-creation-rr8542]
-    paths: [accounts/people.txt]
   workflow_dispatch:
     inputs:
       people:
