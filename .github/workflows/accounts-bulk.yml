@@ -1,7 +1,9 @@
 name: Create creator accounts in bulk
 
-# Run from the Actions tab (Run workflow) with an admin's email and password.
-# Uses accounts/people.txt unless a list is pasted. One person per line:
+# Run from the Actions tab (Run workflow). Uses accounts/people.txt unless a
+# list is pasted. Signs in as the admin saved in the ADMIN_EMAIL and
+# ADMIN_PASSWORD repo secrets, unless an admin email/password is typed into
+# the form. One person per line:
 #
 #   First Last @instagramhandle [photo: YouTube channel or Instagram profile]
 #
@@ -23,7 +25,7 @@ on:
         description: 'One per line (or separated by ;): First Last @handle. Empty = accounts/people.txt'
         required: false
       admin_email:
-        description: An admin's email (optional; the ADMIN_KEY repo secret is used otherwise)
+        description: An admin's email (optional; the ADMIN_EMAIL repo secret is used otherwise)
         required: false
       admin_password:
         description: That admin's password (masked in the log)
@@ -46,13 +48,18 @@ jobs:
         env:
           SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
           DOMAIN: digitalcollective.com
-          ADMIN_EMAIL: ${{ inputs.admin_email }}
-          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+          FORM_EMAIL: ${{ inputs.admin_email }}
+          FORM_PASSWORD: ${{ inputs.admin_password }}
+          SAVED_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          SAVED_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           PEOPLE: ${{ inputs.people }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           if [ -z "$PEOPLE" ]; then PEOPLE=$(grep -v '^[[:space:]]*#' accounts/people.txt || true); fi
+          # The typed pair, or else the saved pair; never one of each.
+          if [ -n "$FORM_EMAIL" ]; then ADMIN_EMAIL=$FORM_EMAIL; ADMIN_PASSWORD=$FORM_PASSWORD
+          else ADMIN_EMAIL=$SAVED_EMAIL; ADMIN_PASSWORD=$SAVED_PASSWORD; fi
           if [ "$DRY_RUN" != "true" ]; then
             if [ -n "$ADMIN_EMAIL" ]; then
               login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
@@ -63,7 +70,7 @@ jobs:
             elif [ -n "$ADMIN_KEY" ]; then
               AUTH="x-admin-key: $ADMIN_KEY"
             else
-              echo "No admin sign-in: give admin_email/admin_password or set the ADMIN_KEY repo secret"; exit 1
+              echo "No admin sign-in: add the ADMIN_EMAIL and ADMIN_PASSWORD repo secrets, or type them into the form"; exit 1
             fi
           fi
 
