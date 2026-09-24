@@ -96,7 +96,10 @@ email, so a creator only ever sees their own leads.
 
 ## Deploying to Cloudflare (production)
 
-The app runs as a Cloudflare Worker (`worker.js`) with a D1 database. The database `faith-journey-funnel` already exists on the Cloudflare account with the schema applied, and `wrangler.toml` is fully configured. To deploy:
+The app runs as a Cloudflare Worker (`worker.js`). Its data belongs in
+Postgres (see **Database: Postgres** above). Until the Postgres connection is
+deployed it still reads and writes the D1 database `faith-journey-funnel`,
+which `wrangler.toml` binds. To deploy:
 
 ```bash
 npx wrangler login          # one-time browser login (or set CLOUDFLARE_API_TOKEN)
@@ -303,11 +306,12 @@ consent text that was shown. Nothing is enriched in the browser.
 **Supabase.** `supabase/schema.sql` is the full Postgres schema, including
 the `consents` evidence table, the enrichment columns on `contacts`, a
 `lead_database` view (contact + latest response + score) and row-level
-security: admins see everything, a signed-in creator sees only their own
-responses and the contacts behind them, consent evidence is admin-only. The
-Worker talks to Postgres with the service key when `SUPABASE_URL` and
-`SUPABASE_SERVICE_KEY` are set and to D1 otherwise; the pipeline is the same
-on both.
+security: the public anon key reaches only the creator directory, admins see
+everything, a signed-in creator sees only their own responses and the
+contacts behind them, consent evidence is admin-only, and no browser role can
+write. The Worker connects to Postgres directly (Hyperdrive or
+`DATABASE_URL`) and falls back to D1 until that connection is deployed; the
+pipeline is the same on both.
 
 **External data sources.** `enrich.js` has one generic hook: if
 `ENRICH_PROVIDER_URL` (and optionally `ENRICH_API_KEY`) is set, the cleaned
@@ -343,8 +347,9 @@ and the creator dashboard read the same rows.
 
 ## The platform layer
 
-Everything below was added to match the developer proposal. It runs on D1
-today; `supabase/schema.sql` carries the same tables for Postgres.
+Everything below was added to match the developer proposal. It runs on
+Postgres once connected (D1 until then); `supabase/schema.sql` carries its
+tables.
 
 **People and responses.** Every form submission still writes a `leads` row
 (the old shape), and also upserts a **contact** (one per person, matched on

@@ -450,19 +450,13 @@ do $$ begin
     foreign key (creator_slug) references creators (slug) on update cascade on delete set null not valid;
 exception when duplicate_object then null; end $$;
 
--- Indexes for every foreign key and the lookups the Worker makes.
+-- Indexes, only where a query the Worker runs needs one: the group-signup
+-- join to leads, creator-key sign-in, and a contact's communications. The
+-- unique one keeps one response per lead, as on D1.
 create index if not exists signups_lead_idx         on group_signups (lead_id);
-create index if not exists signups_creator_idx      on group_signups (creator_slug);
-create index if not exists admins_creator_slug_idx  on admins (creator_slug);
-create index if not exists admins_email_lower_idx   on admins (lower(email));
 create index if not exists creators_key_hash_idx    on creators (key_hash);
-create index if not exists applications_email_idx   on applications (lower(email));
-create index if not exists applications_status_idx  on applications (status, created_at desc);
 create unique index if not exists responses_lead_uidx on responses (lead_id) where lead_id is not null;
 create index if not exists communications_contact_idx on communications (contact_id);
-create index if not exists consents_email_idx       on consents (lower(email));
-create index if not exists verifications_email_idx  on verifications (lower(email));
-create index if not exists audit_created_idx        on audit_log (created_at desc);
 
 -- updated_at keeps itself current.
 create or replace function touch_updated_at() returns trigger language plpgsql

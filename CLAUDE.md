@@ -441,3 +441,22 @@ something that works today.
      same database over REST would mean rewriting them.
    - Hyperdrive: Workers can't keep a database connection between requests,
      so without it every request pays for a new database login.
+7. **The local development server** (`server.js`, `npm start`) keeps its own
+   SQLite file (`data/funnel.db`). It never runs in production and holds only
+   local test data.
+
+# Assumptions awaiting the owner's confirmation
+
+Business-logic decisions made during the Postgres work. Each is small and
+reversible; confirm or change them.
+
+1. **A response through a link to a creator that doesn't exist** (a typo, or a
+   removed creator) is saved under `default`, the collective, instead of being
+   rejected. Before this, D1 stored it under the unknown name and Postgres
+   refused it. The name typed in the link is not kept.
+   - This differs from the one-time copy on purpose: there, existing leads for
+     a creator who has since been removed keep their link, through an
+     archived, unlisted placeholder creator, so that history is preserved.
+2. **One creator per email address.** Registering a second creator with an
+   email that is already in use is refused (409) on both databases, because
+   sign-in finds a creator by email. D1 used to allow it.

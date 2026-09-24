@@ -92,7 +92,7 @@ jobs:
             seen="$seen$email "
 
             if [ "$DRY_RUN" = "true" ]; then
-              echo "• $name → $email  password: $password  link: /c/$slug"; continue
+              echo "• $name → $email  link: /c/$slug"; continue
             fi
 
             body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
