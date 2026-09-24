@@ -39,7 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Mask secrets
-        run: echo "::add-mask::${{ inputs.admin_password }}"
+        env:
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+        run: '[ -z "$ADMIN_PASSWORD" ] || echo "::add-mask::$ADMIN_PASSWORD"' 
       - uses: actions/checkout@v4
       - name: Create accounts
         env:
@@ -51,7 +53,7 @@ jobs:
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          if [ -z "$PEOPLE" ]; then PEOPLE=$(grep -v '^[[:space:]]*#' accounts/people.txt); fi
+          if [ -z "$PEOPLE" ]; then PEOPLE=$(grep -v '^[[:space:]]*#' accounts/people.txt || true); fi
           if [ "$DRY_RUN" != "true" ]; then
             if [ -n "$ADMIN_EMAIL" ]; then
               login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
@@ -66,13 +68,13 @@ jobs:
             fi
           fi
 
-          created=0; skipped=0; failed=0
+          created=0; skipped=0; failed=0; seen=' '
           # Accept newlines or semicolons between people (the Actions input box
           # is a single line on some browsers).
           while IFS= read -r line; do
             line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
             [ -z "$line" ] && continue
-            handle=$(printf '%s' "$line" | grep -o '@[A-Za-z0-9._-]*' | head -n1 | sed 's/^@//')
+            handle=$(printf '%s' "$line" | { grep -o '@[A-Za-z0-9._-]*' || true; } | head -n1 | sed 's/^@//')
             name=$(printf '%s' "$line" | sed 's/@[A-Za-z0-9._-]*//g; s/[[:space:]]\+/ /g; s/^ //; s/ $//')
             first=$(printf '%s' "$name" | awk '{print $1}')
             last=$(printf '%s' "$name" | awk '{print $NF}')
@@ -84,6 +86,10 @@ jobs:
             email="$(clean "$first")$(clean "$last")@$DOMAIN"
             password=$(clean "$first")
             slug=$(printf '%s' "$handle" | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9-]/-/g' | cut -c1-40)
+            case "$seen" in *" $email "*)
+              echo "✗ $name → $email is already used by someone earlier in this list"; failed=$((failed+1)); continue ;;
+            esac
+            seen="$seen$email "
 
             if [ "$DRY_RUN" = "true" ]; then
               echo "• $name → $email  password: $password  link: /c/$slug"; continue
