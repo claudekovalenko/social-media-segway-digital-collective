@@ -77,8 +77,14 @@ async function parent() {
 
     const outS = path.join(tmp, 'sqlite.json');
     const outP = path.join(tmp, 'pg.json');
-    await runChild('sqlite', outS, { TEST_SQLITE_FILE: sqliteFile });
-    await runChild('postgres', outP, { TEST_DATABASE_URL: pgUrl });
+    const logS = await runChild('sqlite', outS, { TEST_SQLITE_FILE: sqliteFile });
+    const logP = await runChild('postgres', outP, { TEST_DATABASE_URL: pgUrl });
+    // Errors the app caught and only logged (e.g. "platform record failed").
+    for (const [b, log] of [['sqlite', logS], ['postgres', logP]]) {
+      const errs = log.split('\n').filter((l) => /failed|error/i.test(l) && !/ExperimentalWarning|MODULE_TYPELESS/.test(l));
+      const uniq = [...new Map(errs.map((l) => [l, 0])).keys()];
+      if (uniq.length) console.log(`App log (${b}), ${errs.length} line(s):\n` + uniq.slice(0, 20).map((l) => '  ' + l.slice(0, 220)).join('\n'));
+    }
     const S = JSON.parse(fs.readFileSync(outS, 'utf8'));
     const P = JSON.parse(fs.readFileSync(outP, 'utf8'));
     exitCode = compare(S, P);
@@ -114,6 +120,7 @@ const TS = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d\d(:?\d\d
 const TS_ANY = /\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d\d(:?\d\d)?)?/g;
 const ID_KEY = /^(id|.*_id|dup_of|keep|drop)$/;
 const SECRET_KEY = /^(token|access_key|pass_hash|key_hash|provider_id)$/;
+const EXPECTED_KEY = /^(backend)$/; // 'd1' vs 'postgres' by design
 const typeTag = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
 
 function normText(s) {
@@ -128,6 +135,7 @@ function norm(v, key = '') {
   if (v === null || v === undefined) return v ?? null;
   if (typeof v === 'string') {
     if (SECRET_KEY.test(key)) return `<${key}:string>`;
+    if (EXPECTED_KEY.test(key)) return `<${key}>`;
     if (TS.test(v)) return '<ts>';
     // JSON stored as text (D1) or jsonb (Postgres): compare the value, not the
     // whitespace the database happened to print it with.
@@ -153,16 +161,38 @@ function sortedDeep(v) {
 }
 
 // Paths where two objects differ, with both values: short, readable diffs.
+// Arrays are compared as multisets (rows present on one side only), because
+// row order is already judged separately (see ORDER) and a positional diff of
+// a list that merely shifted by one row is unreadable.
 function diffPaths(a, b, at = '', out = []) {
   if (out.length > 25) return out;
   if (JSON.stringify(a) === JSON.stringify(b)) return out;
-  if (a && b && typeof a === 'object' && typeof b === 'object' && Array.isArray(a) === Array.isArray(b)) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const ka = a.map((x) => JSON.stringify(sortedDeep(x))); const kb = b.map((x) => JSON.stringify(sortedDeep(x)));
+    const onlyA = a.filter((_, i) => { const j = kb.indexOf(ka[i]); if (j < 0) return true; kb[j] = null; return false; });
+    const kb2 = b.map((x) => JSON.stringify(sortedDeep(x))); const ka2 = a.map((x) => JSON.stringify(sortedDeep(x)));
+    const onlyB = b.filter((_, i) => { const j = ka2.indexOf(kb2[i]); if (j < 0) return true; ka2[j] = null; return false; });
+    // One row changed on each side: show which fields differ.
+    if (onlyA.length === 1 && onlyB.length === 1 && onlyA[0] && typeof onlyA[0] === 'object') return diffPaths(onlyA[0], onlyB[0], `${at}[~]`, out);
+    for (const x of onlyA) out.push(`${at}[]: only in sqlite:   ${JSON.stringify(x).slice(0, 700)}`);
+    for (const x of onlyB) out.push(`${at}[]: only in postgres: ${JSON.stringify(x).slice(0, 700)}`);
+    if (!onlyA.length && !onlyB.length) out.push(`${at}: same rows, different order`);
+    return out;
+  }
+  if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
     const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-    for (const k of keys) diffPaths(a[k], b[k], `${at}${Array.isArray(a) ? `[${k}]` : `.${k}`}`, out);
+    for (const k of keys) diffPaths(a[k], b[k], `${at}.${k}`, out);
     return out;
   }
   out.push(`${at || '(body)'}: sqlite=${JSON.stringify(a)} (${typeTag(a)})  postgres=${JSON.stringify(b)} (${typeTag(b)})`);
   return out;
+}
+
+// CSV export: header plus one entry per row; response_id (first column) and
+// duplicate_of (last column) are ids, so only their presence is compared.
+function csvRows(text) {
+  const [header, ...rows] = text.split('\n');
+  return { header, rows: rows.map((r) => normText(r).replace(/^\d+,/, '<id>,').replace(/,\d+$/, ',<id>')) };
 }
 
 function shape(step) {
@@ -170,7 +200,9 @@ function shape(step) {
     status: step.status,
     location: step.location ? normText(step.location) : undefined,
     ctype: step.ctype ? step.ctype.toLowerCase().replace(/\s/g, '') : undefined,
-    body: step.json !== undefined ? norm(step.json) : normText(step.text || ''),
+    body: step.json !== undefined ? norm(step.json)
+      : /text\/csv/.test(step.ctype || '') ? csvRows(step.text || '')
+        : normText(step.text || ''),
   };
 }
 
@@ -188,8 +220,9 @@ function compare(S, P) {
     if (JSON.stringify(a) === JSON.stringify(b)) verdict = 'PASS';
     else if (a.status === b.status && JSON.stringify(sortedDeep(a)) === JSON.stringify(sortedDeep(b))) verdict = 'ORDER';
     else verdict = 'DIFF';
-    if (fivexx && verdict !== 'DIFF') verdict = '5XX';
-    if (verdict === 'DIFF' || verdict === '5XX') fail++;
+    // A 5xx fails even when both backends agree on it; "DIFF!" is a DIFF with a 5xx.
+    if (fivexx) verdict = verdict === 'DIFF' ? 'DIFF!' : '5XX';
+    if (verdict !== 'PASS' && verdict !== 'ORDER') fail++;
     lines.push([verdict, label, req, String(s.status), String(p.status)]);
     if (verdict !== 'PASS') {
       const d = verdict === 'ORDER'
@@ -199,6 +232,7 @@ function compare(S, P) {
         details.push(`#${i + 1} ${verdict} ${label}  [${req}]`);
         if (verdict !== 'ORDER') {
           details.push(...d.slice(0, 25));
+          if (verdict === '5XX') details.push('  (same response on both backends, but a server error)');
           if (fivexx) details.push(`  raw sqlite: ${JSON.stringify(s.json ?? s.text).slice(0, 400)}`, `  raw postgres: ${JSON.stringify(p.json ?? p.text).slice(0, 400)}`);
         }
       }
@@ -374,7 +408,6 @@ async function child(backend, out) {
   });
   T.AK = J(r).access_key;
   await call('creators/register: duplicate slug -> 409', 'POST', '/api/creators/register', { body: { slug: 'annaj', name: 'Other' } });
-  await call('creators/register: duplicate email', 'POST', '/api/creators/register', { body: { slug: 'anna-two', name: 'Anna 2', email: 'anna@example.org' } });
   await call('creators/register: missing name -> 400', 'POST', '/api/creators/register', { body: { slug: 'x-y-z' } });
   await call('creators/register: bad email -> 400', 'POST', '/api/creators/register', { body: { slug: 'x-y-z', name: 'X', email: 'nope' } });
   await call('register (closed) -> 403', 'POST', '/api/register', { body: { email: 'r@example.org' } });
@@ -478,7 +511,6 @@ async function child(backend, out) {
   await call('leads: find_church w/ creator, bad path', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'find_church', name: 'Carl Connect', email: 'carl@example.net', phone: '+44 7700 900123', path: 'somewhere', city: 'Austin', creator_slug: 'craigbrown' }) });
   await call('leads: same name+city (soft dup)', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'know_god', name: 'SAM SEEKER', email: 'sam.other@example.net', city: 'AUSTIN', creator_slug: 'annaj' }) });
   await call('leads: phone only match', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'know_god', name: 'Sam Phone', email: 'samphone@example.net', phone: '555-123-4567' }) });
-  await call('leads: unknown creator slug', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'know_god', name: 'Gus Ghost', email: 'gus@example.net', creator_slug: 'ghost-creator' }) });
   await call('leads: invalid step -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'nope', name: 'X', email: 'x@example.net' }) });
   await call('leads: no consent -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: { step: 'know_god', name: 'X', email: 'x@example.net' } });
   await call('leads: bad email -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'know_god', name: 'X', email: 'x' }) });
@@ -492,7 +524,10 @@ async function child(backend, out) {
   const resp = J(r).responses || [];
   const byEmail = (e, t) => resp.find((x) => x.email === e && (!t || x.response_type === t)) || {};
   const samKnow = byEmail('sam@acme-mail.example', 'reported_commitment');
-  const gina = byEmail('gina@gmial.com') ; const annaResp = resp.find((x) => x.creator_slug === 'annaj') || gina;
+  // Pick rows by content, never by position: equal SQLite timestamps make the
+  // order of same-second rows differ between the backends.
+  const gina = resp.find((x) => /^gina@/.test(x.email || '')) || {}; // enrichment fixes gmial -> gmail
+  const annaResp = gina;
   await call('responses: filter creator', 'GET', '/api/responses?creator=craigbrown', { auth: 'A' });
   await call('responses: search q (case)', 'GET', '/api/responses?q=SEEKER', { auth: 'A' });
   await call('responses: search q phone', 'GET', '/api/responses?q=555', { auth: 'A' });
@@ -552,7 +587,7 @@ async function child(backend, out) {
   await call('admin/test-followup', 'POST', '/api/admin/test-followup', { auth: 'A', body: { step: 'grow_with_god', creator: 'craigbrown', name: 'Tess Tester' } });
   await call('admin/enrich: new only', 'POST', '/api/admin/enrich', { auth: 'A', body: {} });
   await call('admin/enrich: all', 'POST', '/api/admin/enrich', { auth: 'A', body: { all: true, limit: 50 } });
-  await call('admin/enrich: one', 'POST', '/api/admin/enrich', { auth: 'A', body: { contact_id: byEmail('gina@gmial.com').contact_id ?? byEmail('gina@gmail.com').contact_id ?? 0 } });
+  await call('admin/enrich: one', 'POST', '/api/admin/enrich', { auth: 'A', body: { contact_id: gina.contact_id ?? 0 } });
   await call('admin/enrich: unauth -> 401', 'POST', '/api/admin/enrich', { auth: 'C', body: {} });
   await call('admin/migrate', 'POST', '/api/admin/migrate', { auth: 'A' });
   await call('admin/migrate: again (idempotent)', 'POST', '/api/admin/migrate', { auth: 'A' });
@@ -619,6 +654,12 @@ async function child(backend, out) {
   await call('admin/leads: admin', 'GET', '/api/admin/leads', { auth: 'A' });
   await call('admin/leads: admin key', 'GET', '/api/admin/leads', { auth: 'K' });
   await call('status: final', 'GET', '/api/admin/status');
+
+  // ---- known schema divergences, last, so their rows don't shift everything above ----
+  // D1 has no unique email on creators and no foreign key from leads to creators.
+  await call('creators/register: duplicate email', 'POST', '/api/creators/register', { body: { slug: 'anna-two', name: 'Anna 2', email: 'anna@example.org' } });
+  await call('leads: unknown creator slug', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'know_god', name: 'Gus Ghost', email: 'gus@example.net', creator_slug: 'ghost-creator' }) });
+  await call('admin/leads: after divergences', 'GET', '/api/admin/leads', { auth: 'A' });
 
   const result = { backend, steps, counts: await counts(), outbound };
   fs.writeFileSync(out, JSON.stringify(result));

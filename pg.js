@@ -61,6 +61,10 @@ export function connect(url, opts = {}) {
       timestamps: { to: 1184, from: [1082, 1114, 1184], serialize: (x) => (x instanceof Date ? x.toISOString() : x),
         parse: parseTimestamp },
       json: { to: 114, from: [114, 3802], ...asString },
+      // The queries bind 1/0 for booleans, as D1 stores them; read back the same.
+      boolean: { to: 16, from: [16],
+        serialize: (x) => (x === true || x === 1 || x === '1' || x === 't' || x === 'true' ? 't' : 'f'),
+        parse: (x) => (x === 't' ? 1 : 0) },
     },
     ...opts,
   });

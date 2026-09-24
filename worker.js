@@ -439,6 +439,10 @@ async function handle(req, env, ctx) {
         const email = String(b.email || '').trim().toLowerCase().slice(0, 200) || null;
         if (!slug || !name) return json({ error: 'slug and name are required' }, 400);
         if (email && !/.+@.+\..+/.test(email)) return json({ error: 'that email looks wrong' }, 400);
+        // One creator per email: sign-in finds a creator by email.
+        if (email && await db.creatorByEmail(email).catch(() => null)) {
+          return json({ error: 'that link name or email is already taken' }, 409);
+        }
         // The key is shown once at signup; only its hash is stored.
         const accessKey = newAccessKey();
         const keyHash = await sha256hex(accessKey);
@@ -521,8 +525,21 @@ async function handle(req, env, ctx) {
         if (role === 'creator') {
           creatorSlug = String(b.creator_slug || email.split('@')[0] || '')
             .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
-          if (!creatorSlug) return json({ error: 'Give the creator a link name.' }, 400);
+          if (creatorSlug.replace(/-/g, '').length < 3) {
+            return json({ error: 'Give the creator a link name of at least 3 letters or numbers.' }, 400);
+          }
+          if (RESERVED_PATHS.has(creatorSlug) || creatorSlug === 'default') {
+            return json({ error: 'That link name is reserved.' }, 400);
+          }
           const already = await db.creatorBySlug(creatorSlug);
+          // An existing link can only be joined by the creator it belongs to;
+          // anyone else would be handed that creator's leads.
+          if (already) {
+            const owner = await db.creatorByEmail(email).catch(() => null);
+            if (!owner || owner.slug !== creatorSlug) {
+              return json({ error: 'That link name belongs to another creator.' }, 409);
+            }
+          }
           if (!already) {
             accessKey = newAccessKey();
             try {
@@ -986,7 +1003,12 @@ async function handle(req, env, ctx) {
         if (!VALID_STEPS.has(step)) return json({ error: 'invalid step' }, 400);
         if (!name || !/.+@.+\..+/.test(email)) return json({ error: 'name and a valid email are required' }, 400);
         const interested = b.interested_in_group ? 1 : 0;
-        const creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
+        // A link to a creator who doesn't exist (a typo, or one removed) still
+        // keeps the person's answer: it goes to the collective instead.
+        let creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
+        if (creatorSlug !== 'default' && !(await db.creatorBySlug(creatorSlug).catch(() => null))) {
+          creatorSlug = 'default';
+        }
         const path = VALID_PATHS.has(b.path) ? b.path : null;
         const country = String(b.country || '').slice(0, 8) || null;
         const language = String(b.language || '').slice(0, 8) || null;

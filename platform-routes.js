@@ -394,7 +394,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     if (me.role !== 'admin') return json({ error: 'unauthorized' }, 401);
     const b = await req.json().catch(() => ({}));
     const ids = b.contact_id ? [Number(b.contact_id)]
-      : await pf.contactsToEnrich({ limit: Math.min(Number(b.limit) || 200, 200), staleBefore: b.all ? '9999' : null });
+      : await pf.contactsToEnrich({ limit: Math.min(Number(b.limit) || 200, 200), staleBefore: b.all ? '9999-12-31' : null });
     const results = [];
     for (const id of ids) {
       try { const r = await enrichContact(pf, id, { env, fetchFn: fetch }); if (r) results.push({ id, score: r.score, email_status: r.email_status, dup_of: r.dup_of }); }

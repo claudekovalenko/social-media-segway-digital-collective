@@ -115,7 +115,7 @@ function d1Adapter(DB) {
         `INSERT INTO leads (step, name, email, phone, city, message, decision,
                             interested_in_group, group_slot, slot_note, path,
                             country, language, consent, consent_at, creator_slug)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, datetime('now'), ?)`
       ).bind(l.step, l.name, l.email, l.phone, l.city, l.message, l.decision,
         l.interested_in_group ? 1 : 0, l.group_slot, l.slot_note, l.path,
         l.country, l.language, l.creator_slug).run();
