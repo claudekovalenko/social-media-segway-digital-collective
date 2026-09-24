@@ -20,6 +20,7 @@ const letters = (s) => s.normalize('NFKD').toLowerCase().replace(/[^a-z]/g, '');
 
 // A channel or profile address → its canonical form, or an error.
 function photoAddress(token) {
+  if (token.length > 200) return { error: 'that photo address is too long' };
   let u;
   try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(token) ? token : 'https://' + token); }
   catch { return { error: `"${token}" is not a web address` }; }
@@ -60,6 +61,8 @@ export function parsePerson(raw) {
     if (p.error) return fail(p.error);
     photo = p.url;
   }
+  const slug = handle.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  if (slug.replace(/-/g, '').length < 3) return fail(`"@${handle}" gives a link name shorter than 3 letters or numbers`);
   const first = letters(words[0]);
   const last = letters(words.at(-1));
   if (!first || !last) return fail('the name has no letters an email address can use');
@@ -69,7 +72,7 @@ export function parsePerson(raw) {
     handle,
     email: `${first}${last}@digitalcollective.com`,
     password: first,
-    slug: handle.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40),
+    slug,
     photo,
   };
 }

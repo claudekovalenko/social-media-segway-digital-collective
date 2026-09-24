@@ -123,6 +123,12 @@ try {
     child.on('close', (status) => resolve({ status, stdout, stderr }));
   });
 
+  // One of them already has an account, made by hand without a photo, as an
+  // admin might have done: the workflow leaves it alone but adds their photo.
+  const early = listPeople().filter((x) => x.photo).at(-1);
+  await api('/api/admin/accounts', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY }, body: {
+    email: early.email, password: early.password, role: 'creator', name: early.name, creator_slug: early.slug, handle: '@' + early.handle } });
+
   console.log('Workflow, first run:');
   const first = await runWorkflow();
   console.log(first.stdout.replace(/^/gm, '    ').trimEnd());

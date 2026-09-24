@@ -67,6 +67,8 @@ jobs:
             fi
           fi
 
+          # Read the list first, so a reader failure fails the run.
+          printf '%s\n' "$PEOPLE" | tr ';' '\n' | node accounts/people.mjs - > /tmp/people.jsonl
           created=0; skipped=0; failed=0; seen=' '
           # One reader for the list (accounts/people.mjs, also used by the
           # tests); it refuses unclear lines instead of guessing. Newlines or
@@ -105,10 +107,20 @@ jobs:
                   [ "$pcode" = 200 ] || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
                 fi
                 ;;
-              409)     echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1)) ;;
+              409)
+                echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1))
+                # Give them the listed photo only if they have none yet; never
+                # replace one they chose.
+                if [ -n "$photo" ] && [ -z "$(curl -s "$SITE/api/creators/$slug" | jq -r '(.creator // .).avatar_url // empty')" ]; then
+                  pbody=$(jq -nc --arg s "$slug" --arg u "$photo" '{slug:$s,avatar_url:$u}')
+                  pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
+                    -H "content-type: application/json" -H "$AUTH" --data "$pbody")
+                  [ "$pcode" = 200 ] && echo "  photo set: $photo" || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
+                fi
+                ;;
               *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' /tmp/out 2>/dev/null)"; failed=$((failed+1)) ;;
             esac
-          done < <(printf '%s\n' "$PEOPLE" | tr ';' '\n' | node accounts/people.mjs -)
+          done < /tmp/people.jsonl
 
           echo
           echo "created: $created  already existed: $skipped  failed: $failed"
