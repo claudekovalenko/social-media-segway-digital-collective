@@ -160,6 +160,16 @@ selector, so access can be granted, downgraded, or revoked (set to `pending`)
 at any time. An admin can't remove their own admin access, and only admins can
 change anyone's tier.
 
+### Adding a group of creators at once
+
+GitHub → **Actions → Create creator accounts in bulk → Run workflow**. Paste one
+person per line (or separate them with `;`) as `First Last @handle`. Each becomes
+a creator on the default videos, signing in as `firstlast@digitalcollective.com`
+with their first name in lowercase as the password, and linked at `/c/<handle>`.
+Tick **dry run** first to see the list without creating anything. Anyone who
+already has an account is left alone. Change a password afterwards with the
+**Create or reset an account** workflow.
+
 ### What the network does and doesn't endorse
 
 The statement of faith carries a clause saying plainly that Digital Collective

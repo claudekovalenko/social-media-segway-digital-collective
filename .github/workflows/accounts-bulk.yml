@@ -1,0 +1,91 @@
+name: Create creator accounts in bulk
+
+# Run from the Actions tab. Paste one person per line:
+#
+#   First Last @handle
+#
+# Each line becomes a creator account on the live site:
+#   - sign-in:  firstlast@digitalcollective.com (lowercase, letters only)
+#   - password: their first name, lowercase
+#   - link:     /c/<handle>, using the platform's default videos
+#
+# Lines that already have an account are skipped, not reset. Goes through
+# the site's own API, the same way the single "Create or reset an account"
+# workflow does.
+
+on:
+  workflow_dispatch:
+    inputs:
+      people:
+        description: 'One per line (or separated by ;): First Last @handle'
+        required: true
+      admin_email:
+        description: An existing admin's email (to authorize this)
+        required: true
+      admin_password:
+        description: That admin's password (masked in the log)
+        required: true
+      dry_run:
+        description: Only show what would be created
+        type: boolean
+        default: false
+
+jobs:
+  accounts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask secrets
+        run: echo "::add-mask::${{ inputs.admin_password }}"
+      - name: Create accounts
+        env:
+          SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          DOMAIN: digitalcollective.com
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+          PEOPLE: ${{ inputs.people }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" != "true" ]; then
+            login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+            TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
+            [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
+            echo "::add-mask::$TOKEN"
+          fi
+
+          created=0; skipped=0; failed=0
+          # Accept newlines or semicolons between people (the Actions input box
+          # is a single line on some browsers).
+          while IFS= read -r line; do
+            line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+            [ -z "$line" ] && continue
+            handle=$(printf '%s' "$line" | grep -o '@[A-Za-z0-9._-]*' | head -n1 | sed 's/^@//')
+            name=$(printf '%s' "$line" | sed 's/@[A-Za-z0-9._-]*//g; s/[[:space:]]\+/ /g; s/^ //; s/ $//')
+            first=$(printf '%s' "$name" | awk '{print $1}')
+            last=$(printf '%s' "$name" | awk '{print $NF}')
+            if [ -z "$handle" ] || [ -z "$first" ] || [ "$first" = "$last" ]; then
+              echo "✗ '$line' — need: First Last @handle"; failed=$((failed+1)); continue
+            fi
+            # José → jose, O'Brien → obrien
+            clean() { python3 -c 'import sys,unicodedata as u; s=u.normalize("NFKD",sys.argv[1]).lower(); print("".join(c for c in s if "a"<=c<="z"),end="")' "$1"; }
+            email="$(clean "$first")$(clean "$last")@$DOMAIN"
+            password=$(clean "$first")
+            slug=$(printf '%s' "$handle" | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9-]/-/g' | cut -c1-40)
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "• $name → $email  password: $password  link: /c/$slug"; continue
+            fi
+
+            body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
+              '{email:$e,password:$p,role:"creator",name:$n,creator_slug:$s,handle:$h}')
+            code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
+              -H "content-type: application/json" -H "authorization: Bearer $TOKEN" --data "$body")
+            case "$code" in
+              200|201) echo "✓ $name → $email  link: /c/$slug"; created=$((created+1)) ;;
+              409)     echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1)) ;;
+              *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' /tmp/out 2>/dev/null)"; failed=$((failed+1)) ;;
+            esac
+          done < <(printf '%s\n' "$PEOPLE" | tr ';' '\n')
+
+          echo
+          echo "created: $created  already existed: $skipped  failed: $failed"
+          [ "$failed" = 0 ]
