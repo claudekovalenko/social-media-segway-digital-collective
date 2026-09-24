@@ -353,7 +353,10 @@ revoke all on all sequences in schema public from anon, authenticated;
 revoke execute on all functions in schema public from public, anon;
 alter default privileges in schema public revoke all on tables from anon, authenticated;
 alter default privileges in schema public revoke all on sequences from anon, authenticated;
-alter default privileges in schema public revoke execute on functions from public, anon;
+alter default privileges in schema public revoke execute on functions from anon;
+-- PUBLIC's execute comes from the global default, which a per-schema entry
+-- can't take away; only the global form removes it for future functions.
+alter default privileges revoke execute on functions from public;
 
 -- The directory: row policy decides which creators, column grants decide
 -- which fields. Never email, phone, key_hash or agreements.
@@ -368,7 +371,7 @@ grant select on leads, group_signups, contacts, responses, events, communication
 -- case-insensitive email, callable only by signed-in users.
 create or replace function auth_email() returns text language sql stable
   set search_path = '' as $$
-  select lower(coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email', ''))
+  select nullif(lower(trim(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email')), '')
 $$;
 create or replace function is_admin() returns boolean language sql stable security definer
   set search_path = '' as $$
@@ -377,7 +380,10 @@ create or replace function is_admin() returns boolean language sql stable securi
 $$;
 create or replace function my_creator_slugs() returns setof text language sql stable security definer
   set search_path = '' as $$
-  select slug from public.creators where lower(email) = public.auth_email()
+  select c.slug from public.creators c
+   where lower(c.email) = public.auth_email()
+     and not exists (select 1 from public.admins a
+                     where lower(a.email) = public.auth_email() and a.role <> 'creator')
   union
   select creator_slug from public.admins
    where lower(email) = public.auth_email() and role = 'creator' and creator_slug is not null
@@ -432,8 +438,9 @@ drop policy if exists admins_all_audit on audit_log;
 drop policy if exists read_audit on audit_log;
 create policy read_audit on audit_log for select to authenticated using ((select is_admin()));
 
--- Integrity. NOT VALID: enforced on every new write, without failing on rows
--- copied over from D1; validate once the copy is checked.
+-- Integrity. NOT VALID only spares rows already present when this runs; every
+-- later insert is checked, including a copy from D1, so copy creators before
+-- admins and fix any admin pointing at a missing creator first.
 do $$ begin
   alter table admins add constraint admins_role_check
     check (role in ('admin', 'creator', 'pending')) not valid;
@@ -451,7 +458,7 @@ create index if not exists admins_email_lower_idx   on admins (lower(email));
 create index if not exists creators_key_hash_idx    on creators (key_hash);
 create index if not exists applications_email_idx   on applications (lower(email));
 create index if not exists applications_status_idx  on applications (status, created_at desc);
-create index if not exists responses_lead_idx       on responses (lead_id);
+create unique index if not exists responses_lead_uidx on responses (lead_id) where lead_id is not null;
 create index if not exists communications_contact_idx on communications (contact_id);
 create index if not exists consents_email_idx       on consents (lower(email));
 create index if not exists verifications_email_idx  on verifications (lower(email));
@@ -475,3 +482,12 @@ revoke execute on function consents_append_only() from public, anon, authenticat
 drop trigger if exists consents_no_change on consents;
 create trigger consents_no_change before update or delete on consents
   for each row execute function consents_append_only();
+drop trigger if exists consents_no_truncate on consents;
+create trigger consents_no_truncate before truncate on consents
+  for each statement execute function consents_append_only();
+
+-- Leads with no creator link are attributed to 'default' (worker.js), and
+-- leads.creator_slug references creators, so that row has to exist. No handle,
+-- so it never shows in the directory.
+insert into creators (slug, name, mode) values ('default', 'Digital Collective', 'default')
+  on conflict (slug) do nothing;
