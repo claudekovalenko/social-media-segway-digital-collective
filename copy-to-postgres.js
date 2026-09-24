@@ -1,9 +1,11 @@
-// One-time (and safely repeatable) copy of every D1 row into Postgres.
+// Copy of every D1 row into Postgres, repeatable until Postgres goes live.
 //
 // Parents before children, so foreign keys hold. Rows keep their ids, so
 // links between tables survive, and a row already in Postgres is updated in
-// place rather than duplicated: running it twice is harmless, and running it
-// again just before switching over picks up whatever arrived in between.
+// place rather than duplicated: while D1 is still the live database, running
+// it again simply refreshes Postgres. The last run happens with saving paused
+// (DATABASE_MODE=paused); after the switch the Worker refuses to copy, because
+// Postgres then holds newer data than D1.
 // Only columns both databases have are copied; empty strings in typed columns
 // (dates, numbers, JSON) become NULL, and invalid JSON is kept as a JSON string
 // rather than lost.
@@ -120,7 +122,9 @@ export async function copyPage(d1, pg, table, after = 0) {
         await tx.unsafe(`set local timezone = 'UTC'`);
         await tx.unsafe(text, values);
       });
-    } catch {
+    } catch (err) {
+      // A lost connection isn't a bad row: stop, and let the rerun continue.
+      if (/ECONNREFUSED|ENOTFOUND|CONNECT_TIMEOUT|ETIMEDOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)/.test(String(err.code || '') + ' ' + err.message)) throw err;
       const width = cols.length;
       const one = text.replace(/values [\s\S]*?\s+on conflict/, `values (${cols.map((_, i) => `$${i + 1}`).join(', ')}) on conflict`);
       for (let r = 0; r < rows.length; r++) {
@@ -144,11 +148,8 @@ export async function copyPage(d1, pg, table, after = 0) {
   };
 }
 
-// After copying, new rows must get ids above the copied ones, with room to
-// spare: rows written to D1 between a copy and the switch to Postgres keep
-// their D1 ids when the copy runs again, so Postgres's own new rows start
-// ID_GAP further on and the two can't collide.
-const ID_GAP = 10000;
+// After copying, new rows must get ids above the copied ones. (The final copy
+// runs while saving is paused, so no D1 row can arrive after it.)
 export async function resetSequences(pg) {
   for (const table of COPY_ORDER) {
     const [{ seq }] = await pg.unsafe(
@@ -157,7 +158,8 @@ export async function resetSequences(pg) {
         where table_schema = 'public' and table_name = $1 and column_name = 'id'
         union all select null limit 1`, [table]);
     if (!seq) continue;
-    await pg.unsafe(`select setval($1, greatest((select coalesce(max(id), 0) from ${table}), 1) + ${ID_GAP}, true)`, [seq]);
+    await pg.unsafe(`select setval($1, greatest((select coalesce(max(id), 0) from ${table}), 1),
+                                 (select count(*) > 0 from ${table}))`, [seq]);
   }
 }
 

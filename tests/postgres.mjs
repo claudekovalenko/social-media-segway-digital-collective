@@ -312,7 +312,7 @@ async function child(backend, out) {
     };
   } else {
     env.DATABASE_URL = process.env.TEST_DATABASE_URL;
-    env.POSTGRES_PRIMARY = 'true';
+    env.DATABASE_MODE = 'postgres';
     const { default: postgres } = await import('postgres');
     const sql = postgres(env.DATABASE_URL, { max: 1, onnotice: () => {} });
     peek = async (q, ...a) => (await sql.unsafe(q.replace(/\?/g, (() => { let n = 0; return () => '$' + (++n); })()), a))[0] ?? null;

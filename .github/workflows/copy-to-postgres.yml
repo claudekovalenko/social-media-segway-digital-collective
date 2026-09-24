@@ -3,9 +3,10 @@ name: Copy D1 into Postgres
 # Run from the Actions tab once the Worker has a Postgres connection
 # (HYPERDRIVE binding or DATABASE_URL secret) alongside its D1 binding.
 # Copies every table a page at a time through the live Worker's own
-# /api/admin/copy-to-postgres route, then compares row counts. Safe to run
-# again: rows already in Postgres are updated, not duplicated, so a last run
-# just before switching over picks up anything that arrived in between.
+# /api/admin/copy-to-postgres route, then compares row counts. Repeatable
+# while D1 is still live (rows are refreshed, not duplicated); run it one last
+# time with DATABASE_MODE=paused, then switch. After the switch the Worker
+# refuses to copy.
 
 on:
   workflow_dispatch:
@@ -57,6 +58,6 @@ jobs:
           jq -e '[.counts[] | select(.match | not)] | length == 0' /tmp/out >/dev/null \
             || echo "Some counts differ: rows skipped or refused above explain a difference; anything else needs a look."
           if [ "${rejected:-0}" -gt 0 ]; then
-            echo "$rejected row(s) were refused. Fix them in D1 and run this again: it only adds what's missing."
+            echo "$rejected row(s) were refused. Fix them in D1 (still the live database) and run this again."
             exit 1
           fi

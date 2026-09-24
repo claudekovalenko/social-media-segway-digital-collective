@@ -414,10 +414,12 @@ something that works today.
    when no Postgres connection is configured.
    - Why: the move to Supabase/Postgres is in progress; the Supabase project
      isn't created yet.
-   - Authoritative: D1 until the Worker secret `POSTGRES_PRIMARY` is `true`;
+   - Authoritative: D1 until the Worker secret `DATABASE_MODE` is `postgres`;
      Postgres from then on. A configured connection alone switches nothing.
-   - Sync: none. It is a one-way, one-time copy (`copy-to-postgres.js`, safe to
-     repeat). If a copy run fails, D1 is untouched and the copy is re-run.
+   - Sync: none. It is a one-way copy (`copy-to-postgres.js`), repeatable only
+     while D1 is live. The last run happens with saving paused
+     (`DATABASE_MODE=paused`); after the switch the Worker refuses to copy. If a
+     copy run fails, D1 is untouched and the copy is re-run.
    - End state: after the switch is verified, remove the D1 binding, the D1
      fallback, `copy-to-postgres.js` and `/api/admin/copy-to-postgres`.
 2. **A third, older data path: the Supabase REST adapter** (`supabaseAdapter`

@@ -357,29 +357,48 @@ function creatorInsertError(err) {
 // so it is opened lazily and closed once the response and any waitUntil work
 // are done (Hyperdrive keeps the real connections warm).
 //
-// Postgres serves the site only once POSTGRES_PRIMARY is "true". Until then
-// D1 stays the system of record and Postgres is reachable only by the copy
-// (env.PG), so copying can be repeated without live writes landing in both.
+// DATABASE_MODE decides which database serves the site:
+//   (unset) or "d1"  D1 serves everything; Postgres is used only by the copy.
+//   "paused"         D1 still serves pages, but saving is paused so a final
+//                    copy can run while D1 can't change.
+//   "postgres"       Postgres serves everything. Copying is refused from here
+//                    on, so nothing can overwrite what Postgres now holds.
+function databaseMode(env) {
+  const m = String(env.DATABASE_MODE || '').toLowerCase();
+  return m === 'postgres' || m === 'paused' ? m : 'd1';
+}
+
 function withPostgres(env) {
+  const mode = databaseMode(env);
   const url = (env.HYPERDRIVE && env.HYPERDRIVE.connectionString) || env.DATABASE_URL;
-  if (!url) return { env, done: null };
+  if (!url) return { env, done: null, mode, unavailable: mode === 'postgres' };
   let client;
   try {
     client = connect(url, { max: 1 });
   } catch (err) {
+    // A bad connection string must not take down a site still served by D1.
     console.error('Postgres connection string rejected:', err.message);
-    return { env, done: null, unavailable: true };
+    return { env, done: null, mode, unavailable: mode === 'postgres' };
   }
-  const primary = String(env.POSTGRES_PRIMARY || '').toLowerCase() === 'true';
   return {
-    env: { ...env, DB: primary ? postgresD1(client) : env.DB, D1: env.DB, PG: client },
+    env: { ...env, DB: mode === 'postgres' ? postgresD1(client) : env.DB, D1: env.DB, PG: client },
     done: () => client.end({ timeout: 5 }),
+    mode,
   };
+}
+
+// While paused, anything that would save something waits; pages still load.
+// Signing in and the copy itself stay open so the admin can finish the move.
+function savingPaused(req, mode) {
+  if (mode !== 'paused' || ['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return false;
+  const p = new URL(req.url).pathname;
+  return p.startsWith('/api/') && p !== '/api/admin/login' && p !== '/api/admin/copy-to-postgres';
 }
 
 // What a visitor sees when something fails on our side. The detail goes to the
 // Worker's log, never to the browser.
-const CONNECTION_ERROR = /ECONNREFUSED|ENOTFOUND|CONNECT_TIMEOUT|ETIMEDOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|too many connections/i;
+// Includes a missing database (3D000) and refused credentials (28000, 28P01).
+const CONNECTION_ERROR = /ECONNREFUSED|ENOTFOUND|CONNECT_TIMEOUT|ETIMEDOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|too many connections|\b(3D000|28000|28P01|57P0[123])\b/i;
 function serverError(err) {
   console.error(err && err.stack || err);
   const down = CONNECTION_ERROR.test(String(err && (err.code || '') + ' ' + (err.message || '')));
@@ -390,8 +409,12 @@ function serverError(err) {
 
 export default {
   async fetch(req, rawEnv, ctx) {
-    const { env, done, unavailable } = withPostgres(rawEnv);
+    const { env, done, unavailable, mode } = withPostgres(rawEnv);
     if (unavailable) return json({ error: 'The database is unavailable right now. Please try again in a minute.' }, 503);
+    if (savingPaused(req, mode)) {
+      if (done) try { ctx.waitUntil(done()); } catch { /* no context */ }
+      return json({ error: 'We are moving to a new database. Saving is paused for a minute or two; please try again shortly.' }, 503);
+    }
     if (!done) return handle(req, env, ctx);
     const pending = [];
     const trackedCtx = {
@@ -511,6 +534,11 @@ async function handle(req, env, ctx) {
         if (!who.ok) return json({ error: 'unauthorized' }, 401);
         if (!env.PG || !env.D1) {
           return json({ error: 'Needs both the D1 binding and a Postgres connection (HYPERDRIVE or DATABASE_URL).' }, 400);
+        }
+        // Once Postgres is live it holds newer data than D1; copying again
+        // would overwrite it.
+        if (databaseMode(env) === 'postgres') {
+          return json({ error: 'Postgres is already live (DATABASE_MODE=postgres); copying from D1 now would overwrite newer data.' }, 409);
         }
         const b = await req.json().catch(() => ({}));
         if (b.finish) {
