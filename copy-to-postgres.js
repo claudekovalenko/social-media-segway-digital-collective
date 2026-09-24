@@ -124,7 +124,7 @@ export async function copyPage(d1, pg, table, after = 0) {
       });
     } catch (err) {
       // A lost connection isn't a bad row: stop, and let the rerun continue.
-      if (/ECONNREFUSED|ENOTFOUND|CONNECT_TIMEOUT|ETIMEDOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)/.test(String(err.code || '') + ' ' + err.message)) throw err;
+      if (/ECONNREFUSED|ENOTFOUND|CONNECT_TIMEOUT|ETIMEDOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|\b57P0[123]\b/.test(String(err.code || '') + ' ' + err.message)) throw err;
       const width = cols.length;
       const one = text.replace(/values [\s\S]*?\s+on conflict/, `values (${cols.map((_, i) => `$${i + 1}`).join(', ')}) on conflict`);
       for (let r = 0; r < rows.length; r++) {

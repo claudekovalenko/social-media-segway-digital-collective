@@ -79,8 +79,11 @@ How the Worker reaches it (`pg.js`, `db.js`):
    - A row Postgres refuses (an impossible date, a duplicate email) is listed
      with the reason and the run fails; fix it in D1 and run again.
 5. **Pause saving:** set the Worker secret `DATABASE_MODE` to `paused` (with the
-   **Set a Worker secret** workflow). Pages keep working; forms answer "saving
-   is paused, try again in a minute" for the minute or two this takes.
+   **Set a Worker secret** workflow). Pages keep working; forms, unsubscribe
+   and verification links answer "saving is paused, try again in a minute" for
+   the minute or two this takes. Wait about 30 seconds before the next step,
+   so requests already in flight finish. (Any value other than `d1`, `paused`
+   or `postgres` is treated as `paused`, so a typo can't lose data.)
 6. **Final copy:** run **Copy D1 into Postgres** once more. D1 can't change
    now, so this copy is complete.
 7. **Switch:** set `DATABASE_MODE` to `postgres`. From this moment the site

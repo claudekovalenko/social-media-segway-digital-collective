@@ -364,8 +364,12 @@ function creatorInsertError(err) {
 //   "postgres"       Postgres serves everything. Copying is refused from here
 //                    on, so nothing can overwrite what Postgres now holds.
 function databaseMode(env) {
-  const m = String(env.DATABASE_MODE || '').toLowerCase();
-  return m === 'postgres' || m === 'paused' ? m : 'd1';
+  const m = String(env.DATABASE_MODE || '').trim().toLowerCase();
+  if (m === '' || m === 'd1' || m === 'postgres' || m === 'paused') return m || 'd1';
+  // A typo must not quietly mean "D1, copying allowed": pause saving instead,
+  // which keeps the data safe and makes the mistake obvious.
+  console.error(`DATABASE_MODE "${env.DATABASE_MODE}" is not d1, paused or postgres; treating it as paused.`);
+  return 'paused';
 }
 
 function withPostgres(env) {
@@ -389,9 +393,13 @@ function withPostgres(env) {
 
 // While paused, anything that would save something waits; pages still load.
 // Signing in and the copy itself stay open so the admin can finish the move.
+// Some links save when opened (unsubscribe, email verification, the export's
+// audit entry), so they wait too; an unsubscribe must never be lost.
+const WRITING_GETS = new Set(['/api/unsubscribe', '/api/verify', '/api/export.csv']);
 function savingPaused(req, mode) {
-  if (mode !== 'paused' || ['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return false;
+  if (mode !== 'paused' || ['HEAD', 'OPTIONS'].includes(req.method)) return false;
   const p = new URL(req.url).pathname;
+  if (req.method === 'GET') return WRITING_GETS.has(p);
   return p.startsWith('/api/') && p !== '/api/admin/login' && p !== '/api/admin/copy-to-postgres';
 }
 
@@ -432,7 +440,10 @@ export default {
 
 async function handle(req, env, ctx) {
   {
-    const after = (p) => { try { ctx.waitUntil(p); } catch { /* no context: skip the refresh */ } };
+    // Background work (photo refresh, enrichment) saves; not while paused.
+    const after = databaseMode(env) === 'paused'
+      ? () => {}
+      : (p) => { try { ctx.waitUntil(p); } catch { /* no context: skip the refresh */ } };
     const url = new URL(req.url);
     const p = url.pathname;
     const db = makeDb(env);
