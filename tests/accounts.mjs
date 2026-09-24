@@ -54,6 +54,14 @@ try {
     const u = new URL(typeof input === 'string' ? input : input.url);
     if (u.hostname === '127.0.0.1') return realFetch(input, init);
     // A stand-in Instagram profile page, shaped like the real one's <head>.
+    // A stand-in YouTube channel page; a channel whose address contains
+    // "broken" gives no picture, to exercise the fallback to Instagram.
+    if (u.hostname === 'www.youtube.com') {
+      photoFetches.push(u.pathname);
+      if (u.pathname.includes('broken')) return new Response('<html><head></head></html>', { headers: { 'content-type': 'text/html' } });
+      return new Response(`<html><head><meta property="og:image" content="https://yt.example${u.pathname}.jpg" /></head></html>`,
+        { headers: { 'content-type': 'text/html' } });
+    }
     if (u.hostname === 'www.instagram.com') {
       const handle = u.pathname.replace(/\//g, '');
       photoFetches.push(handle);
@@ -152,8 +160,11 @@ try {
     await api(`/api/creators/${p.slug}`);
     const again = await api(`/api/creators/${p.slug}`);
     const photo = again.json?.creator?.avatar_url ?? again.json?.avatar_url;
-    check(photo === `https://cdn.example/${p.handle}.jpg?a=1&b=2`, 'Instagram profile photo shows on their page',
-      `got ${JSON.stringify(photo)}; Instagram fetched for: ${photoFetches.join(', ')}`);
+    p.expectedPhoto = p.youtube
+      ? `https://yt.example${new URL(p.youtube).pathname.replace(/\/$/, '')}.jpg`
+      : `https://cdn.example/${p.handle}.jpg?a=1&b=2`;
+    check(photo === p.expectedPhoto, `${p.youtube ? 'YouTube' : 'Instagram'} photo shows on their page`,
+      `got ${JSON.stringify(photo)}; fetched: ${photoFetches.join(', ')}`);
 
     // A person responds through their link…
     const lead = await api('/api/leads', { method: 'POST', body: {
@@ -175,8 +186,20 @@ try {
 
   const dirAfter = (await api('/api/directory')).json;
   const dirRows = Array.isArray(dirAfter) ? dirAfter : dirAfter?.creators || [];
-  check(people.every((p) => dirRows.find((d) => d.slug === p.slug)?.avatar_url === `https://cdn.example/${p.handle}.jpg?a=1&b=2`),
+  check(people.every((p) => dirRows.find((d) => d.slug === p.slug)?.avatar_url === p.expectedPhoto),
     'every photo shows in the creators directory', JSON.stringify(dirRows.map((d) => [d.slug, d.avatar_url])));
+  check(dirRows.every((d) => !('avatar_cached' in d) && !('avatar_checked_at' in d)),
+    'the directory shows photos without internal bookkeeping fields');
+
+  // YouTube first, Instagram as the fallback: a channel that gives no picture.
+  const q = people[0];
+  await api('/api/creator/links', { method: 'POST', token: q.token,
+    body: { avatar_url: 'https://www.youtube.com/@broken-channel' } });
+  await api(`/api/creators/${q.slug}`);
+  const fb = await api(`/api/creators/${q.slug}`);
+  check((fb.json?.creator?.avatar_url ?? fb.json?.avatar_url) === `https://cdn.example/${q.handle}.jpg?a=1&b=2`,
+    'when YouTube gives no picture, their Instagram photo is used',
+    JSON.stringify(fb.json?.creator?.avatar_url ?? fb.json?.avatar_url));
 
   console.log('\nWorkflow, second run (nothing should change):');
   const second = await runWorkflow();

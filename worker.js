@@ -75,6 +75,18 @@ async function readChannelAvatar(url) {
   } catch { return null; }
 }
 
+// Where to look for a creator's photo, in order: the address they gave, then,
+// when that is a YouTube channel, their Instagram profile (from their handle)
+// in case YouTube doesn't hand the picture over.
+function photoSources(row) {
+  const out = [row.avatar_url];
+  const handle = String(row.handle || '').trim().replace(/^@/, '');
+  let youtube = false;
+  try { youtube = new URL(row.avatar_url).hostname.replace(/^(www|m)\./, '') === 'youtube.com'; } catch {}
+  if (youtube && /^[\w.]{1,30}$/.test(handle)) out.push(`https://www.instagram.com/${handle}/`);
+  return out;
+}
+
 // Returns straight away. `after` is given any slow refresh work to run once
 // the response has gone out, so nobody waits for it.
 function avatarFor(row, db, after) {
@@ -82,11 +94,12 @@ function avatarFor(row, db, after) {
   if (!isChannelUrl(row.avatar_url)) { row.avatar_url = row.avatar_url; return row; }
   const age = row.avatar_checked_at ? Date.now() - Date.parse(row.avatar_checked_at) : Infinity;
   if (row.avatar_cached && age < AVATAR_MAX_AGE_MS) { row.avatar_url = row.avatar_cached; return row; }
-  const channel = row.avatar_url;
+  const sources = photoSources(row);
   const slug = row.slug;
   if (after) {
     after((async () => {
-      const found = await readChannelAvatar(channel);
+      let found = null;
+      for (const source of sources) if (!found) found = await readChannelAvatar(source);
       if (!found) return;
       await db.updateCreatorLinks(slug, { avatar_cached: found, avatar_checked_at: new Date().toISOString() })
         .catch(() => {});
@@ -527,7 +540,8 @@ async function handle(req, env, ctx) {
       if (p === '/api/directory' && req.method === 'GET') {
         const creators = await db.directory();
         for (const c of creators) avatarFor(c, db, after);
-        return json({ creators });
+        // The photo bookkeeping stays server-side; the page needs avatar_url only.
+        return json({ creators: creators.map(({ avatar_cached, avatar_checked_at, ...c }) => c) });
       }
 
       // What the dashboard needs to start a magic-link sign-in, if configured.

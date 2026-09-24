@@ -10,11 +10,13 @@ const clean = (s) => s.normalize('NFKD').toLowerCase().replace(/[^a-z]/g, '');
 export function people(file = path.join(ROOT, 'accounts/people.txt')) {
   return fs.readFileSync(file, 'utf8').split('\n')
     .map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))
-    .map((l) => {
+    .map((line) => {
+      const youtube = (line.match(/https?:\/\/(www\.|m\.)?youtube\.com\/\S+/) || [])[0] || null;
+      const l = line.replace(/https?:\/\/\S+/g, '');
       const handle = l.match(/@([A-Za-z0-9._-]+)/)[1];
       const words = l.replace(/@\S+/g, '').trim().split(/\s+/);
       return {
-        name: words.join(' '), handle,
+        name: words.join(' '), handle, youtube,
         email: `${clean(words[0])}${clean(words.at(-1))}@digitalcollective.com`,
         password: clean(words[0]),
         slug: handle.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40),

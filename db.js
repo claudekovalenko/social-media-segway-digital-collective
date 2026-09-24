@@ -104,7 +104,7 @@ function d1Adapter(DB) {
       await this.ensureAdmins();
       await ensurePlatformColumns(DB);
       const r = await DB.prepare(
-        `SELECT slug, name, handle, topic, back_url, avatar_url, avatar_cached FROM creators
+        `SELECT slug, name, handle, topic, back_url, avatar_url, avatar_cached, avatar_checked_at FROM creators
          WHERE handle IS NOT NULL AND handle != '' AND slug != 'default'
            AND (status IS NULL OR status != 'suspended') ORDER BY created_at ASC`).all();
       return r.results;

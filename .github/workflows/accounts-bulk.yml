@@ -3,12 +3,14 @@ name: Create creator accounts in bulk
 # Runs when accounts/people.txt changes on this branch, or from the Actions
 # tab with a pasted list. One person per line:
 #
-#   First Last @handle
+#   First Last @instagramhandle [https://www.youtube.com/@channel]
 #
 # Each line becomes a creator account on the live site:
 #   - sign-in:  firstlast@digitalcollective.com (lowercase, letters only)
 #   - password: their first name, lowercase
 #   - link:     /c/<handle>, using the platform's default videos
+#   - photo:    their YouTube channel when given (falling back to Instagram
+#               if YouTube doesn't give one), otherwise their Instagram
 #
 # Lines that already have an account are skipped, not reset. Goes through
 # the site's own API, the same way the single "Create or reset an account"
@@ -74,6 +76,8 @@ jobs:
           while IFS= read -r line; do
             line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
             [ -z "$line" ] && continue
+            youtube=$(printf '%s' "$line" | { grep -oE 'https?://(www\.|m\.)?youtube\.com/[^[:space:]]+' || true; } | head -n1)
+            line=$(printf '%s' "$line" | sed -E 's#https?://[^[:space:]]+##g')
             handle=$(printf '%s' "$line" | { grep -o '@[A-Za-z0-9._-]*' || true; } | head -n1 | sed 's/^@//')
             name=$(printf '%s' "$line" | sed 's/@[A-Za-z0-9._-]*//g; s/[[:space:]]\+/ /g; s/^ //; s/ $//')
             first=$(printf '%s' "$name" | awk '{print $1}')
@@ -92,7 +96,7 @@ jobs:
             seen="$seen$email "
 
             if [ "$DRY_RUN" = "true" ]; then
-              echo "• $name → $email  link: /c/$slug"; continue
+              echo "• $name → $email  link: /c/$slug  photo: ${youtube:-https://www.instagram.com/$handle/}"; continue
             fi
 
             body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
@@ -102,9 +106,9 @@ jobs:
             case "$code" in
               200|201)
                 echo "✓ $name → $email  link: /c/$slug"; created=$((created+1))
-                # Their Instagram profile as their photo, looked up the same way
-                # as a YouTube channel photo.
-                photo=$(jq -nc --arg s "$slug" --arg u "https://www.instagram.com/$handle/" '{slug:$s,avatar_url:$u}')
+                # Their photo: the YouTube channel if given (the site falls back
+                # to Instagram when YouTube gives none), otherwise Instagram.
+                photo=$(jq -nc --arg s "$slug" --arg u "${youtube:-https://www.instagram.com/$handle/}" '{slug:$s,avatar_url:$u}')
                 pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
                   -H "content-type: application/json" -H "$AUTH" --data "$photo")
                 [ "$pcode" = 200 ] || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
