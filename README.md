@@ -224,9 +224,16 @@ GitHub → **Actions → Create creator accounts in bulk → Run workflow**. Pas
 person per line (or separate them with `;`) as `First Last @handle`. Each becomes
 a creator on the default videos, signing in as `firstlast@digitalcollective.com`
 with their first name in lowercase as the password, and linked at `/c/<handle>`.
-Tick **dry run** first to see the list without creating anything. Anyone who
-already has an account is left alone. Change a password afterwards with the
-**Create or reset an account** workflow.
+Each new creator's photo is set to their Instagram profile
+(`https://www.instagram.com/<handle>/`), read the same way as a YouTube
+channel photo: the Worker reads the profile page's picture, keeps it, and
+refreshes it every six hours. Tick **dry run** first to see the list without
+creating anything. Anyone who already has an account is left alone. Change a
+password afterwards with the **Create or reset an account** workflow.
+
+After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
+signs in as each person in `accounts/people.txt` and checks their dashboard
+data, `/c/` link, short link, directory entry and photo. It only reads.
 
 ### What the network does and doesn't endorse
 

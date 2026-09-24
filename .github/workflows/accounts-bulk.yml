@@ -100,7 +100,15 @@ jobs:
             code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
               -H "content-type: application/json" -H "$AUTH" --data "$body")
             case "$code" in
-              200|201) echo "✓ $name → $email  link: /c/$slug"; created=$((created+1)) ;;
+              200|201)
+                echo "✓ $name → $email  link: /c/$slug"; created=$((created+1))
+                # Their Instagram profile as their photo, looked up the same way
+                # as a YouTube channel photo.
+                photo=$(jq -nc --arg s "$slug" --arg u "https://www.instagram.com/$handle/" '{slug:$s,avatar_url:$u}')
+                pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
+                  -H "content-type: application/json" -H "$AUTH" --data "$photo")
+                [ "$pcode" = 200 ] || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
+                ;;
               409)     echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1)) ;;
               *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' /tmp/out 2>/dev/null)"; failed=$((failed+1)) ;;
             esac

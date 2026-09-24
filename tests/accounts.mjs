@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { people as listPeople } from './people.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ADMIN_URL = process.env.TEST_DATABASE_URL;
@@ -48,9 +49,17 @@ try {
 
   // ---- the real Worker, served locally ------------------------------------
   const realFetch = globalThis.fetch;
+  const photoFetches = [];
   globalThis.fetch = async (input, init) => {
     const u = new URL(typeof input === 'string' ? input : input.url);
     if (u.hostname === '127.0.0.1') return realFetch(input, init);
+    // A stand-in Instagram profile page, shaped like the real one's <head>.
+    if (u.hostname === 'www.instagram.com') {
+      const handle = u.pathname.replace(/\//g, '');
+      photoFetches.push(handle);
+      return new Response(`<html><head><meta property="og:image" content="https://cdn.example/${handle}.jpg?a=1&amp;b=2" /></head></html>`,
+        { headers: { 'content-type': 'text/html' } });
+    }
     return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }); // email, DNS, video checks
   };
   const { default: worker } = await import(path.join(ROOT, 'worker.js'));
@@ -111,20 +120,7 @@ try {
   console.log(first.stdout.replace(/^/gm, '    ').trimEnd());
   check(first.status === 0, 'workflow succeeded', first.stderr);
 
-  // Who the list says should now exist.
-  const clean = (s) => s.normalize('NFKD').toLowerCase().replace(/[^a-z]/g, '');
-  const people = fs.readFileSync(path.join(ROOT, 'accounts/people.txt'), 'utf8').split('\n')
-    .map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))
-    .map((l) => {
-      const handle = l.match(/@([A-Za-z0-9._-]+)/)[1];
-      const words = l.replace(/@\S+/g, '').trim().split(/\s+/);
-      return {
-        name: words.join(' '), handle,
-        email: `${clean(words[0])}${clean(words.at(-1))}@digitalcollective.com`,
-        password: clean(words[0]),
-        slug: handle.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40),
-      };
-    });
+  const people = listPeople();
 
   const directory = (await api('/api/directory')).json || [];
   const dirList = Array.isArray(directory) ? directory : directory.creators || [];
@@ -151,6 +147,14 @@ try {
       `${pub.status} ${pub.text.slice(0, 120)}`);
     check(dirList.some((d) => d.slug === p.slug && d.handle === `@${p.handle}`), `listed in the directory as @${p.handle}`);
 
+    // Their photo: the Instagram profile is set at creation and its picture
+    // looked up (the first view triggers the lookup; the next one shows it).
+    await api(`/api/creators/${p.slug}`);
+    const again = await api(`/api/creators/${p.slug}`);
+    const photo = again.json?.creator?.avatar_url ?? again.json?.avatar_url;
+    check(photo === `https://cdn.example/${p.handle}.jpg?a=1&b=2`, 'Instagram profile photo shows on their page',
+      `got ${JSON.stringify(photo)}; Instagram fetched for: ${photoFetches.join(', ')}`);
+
     // A person responds through their link…
     const lead = await api('/api/leads', { method: 'POST', body: {
       step: 'know_god', name: `Visitor of ${p.name}`, email: `visitor.${p.slug}@example.org`,
@@ -168,6 +172,11 @@ try {
     check(mine.status === 200 && names.length === 1 && names[0] === `Visitor of ${p.name}`,
       `${p.name} sees exactly their own lead`, `${mine.status} ${JSON.stringify(names)}`);
   }
+
+  const dirAfter = (await api('/api/directory')).json;
+  const dirRows = Array.isArray(dirAfter) ? dirAfter : dirAfter?.creators || [];
+  check(people.every((p) => dirRows.find((d) => d.slug === p.slug)?.avatar_url === `https://cdn.example/${p.handle}.jpg?a=1&b=2`),
+    'every photo shows in the creators directory', JSON.stringify(dirRows.map((d) => [d.slug, d.avatar_url])));
 
   console.log('\nWorkflow, second run (nothing should change):');
   const second = await runWorkflow();

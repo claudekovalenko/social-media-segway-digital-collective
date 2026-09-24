@@ -45,8 +45,9 @@ const DEFAULT_LINKS = {
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
 
-// A creator can give a YouTube channel address as their photo. Reading that
-// page costs a second or two, which is far too slow to do while someone waits
+// A creator can give a YouTube channel or Instagram profile address as their
+// photo; its page names the profile picture (og:image). Reading that page
+// costs a second or two, which is far too slow to do while someone waits
 // for a page to load. So the resolved image address is kept in the database
 // and handed back at once; when it is stale the refresh happens after the
 // response has already been sent, and the next visitor gets the new one.
@@ -55,7 +56,9 @@ const AVATAR_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 function isChannelUrl(url) {
   try {
     const u = new URL(url);
-    return u.hostname.replace(/^(www|m)\./, '') === 'youtube.com'
+    const host = u.hostname.replace(/^(www|m)\./, '');
+    if (host === 'instagram.com') return /^\/[\w.]{1,30}\/?$/.test(u.pathname);
+    return host === 'youtube.com'
       && /^\/(@[\w.-]+|channel\/[\w-]+|c\/[\w.-]+|user\/[\w.-]+)\/?$/.test(u.pathname);
   } catch { return false; }
 }
@@ -67,7 +70,8 @@ async function readChannelAvatar(url) {
     });
     if (!res.ok) return null;
     const m = (await res.text()).match(/property="og:image" content="([^"]+)"/);
-    return m ? m[1] : null;
+    // Instagram writes & as &amp; inside the attribute.
+    return m ? m[1].replace(/&amp;/g, '&') : null;
   } catch { return null; }
 }
 
