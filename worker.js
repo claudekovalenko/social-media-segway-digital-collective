@@ -3,7 +3,7 @@ import { connect, postgresD1 } from './pg.js';
 import { COPY_ORDER, copyPage, finish as finishCopy, compareCounts } from './copy-to-postgres.js';
 import { handlePlatform, sendFollowUp } from './platform-routes.js';
 import { enrichContact } from './enrich.js';
-import { platform, rateLimited, clientIp } from './platform.js';
+import { platform, rateLimited, clientIp, isRealDate, recordId } from './platform.js';
 
 // Cloudflare Worker backend for the Faith Journey funnel.
 // Static files in public/ are served by Workers Assets; this handles /api/* and /c/*.
@@ -340,28 +340,54 @@ async function isAdmin(req, url, env, db) {
 // A duplicate slug is the caller's problem; anything else is ours and should say so.
 function creatorInsertError(err) {
   const msg = String(err && err.message || err);
-  if (/UNIQUE|unique/.test(msg)) return json({ error: 'That link name is already taken.' }, 409);
+  if (/UNIQUE|unique/.test(msg)) {
+    return json({ error: /email/i.test(msg)
+      ? 'That email already belongs to another creator.'
+      : 'That link name is already taken.' }, 409);
+  }
   return json({ error: 'Could not create the creator: ' + msg }, 500);
 }
 
-// With Postgres configured, env.DB becomes a D1-shaped Postgres client for
-// this request. Workers can't share a socket between requests, so each request
-// opens its own (Hyperdrive keeps the real connections warm) and closes it
-// once the response and any waitUntil work are done.
+// With a Postgres connection configured (HYPERDRIVE or DATABASE_URL), each
+// request gets its own client: Workers can't share a socket between requests,
+// so it is opened lazily and closed once the response and any waitUntil work
+// are done (Hyperdrive keeps the real connections warm).
+//
+// Postgres serves the site only once POSTGRES_PRIMARY is "true". Until then
+// D1 stays the system of record and Postgres is reachable only by the copy
+// (env.PG), so copying can be repeated without live writes landing in both.
 function withPostgres(env) {
   const url = (env.HYPERDRIVE && env.HYPERDRIVE.connectionString) || env.DATABASE_URL;
   if (!url) return { env, done: null };
-  const client = connect(url, { max: 1 });
+  let client;
+  try {
+    client = connect(url, { max: 1 });
+  } catch (err) {
+    console.error('Postgres connection string rejected:', err.message);
+    return { env, done: null, unavailable: true };
+  }
+  const primary = String(env.POSTGRES_PRIMARY || '').toLowerCase() === 'true';
   return {
-    // D1 and the raw client stay reachable for the one-time copy.
-    env: { ...env, DB: postgresD1(client), D1: env.DB, PG: client },
+    env: { ...env, DB: primary ? postgresD1(client) : env.DB, D1: env.DB, PG: client },
     done: () => client.end({ timeout: 5 }),
   };
 }
 
+// What a visitor sees when something fails on our side. The detail goes to the
+// Worker's log, never to the browser.
+const CONNECTION_ERROR = /ECONNREFUSED|ENOTFOUND|CONNECT_TIMEOUT|ETIMEDOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|too many connections/i;
+function serverError(err) {
+  console.error(err && err.stack || err);
+  const down = CONNECTION_ERROR.test(String(err && (err.code || '') + ' ' + (err.message || '')));
+  return down
+    ? json({ error: 'The database is unavailable right now. Please try again in a minute.' }, 503)
+    : json({ error: 'Something went wrong on our side. Please try again.' }, 500);
+}
+
 export default {
   async fetch(req, rawEnv, ctx) {
-    const { env, done } = withPostgres(rawEnv);
+    const { env, done, unavailable } = withPostgres(rawEnv);
+    if (unavailable) return json({ error: 'The database is unavailable right now. Please try again in a minute.' }, 503);
     if (!done) return handle(req, env, ctx);
     const pending = [];
     const trackedCtx = {
@@ -390,7 +416,7 @@ async function handle(req, env, ctx) {
         accountSecretFor, newAccessKey, sha256hex, defaultLinks, SESSION_HOURS, RESERVED_PATHS);
       if (handled) return handled;
     } catch (err) {
-      return json({ error: err.message }, 500);
+      return serverError(err);
     }
 
     try {
@@ -524,7 +550,7 @@ async function handle(req, env, ctx) {
 
         if (role === 'creator') {
           creatorSlug = String(b.creator_slug || email.split('@')[0] || '')
-            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
           if (creatorSlug.replace(/-/g, '').length < 3) {
             return json({ error: 'Give the creator a link name of at least 3 letters or numbers.' }, 400);
           }
@@ -873,9 +899,10 @@ async function handle(req, env, ctx) {
 
       // ---- CRM: move a lead along and set the next follow-up ---------------
       if (p.startsWith('/api/leads/') && (req.method === 'PATCH' || req.method === 'POST')) {
-        const id = Number(p.split('/')[3]);
+        const id = recordId(p.split('/')[3]);
         const me = await whoami(req, url, env, db);
         if (!me.role || me.role === 'pending') return json({ error: 'unauthorized' }, 401);
+        if (!id) return json({ error: 'not found' }, 404);
         const lead = await db.leadById(id);
         if (!lead) return json({ error: 'not found' }, 404);
         // A creator may only touch leads that came through their own link.
@@ -895,7 +922,7 @@ async function handle(req, env, ctx) {
         if (b.notes !== undefined) fields.notes = String(b.notes).slice(0, 4000);
         if (b.next_follow_up !== undefined) {
           const d = String(b.next_follow_up || '').trim();
-          if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+          if (d && !isRealDate(d)) {
             return json({ error: 'Use a date like 2026-09-01.' }, 400);
           }
           fields.next_follow_up = d || null;
@@ -1104,7 +1131,8 @@ async function handle(req, env, ctx) {
         // response is still attributed to the real creator.
         const aliases = await creatorAliases(db);
         const slug = aliases[vanity[1]] || vanity[1];
-        const owner = await db.creatorBySlug(slug).catch(() => null);
+        // A database failure answers 503 (via serverError), not "no such creator".
+        const owner = await db.creatorBySlug(slug);
         if (!owner || owner.status === 'suspended') {
           // Unknown or disabled creator: a real page, not the default funnel.
           const res404 = await env.ASSETS.fetch(new Request(new URL('/unavailable', url), req));
@@ -1125,7 +1153,7 @@ async function handle(req, env, ctx) {
       // Anything else falls through to static assets.
       return env.ASSETS.fetch(req);
     } catch (err) {
-      return json({ error: err.message }, 500);
+      return serverError(err);
     }
   }
 }

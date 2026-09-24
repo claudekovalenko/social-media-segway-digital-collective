@@ -45,7 +45,9 @@ jobs:
           while [ -n "$table" ] && [ "$table" != null ]; do
             call "$(jq -nc --arg t "$table" --argjson a "$after" '{table:$t,after:$a}')"
             jq -r '"\(.table): +\(.copied)" + (if .orphaned > 0 then "  (\(.orphaned) skipped: parent row missing)" else "" end)
-                   + (if (.skipped // []) | length > 0 then "  columns not in Postgres: \(.skipped | join(", "))" else "" end)' /tmp/out
+                   + (if (.skipped // []) | length > 0 then "  columns not in Postgres: \(.skipped | join(", "))" else "" end),
+                   ((.rejected // [])[] | "    ✗ refused \(to_entries[0].key) \(to_entries[0].value): \(.error)")' /tmp/out
+            rejected=$(( ${rejected:-0} + $(jq '(.rejected // []) | length' /tmp/out) ))
             table=$(jq -r '.next_table' /tmp/out); after=$(jq -r '.next_after' /tmp/out)
           done
 
@@ -53,4 +55,8 @@ jobs:
           echo; echo "Row counts (D1 → Postgres):"
           jq -r '.counts[] | "  \(if .match then "✓" else "✗" end) \(.table): \(.d1) → \(.postgres)" + (if .placeholders then "  (incl. \(.placeholders) placeholder/default creators)" else "" end)' /tmp/out
           jq -e '[.counts[] | select(.match | not)] | length == 0' /tmp/out >/dev/null \
-            || echo "Some counts differ: rows skipped above (missing parent) explain a difference; anything else needs a look."
+            || echo "Some counts differ: rows skipped or refused above explain a difference; anything else needs a look."
+          if [ "${rejected:-0}" -gt 0 ]; then
+            echo "$rejected row(s) were refused. Fix them in D1 and run this again: it only adds what's missing."
+            exit 1
+          fi

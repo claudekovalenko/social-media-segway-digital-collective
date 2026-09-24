@@ -9,31 +9,52 @@
 import postgres from 'postgres';
 
 // SQLite dialect → Postgres, for the handful of constructs this app uses.
+// Only SQL text is rewritten: string literals, quoted names and comments pass
+// through untouched, and `?` placeholders are numbered in order.
 export function translate(sql) {
-  let out = '';
+  const text = sql.replace(/datetime\('now'\)/gi, 'now()').replace(/;\s*$/, '');
+  const parts = [];
+  let code = '';
   let n = 0;
-  let quote = null;
-  for (let i = 0; i < sql.length; i++) {
-    const ch = sql[i];
-    if (quote) {
-      out += ch;
-      if (ch === quote) quote = null;
-    } else if (ch === "'" || ch === '"') {
-      quote = ch;
-      out += ch;
-    } else if (ch === '?') {
-      out += '$' + (++n);
+  for (let i = 0; i < text.length;) {
+    const two = text.slice(i, i + 2);
+    let end = -1;
+    if (text[i] === "'" || text[i] === '"') {
+      const q = text[i];
+      end = i + 1;
+      while (end < text.length && !(text[end] === q && text[end + 1] !== q)) end += text[end] === q ? 2 : 1;
+      end += 1;
+    } else if (two === '--') {
+      end = text.indexOf('\n', i); if (end < 0) end = text.length;
+    } else if (two === '/*') {
+      end = text.indexOf('*/', i + 2); end = end < 0 ? text.length : end + 2;
+    }
+    if (end > i) {
+      parts.push(rewrite(code), text.slice(i, end));
+      code = '';
+      i = end;
     } else {
-      out += ch;
+      code += text[i] === '?' ? '$' + (++n) : text[i];
+      i += 1;
     }
   }
-  return out
-    .replace(/datetime\('now'\)/gi, 'now()')
-    .replace(/([\w.]+) = (\$\d+) COLLATE NOCASE/gi, 'lower($1) = lower($2)')
-    .replace(/\s+COLLATE NOCASE/gi, '')
-    .replace(/\bLIKE\b/g, 'ILIKE')
+  parts.push(rewrite(code));
+  return parts.join('');
+}
+
+function rewrite(code) {
+  const term = '([\\w.$]+(?:\\([^()]*\\))?)';
+  return code
+    .replace(new RegExp(`${term}\\s+COLLATE\\s+NOCASE\\s*=\\s*${term}`, 'gi'), 'lower($1) = lower($2)')
+    .replace(new RegExp(`${term}\\s*=\\s*${term}\\s+COLLATE\\s+NOCASE`, 'gi'), 'lower($1) = lower($2)')
+    .replace(new RegExp(`${term}\\s+COLLATE\\s+NOCASE`, 'gi'), 'lower($1)')
+    .replace(/\bNOT\s+LIKE\b/gi, 'NOT ILIKE')
+    .replace(/(?<!NOT\s)\bLIKE\b/gi, 'ILIKE')
     .replace(/\bsubstr\(([\w.]+),/gi, 'substr(($1)::text,');
 }
+
+// Postgres can't store the NUL character in text; D1 can. Drop it.
+const clean = (v) => (typeof v === 'string' && v.includes('\u0000') ? v.replace(/\u0000/g, '') : v);
 
 const asString = { serialize: (x) => x, parse: (x) => x };
 
@@ -52,7 +73,7 @@ export function connect(url, opts = {}) {
     max: opts.max ?? 5,
     prepare: false,           // safe behind Supabase's transaction pooler and Hyperdrive
     idle_timeout: 20,
-    connect_timeout: 10,
+    connect_timeout: 5,
     onnotice: () => {},
     types: {
       bigint: { to: 20, from: [20], serialize: (x) => String(x), parse: (x) => Number(x) },
@@ -79,7 +100,7 @@ export function postgresD1(sql) {
       text,
       params,
       bind(...args) {
-        return statement(text, args.map((a) => (a === undefined ? null : a)));
+        return statement(text, args.map((a) => (a === undefined ? null : clean(a))));
       },
       async all(q = sql) {
         const rows = await exec(q, text, params);
@@ -92,9 +113,10 @@ export function postgresD1(sql) {
       },
       async run(q = sql) {
         // D1 reports the new row's id; Postgres has to be asked for it.
-        const isInsert = /^\s*insert\b/i.test(text) && !/\breturning\b/i.test(text);
-        const rows = await exec(q, isInsert ? `${text} RETURNING *` : text, params);
-        const first = rows[0];
+        const body = text.replace(/;\s*$/, '');
+        const isInsert = /^\s*insert\b/i.test(body) && !/\breturning\b/i.test(body);
+        const rows = await exec(q, isInsert ? `${body}\nRETURNING *` : body, params);
+        const first = rows[rows.length - 1]; // D1 reports the last row inserted
         return {
           success: true,
           results: [],

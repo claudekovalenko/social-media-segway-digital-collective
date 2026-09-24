@@ -414,8 +414,8 @@ something that works today.
    when no Postgres connection is configured.
    - Why: the move to Supabase/Postgres is in progress; the Supabase project
      isn't created yet.
-   - Authoritative: D1 until the switch; Postgres from the moment a
-     `HYPERDRIVE` binding or `DATABASE_URL` is deployed.
+   - Authoritative: D1 until the Worker secret `POSTGRES_PRIMARY` is `true`;
+     Postgres from then on. A configured connection alone switches nothing.
    - Sync: none. It is a one-way, one-time copy (`copy-to-postgres.js`, safe to
      repeat). If a copy run fails, D1 is untouched and the copy is re-run.
    - End state: after the switch is verified, remove the D1 binding, the D1

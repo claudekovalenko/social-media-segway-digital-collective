@@ -28,13 +28,16 @@ security). Any Postgres host works; Supabase is the one it's set up for.
 
 How the Worker reaches it (`pg.js`, `db.js`):
 
-- With a **Hyperdrive** binding named `HYPERDRIVE`, or a `DATABASE_URL` secret,
-  the Worker opens a Postgres connection per request and runs every query
-  there. The existing queries are written in SQLite's dialect; `pg.js`
-  translates the few differences and returns rows in the same shapes, so the
-  rest of the code doesn't change.
-- Without either, it falls back to the old Cloudflare D1 database, so the site
-  keeps working until the switch.
+- With a **Hyperdrive** binding named `HYPERDRIVE` (or a `DATABASE_URL`
+  secret) **and** `POSTGRES_PRIMARY` set to `true`, the Worker opens a
+  Postgres connection per request and runs every query there. The existing
+  queries are written in SQLite's dialect; `pg.js` translates the few
+  differences and returns rows in the same shapes, so the rest of the code
+  doesn't change.
+- Until `POSTGRES_PRIMARY` is `true`, the old Cloudflare D1 database keeps
+  serving the site; a configured Postgres connection is used only by the copy
+  below. That way the copy can be repeated without live data landing in two
+  places.
 
 `GET /api/admin/leads` reports which one answered, as `backend`
 (`postgres`, `supabase` or `d1`).
@@ -65,14 +68,26 @@ How the Worker reaches it (`pg.js`, `db.js`):
    (Or, without Hyperdrive, set the connection string as a `DATABASE_URL`
    Worker secret with the **Set a Worker secret** workflow.) Keep the
    `[[d1_databases]]` block for now: the copy reads from it.
-3. **Deploy.** From this moment new data goes to Postgres.
+3. **Deploy.** The site still runs on D1; nothing has switched yet.
 4. **Copy what's in D1:** **Actions → Copy D1 into Postgres → Run workflow**.
    Rows keep their ids; it's safe to run more than once; it ends with a row
-   count comparison. Rows whose parent is missing in D1 (a signup for a
-   deleted lead) are skipped and listed; leads for a creator that no longer
-   exists keep their link through an archived, unlisted placeholder creator.
-5. Check the dashboard, then remove the `[[d1_databases]]` block once you're
-   happy.
+   count comparison.
+   - Rows whose parent is missing in D1 (a signup for a deleted lead) are
+     skipped and listed.
+   - Leads for a creator that no longer exists keep their link through an
+     archived, unlisted placeholder creator.
+   - A row Postgres refuses (an impossible date, a duplicate email) is listed
+     with the reason and the run fails; fix it in D1 and run again.
+   - Postgres's own new ids start 10,000 above the copied ones, so rows added
+     to D1 before the switch can still be copied afterwards without clashing.
+5. **Switch:** set the Worker secret `POSTGRES_PRIMARY` to `true`. From this
+   moment the site reads and writes Postgres.
+6. **Copy once more** straight away, to bring over anything that reached D1
+   between step 4 and step 5.
+7. Check the dashboard, then remove the `[[d1_databases]]` block once you're
+   happy. Setting `POSTGRES_PRIMARY` back to `false` returns the site to D1, but
+   anything written after the switch exists only in Postgres, so treat that as
+   an emergency step, not a routine one.
 
 Tests: `npm run test:postgres` runs the whole API against D1 (SQLite) and
 Postgres side by side and fails on any difference (needs a local Postgres).

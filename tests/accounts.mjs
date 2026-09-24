@@ -56,6 +56,7 @@ try {
   const { default: worker } = await import(path.join(ROOT, 'worker.js'));
   const env = {
     DATABASE_URL: dbUrl(DB_NAME),
+    POSTGRES_PRIMARY: 'true',
     ADMIN_KEY: 'accounts-test-admin-key',
     SESSION_SECRET: 'accounts-test-session',
     ASSETS: { fetch: async (req) => new Response(`asset ${new URL(req.url).pathname}`, { headers: { 'content-type': 'text/html' } }) },
