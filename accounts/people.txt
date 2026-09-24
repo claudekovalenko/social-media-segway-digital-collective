@@ -1,4 +1,4 @@
-# One person per line: First Last @instagramhandle
+# One person per line: First Last @instagramhandle (their Instagram is also their photo)
 # Pushing a change to this file on the accounts branch creates the new
 # accounts on the live site (.github/workflows/accounts-bulk.yml).
 # Existing accounts are skipped.
