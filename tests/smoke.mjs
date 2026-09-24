@@ -14,7 +14,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { people } from './people.mjs';
+import { people } from '../accounts/people.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -253,15 +253,16 @@ async function run(base) {
         const rows = Array.isArray(dir) ? dir : dir.creators || [];
         expect(rows.some((d) => d.slug === p.slug && d.handle === `@${p.handle}`), `not in the directory as @${p.handle}`);
       });
+      if (!p.photo) continue; // none listed for them yet
       await check(`creator photo shows: ${p.name}`, async (page) => {
-        // The first view starts the Instagram lookup; the result is kept.
+        // The first view starts the photo lookup; the result is kept.
         let photo = '';
         for (let i = 0; i < 3 && !photo; i++) {
           if (i) await page.waitForTimeout(4000);
           const pub = await (await page.request.get(`${base}/api/creators/${p.slug}`)).json();
           photo = (pub.creator || pub).avatar_url || '';
         }
-        expect(photo, `no photo for ${p.slug} (Instagram profile not readable?)`);
+        expect(photo, `no photo for ${p.slug} (${p.photo} not readable, nor their Instagram?)`);
       });
     }
   }

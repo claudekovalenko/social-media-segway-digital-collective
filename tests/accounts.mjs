@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { people as listPeople } from './people.mjs';
+import { people as listPeople } from '../accounts/people.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ADMIN_URL = process.env.TEST_DATABASE_URL;
@@ -129,6 +129,8 @@ try {
   check(first.status === 0, 'workflow succeeded', first.stderr);
 
   const people = listPeople();
+  const refused = people.filter((p) => p.error);
+  check(!refused.length, 'every line of people.txt reads cleanly', JSON.stringify(refused));
 
   const directory = (await api('/api/directory')).json || [];
   const dirList = Array.isArray(directory) ? directory : directory.creators || [];
@@ -155,15 +157,18 @@ try {
       `${pub.status} ${pub.text.slice(0, 120)}`);
     check(dirList.some((d) => d.slug === p.slug && d.handle === `@${p.handle}`), `listed in the directory as @${p.handle}`);
 
-    // Their photo: the Instagram profile is set at creation and its picture
+    // Their photo: whatever people.txt lists is set at creation and its picture
     // looked up (the first view triggers the lookup; the next one shows it).
     await api(`/api/creators/${p.slug}`);
     const again = await api(`/api/creators/${p.slug}`);
     const photo = again.json?.creator?.avatar_url ?? again.json?.avatar_url;
-    p.expectedPhoto = p.youtube
-      ? `https://yt.example${new URL(p.youtube).pathname.replace(/\/$/, '')}.jpg`
-      : `https://cdn.example/${p.handle}.jpg?a=1&b=2`;
-    check(photo === p.expectedPhoto, `${p.youtube ? 'YouTube' : 'Instagram'} photo shows on their page`,
+    // The photo listed for them: YouTube (stubbed), Instagram (stubbed), or none.
+    const src = p.photo ? new URL(p.photo) : null;
+    p.expectedPhoto = !src ? ''
+      : src.hostname.endsWith('youtube.com') ? `https://yt.example${src.pathname}.jpg`
+      : `https://cdn.example/${src.pathname.replace(/\//g, '')}.jpg?a=1&b=2`;
+    const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : 'Instagram';
+    check((photo || '') === p.expectedPhoto, `${kind} photo${src ? ' shows' : ' (none listed)'} on their page`,
       `got ${JSON.stringify(photo)}; fetched: ${photoFetches.join(', ')}`);
 
     // A person responds through their link…
@@ -186,7 +191,7 @@ try {
 
   const dirAfter = (await api('/api/directory')).json;
   const dirRows = Array.isArray(dirAfter) ? dirAfter : dirAfter?.creators || [];
-  check(people.every((p) => dirRows.find((d) => d.slug === p.slug)?.avatar_url === p.expectedPhoto),
+  check(people.every((p) => (dirRows.find((d) => d.slug === p.slug)?.avatar_url || '') === p.expectedPhoto),
     'every photo shows in the creators directory', JSON.stringify(dirRows.map((d) => [d.slug, d.avatar_url])));
   check(dirRows.every((d) => !('avatar_cached' in d) && !('avatar_checked_at' in d)),
     'the directory shows photos without internal bookkeeping fields');

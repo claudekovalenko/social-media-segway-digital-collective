@@ -83,7 +83,7 @@ function photoSources(row) {
   const handle = String(row.handle || '').trim().replace(/^@/, '');
   let youtube = false;
   try { youtube = new URL(row.avatar_url).hostname.replace(/^(www|m)\./, '') === 'youtube.com'; } catch {}
-  if (youtube && /^[\w.]{1,30}$/.test(handle)) out.push(`https://www.instagram.com/${handle}/`);
+  if (youtube && /^(?=.*\w)[\w.]{1,30}$/.test(handle)) out.push(`https://www.instagram.com/${handle}/`);
   return out;
 }
 
@@ -93,15 +93,17 @@ function avatarFor(row, db, after) {
   if (!row || !row.avatar_url) return row;
   if (!isChannelUrl(row.avatar_url)) { row.avatar_url = row.avatar_url; return row; }
   const age = row.avatar_checked_at ? Date.now() - Date.parse(row.avatar_checked_at) : Infinity;
-  if (row.avatar_cached && age < AVATAR_MAX_AGE_MS) { row.avatar_url = row.avatar_cached; return row; }
+  // Looked up recently (found or not): no new lookup until it goes stale.
+  if (age < AVATAR_MAX_AGE_MS) { row.avatar_url = row.avatar_cached || ''; return row; }
   const sources = photoSources(row);
   const slug = row.slug;
   if (after) {
     after((async () => {
       let found = null;
       for (const source of sources) if (!found) found = await readChannelAvatar(source);
-      if (!found) return;
-      await db.updateCreatorLinks(slug, { avatar_cached: found, avatar_checked_at: new Date().toISOString() })
+      // Nothing found: keep any older picture, and don't ask again for a while.
+      const fields = found ? { avatar_cached: found } : {};
+      await db.updateCreatorLinks(slug, { ...fields, avatar_checked_at: new Date().toISOString() })
         .catch(() => {});
     })());
   }
@@ -947,7 +949,9 @@ async function handle(req, env, ctx) {
           fields.avatar_cached = isChannelUrl(fields.avatar_url)
             ? await readChannelAvatar(fields.avatar_url)
             : fields.avatar_url;
-          fields.avatar_checked_at = new Date().toISOString();
+          // Not found now: leave it unchecked, so the next page view tries again
+          // with the Instagram fallback.
+          fields.avatar_checked_at = fields.avatar_cached ? new Date().toISOString() : null;
         }
         if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
         await db.updateCreatorLinks(slug, fields);
@@ -1070,7 +1074,8 @@ async function handle(req, env, ctx) {
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
         avatarFor(pub, db, after);
-        return json({ ...pub, defaults: await defaultLinks(db) });
+        const { avatar_cached, avatar_checked_at, ...shown } = pub;
+        return json({ ...shown, defaults: await defaultLinks(db) });
       }
 
       if (p === '/api/leads' && req.method === 'POST') {

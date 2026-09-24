@@ -1,9 +1,12 @@
-# One person per line: First Last @instagramhandle (their Instagram is also their photo)
+# One person per line: First Last @instagramhandle [photo]
+# The optional photo is their YouTube channel (the site falls back to their
+# Instagram if YouTube gives no picture) or an Instagram profile address.
+# No photo listed = none until one is added.
 # Pushing a change to this file on the accounts branch creates the new
 # accounts on the live site (.github/workflows/accounts-bulk.yml).
 # Existing accounts are skipped.
 Jessica Brown @ajessicabrown
-Dayne Kamela @litwithprayer
-Josiah Alipate @therealcoachjosiah
+Dayne Kamela @litwithprayer https://www.youtube.com/channel/UCeOJdFKWlQrIqk0y1BntnDg
+Josiah Alipate @therealcoachjosiah https://www.youtube.com/@therealcoachjosiah
 Ivan Kovalenko @ivan.a.kovalenko
-Joel Bomberger @joelbomb
+Joel Bomberger @joelbomb https://www.youtube.com/@joelbomb

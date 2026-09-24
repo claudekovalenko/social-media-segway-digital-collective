@@ -3,14 +3,14 @@ name: Create creator accounts in bulk
 # Runs when accounts/people.txt changes on this branch, or from the Actions
 # tab with a pasted list. One person per line:
 #
-#   First Last @instagramhandle [https://www.youtube.com/@channel]
+#   First Last @instagramhandle [photo: YouTube channel or Instagram profile]
 #
 # Each line becomes a creator account on the live site:
 #   - sign-in:  firstlast@digitalcollective.com (lowercase, letters only)
 #   - password: their first name, lowercase
 #   - link:     /c/<handle>, using the platform's default videos
-#   - photo:    their YouTube channel when given (falling back to Instagram
-#               if YouTube doesn't give one), otherwise their Instagram
+#   - photo:    the address listed, if any (a YouTube channel falls back to
+#               their Instagram when YouTube gives no picture); none if not
 #
 # Lines that already have an account are skipped, not reset. Goes through
 # the site's own API, the same way the single "Create or reset an account"
@@ -71,32 +71,25 @@ jobs:
           fi
 
           created=0; skipped=0; failed=0; seen=' '
-          # Accept newlines or semicolons between people (the Actions input box
-          # is a single line on some browsers).
-          while IFS= read -r line; do
-            line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
-            [ -z "$line" ] && continue
-            youtube=$(printf '%s' "$line" | { grep -oE 'https?://(www\.|m\.)?youtube\.com/[^[:space:]]+' || true; } | head -n1)
-            line=$(printf '%s' "$line" | sed -E 's#https?://[^[:space:]]+##g')
-            handle=$(printf '%s' "$line" | { grep -o '@[A-Za-z0-9._-]*' || true; } | head -n1 | sed 's/^@//')
-            name=$(printf '%s' "$line" | sed 's/@[A-Za-z0-9._-]*//g; s/[[:space:]]\+/ /g; s/^ //; s/ $//')
-            first=$(printf '%s' "$name" | awk '{print $1}')
-            last=$(printf '%s' "$name" | awk '{print $NF}')
-            if [ -z "$handle" ] || [ -z "$first" ] || [ "$first" = "$last" ]; then
-              echo "✗ '$line' — need: First Last @handle"; failed=$((failed+1)); continue
+          # One reader for the list (accounts/people.mjs, also used by the
+          # tests); it refuses unclear lines instead of guessing. Newlines or
+          # semicolons separate people (the Actions input box is one line on
+          # some browsers).
+          while IFS= read -r person; do
+            line=$(jq -r '.line' <<<"$person")
+            if jq -e 'has("error")' <<<"$person" >/dev/null; then
+              echo "✗ '$line' — $(jq -r '.error' <<<"$person")"; failed=$((failed+1)); continue
             fi
-            # José → jose, O'Brien → obrien
-            clean() { python3 -c 'import sys,unicodedata as u; s=u.normalize("NFKD",sys.argv[1]).lower(); print("".join(c for c in s if "a"<=c<="z"),end="")' "$1"; }
-            email="$(clean "$first")$(clean "$last")@$DOMAIN"
-            password=$(clean "$first")
-            slug=$(printf '%s' "$handle" | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9-]/-/g' | cut -c1-40)
+            name=$(jq -r '.name' <<<"$person"); email=$(jq -r '.email' <<<"$person")
+            password=$(jq -r '.password' <<<"$person"); slug=$(jq -r '.slug' <<<"$person")
+            handle=$(jq -r '.handle' <<<"$person"); photo=$(jq -r '.photo // empty' <<<"$person")
             case "$seen" in *" $email "*)
               echo "✗ $name → $email is already used by someone earlier in this list"; failed=$((failed+1)); continue ;;
             esac
             seen="$seen$email "
 
             if [ "$DRY_RUN" = "true" ]; then
-              echo "• $name → $email  link: /c/$slug  photo: ${youtube:-https://www.instagram.com/$handle/}"; continue
+              echo "• $name → $email  link: /c/$slug  photo: ${photo:-none}"; continue
             fi
 
             body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
@@ -105,18 +98,20 @@ jobs:
               -H "content-type: application/json" -H "$AUTH" --data "$body")
             case "$code" in
               200|201)
-                echo "✓ $name → $email  link: /c/$slug"; created=$((created+1))
-                # Their photo: the YouTube channel if given (the site falls back
-                # to Instagram when YouTube gives none), otherwise Instagram.
-                photo=$(jq -nc --arg s "$slug" --arg u "${youtube:-https://www.instagram.com/$handle/}" '{slug:$s,avatar_url:$u}')
-                pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
-                  -H "content-type: application/json" -H "$AUTH" --data "$photo")
-                [ "$pcode" = 200 ] || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
+                echo "✓ $name → $email  link: /c/$slug  photo: ${photo:-none}"; created=$((created+1))
+                # The photo listed for them, if any (a YouTube channel falls back
+                # to their Instagram on the site when YouTube gives no picture).
+                if [ -n "$photo" ]; then
+                  pbody=$(jq -nc --arg s "$slug" --arg u "$photo" '{slug:$s,avatar_url:$u}')
+                  pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
+                    -H "content-type: application/json" -H "$AUTH" --data "$pbody")
+                  [ "$pcode" = 200 ] || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
+                fi
                 ;;
               409)     echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1)) ;;
               *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' /tmp/out 2>/dev/null)"; failed=$((failed+1)) ;;
             esac
-          done < <(printf '%s\n' "$PEOPLE" | tr ';' '\n')
+          done < <(printf '%s\n' "$PEOPLE" | tr ';' '\n' | node accounts/people.mjs -)
 
           echo
           echo "created: $created  already existed: $skipped  failed: $failed"
