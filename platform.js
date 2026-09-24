@@ -32,6 +32,7 @@ let ready = null;
 
 export function platform(DB) {
   async function ensure() {
+    if (DB.postgres) return; // supabase/schema.sql owns the Postgres schema
     if (!ready) ready = (async () => {
       await DB.batch([
         DB.prepare(`CREATE TABLE IF NOT EXISTS contacts (

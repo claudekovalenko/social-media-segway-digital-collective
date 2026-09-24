@@ -1,6 +1,7 @@
 name = "faith-journey-funnel"
 main = "worker.js"
 compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
 account_id = "830375f1830fccce2dac031f42817b3d"
 workers_dev = true
 

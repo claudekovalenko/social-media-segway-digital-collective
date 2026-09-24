@@ -1,4 +1,6 @@
 import { makeDb, usingSupabase, emailFromToken } from './db.js';
+import { connect, postgresD1 } from './pg.js';
+import { COPY_ORDER, copyPage, finish as finishCopy, compareCounts } from './copy-to-postgres.js';
 import { handlePlatform, sendFollowUp } from './platform-routes.js';
 import { enrichContact } from './enrich.js';
 import { platform, rateLimited, clientIp } from './platform.js';
@@ -342,8 +344,41 @@ function creatorInsertError(err) {
   return json({ error: 'Could not create the creator: ' + msg }, 500);
 }
 
+// With Postgres configured, env.DB becomes a D1-shaped Postgres client for
+// this request. Workers can't share a socket between requests, so each request
+// opens its own (Hyperdrive keeps the real connections warm) and closes it
+// once the response and any waitUntil work are done.
+function withPostgres(env) {
+  const url = (env.HYPERDRIVE && env.HYPERDRIVE.connectionString) || env.DATABASE_URL;
+  if (!url) return { env, done: null };
+  const client = connect(url, { max: 1 });
+  return {
+    // D1 and the raw client stay reachable for the one-time copy.
+    env: { ...env, DB: postgresD1(client), D1: env.DB, PG: client },
+    done: () => client.end({ timeout: 5 }),
+  };
+}
+
 export default {
-  async fetch(req, env, ctx) {
+  async fetch(req, rawEnv, ctx) {
+    const { env, done } = withPostgres(rawEnv);
+    if (!done) return handle(req, env, ctx);
+    const pending = [];
+    const trackedCtx = {
+      waitUntil: (p) => { pending.push(p); try { ctx.waitUntil(p); } catch { /* no context */ } },
+      passThroughOnException: () => ctx.passThroughOnException?.(),
+    };
+    try {
+      return await handle(req, env, trackedCtx);
+    } finally {
+      const close = Promise.allSettled(pending).then(done);
+      try { ctx.waitUntil(close); } catch { await close; }
+    }
+  },
+};
+
+async function handle(req, env, ctx) {
+  {
     const after = (p) => { try { ctx.waitUntil(p); } catch { /* no context: skip the refresh */ } };
     const url = new URL(req.url);
     const p = url.pathname;
@@ -432,6 +467,27 @@ export default {
       if (p === '/api/admin/status' && req.method === 'GET') {
         const count = await db.countAdmins().catch(() => 0);
         return json({ has_accounts: count > 0 || adminLogins(env).size > 0 });
+      }
+
+      // Copy D1 into Postgres, one page per call: {table, after} copies the
+      // next page and says where to resume; {finish: true} fixes the id
+      // counters and compares row counts. Admins only; safe to repeat.
+      if (p === '/api/admin/copy-to-postgres' && req.method === 'POST') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        if (!env.PG || !env.D1) {
+          return json({ error: 'Needs both the D1 binding and a Postgres connection (HYPERDRIVE or DATABASE_URL).' }, 400);
+        }
+        const b = await req.json().catch(() => ({}));
+        if (b.finish) {
+          await finishCopy(env.PG);
+          return json({ ok: true, counts: await compareCounts(env.D1, env.PG) });
+        }
+        const table = b.table || COPY_ORDER[0];
+        if (!COPY_ORDER.includes(table)) return json({ error: 'unknown table', tables: COPY_ORDER }, 400);
+        const page = await copyPage(env.D1, env.PG, table, Number(b.after) || 0);
+        const next = page.done ? COPY_ORDER[COPY_ORDER.indexOf(table) + 1] || null : table;
+        return json({ ...page, next_table: next, next_after: page.done ? 0 : page.after });
       }
 
       // Create an admin account. The very first one is open, because a brand
@@ -1049,5 +1105,5 @@ export default {
     } catch (err) {
       return json({ error: err.message }, 500);
     }
-  },
-};
+  }
+}
