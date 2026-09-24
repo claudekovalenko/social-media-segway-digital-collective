@@ -1,0 +1,63 @@
+name: Copy D1 into Postgres
+
+# Run from the Actions tab once the Worker has a Postgres connection
+# (HYPERDRIVE binding or DATABASE_URL secret) alongside its D1 binding.
+# Copies every table a page at a time through the live Worker's own
+# /api/admin/copy-to-postgres route, then compares row counts. Repeatable
+# while D1 is still live (rows are refreshed, not duplicated); run it one last
+# time with DATABASE_MODE=paused, then switch. After the switch the Worker
+# refuses to copy.
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_email:
+        description: An admin's email
+        required: true
+      admin_password:
+        description: That admin's password (masked in the log)
+        required: true
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask secrets
+        env:
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+        run: echo "::add-mask::$ADMIN_PASSWORD"
+      - name: Copy
+        env:
+          SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+        run: |
+          login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+          TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
+          [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
+          echo "::add-mask::$TOKEN"
+          call() {
+            code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/copy-to-postgres" \
+              -H "content-type: application/json" -H "authorization: Bearer $TOKEN" --data "$1")
+            [ "$code" = 200 ] || { echo "failed ($code): $(cat /tmp/out)"; exit 1; }
+          }
+
+          table=creators; after=0
+          while [ -n "$table" ] && [ "$table" != null ]; do
+            call "$(jq -nc --arg t "$table" --argjson a "$after" '{table:$t,after:$a}')"
+            jq -r '"\(.table): +\(.copied)" + (if .orphaned > 0 then "  (\(.orphaned) skipped: parent row missing)" else "" end)
+                   + (if (.skipped // []) | length > 0 then "  columns not in Postgres: \(.skipped | join(", "))" else "" end),
+                   ((.rejected // [])[] | "    ✗ refused \(to_entries[0].key) \(to_entries[0].value): \(.error)")' /tmp/out
+            rejected=$(( ${rejected:-0} + $(jq '(.rejected // []) | length' /tmp/out) ))
+            table=$(jq -r '.next_table' /tmp/out); after=$(jq -r '.next_after' /tmp/out)
+          done
+
+          call '{"finish":true}'
+          echo; echo "Row counts (D1 → Postgres):"
+          jq -r '.counts[] | "  \(if .match then "✓" else "✗" end) \(.table): \(.d1) → \(.postgres)" + (if .placeholders then "  (incl. \(.placeholders) placeholder/default creators)" else "" end)' /tmp/out
+          jq -e '[.counts[] | select(.match | not)] | length == 0' /tmp/out >/dev/null \
+            || echo "Some counts differ: rows skipped or refused above explain a difference; anything else needs a look."
+          if [ "${rejected:-0}" -gt 0 ]; then
+            echo "$rejected row(s) were refused. Fix them in D1 (still the live database) and run this again."
+            exit 1
+          fi

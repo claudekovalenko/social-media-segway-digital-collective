@@ -1,0 +1,11 @@
+# One person per line: First Last @instagramhandle [photo]
+# The optional photo is their YouTube channel (the site falls back to their
+# Instagram if YouTube gives no picture) or an Instagram profile address.
+# No photo listed = none until one is added.
+# Actions → Create creator accounts in bulk → Run workflow creates the new
+# accounts on the live site. Existing accounts are skipped.
+Jessica Brown @ajessicabrown
+Dayne Kamela @litwithprayer https://www.youtube.com/channel/UCeOJdFKWlQrIqk0y1BntnDg
+Josiah Alipate @therealcoachjosiah https://www.youtube.com/@therealcoachjosiah
+Ivan Kovalenko @ivan.a.kovalenko
+Joel Bomberger @joelbomb https://www.youtube.com/@joelbomb

@@ -5,6 +5,7 @@
 import {
   platform, sendEmail, renderEmail, fillTokens, DEFAULT_TEMPLATES, RESPONSE_TYPES,
   EVENT_TYPES, rateLimited, clientIp, toCsv, TERMS_VERSION, FAITH_VERSION, CONSENT_VERSION,
+  isRealDate, dateParam, recordId,
 } from './platform.js';
 import { enrichContact } from './enrich.js';
 
@@ -221,7 +222,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     const asked = url.searchParams.get('creator');
     const creator_slug = me.role === 'admin' ? (asked || null) : me.creator_slug;
     if (me.role !== 'admin' && !creator_slug) return json({ error: 'This account is not linked to a creator.' }, 403);
-    const from = url.searchParams.get('from') || null; const to = url.searchParams.get('to') || null;
+    const from = dateParam(url.searchParams.get('from')); const to = dateParam(url.searchParams.get('to'));
     const data = await pf.analytics({ creator_slug, from, to });
     return json({ scope: creator_slug || 'network', from, to, ...data });
   }
@@ -234,7 +235,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     const creator_slug = me.role === 'admin' ? (asked || null) : me.creator_slug;
     if (me.role !== 'admin' && !creator_slug) return json({ error: 'This account is not linked to a creator.' }, 403);
     const rows = await pf.responses({
-      creator_slug, from: url.searchParams.get('from') || null, to: url.searchParams.get('to') || null,
+      creator_slug, from: dateParam(url.searchParams.get('from')), to: dateParam(url.searchParams.get('to')),
       type: url.searchParams.get('type') || null, status: url.searchParams.get('status') || null,
       q: url.searchParams.get('q') || null,
     });
@@ -242,6 +243,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
   }
 
   const respMatch = p.match(/^\/api\/responses\/(\d+)$/);
+  if (respMatch && !recordId(respMatch[1])) return json({ error: 'not found' }, 404);
   if (respMatch && (req.method === 'PATCH' || req.method === 'POST')) {
     const me = await whoami(req, url, env, db);
     if (!me.role || me.role === 'pending') return json({ error: 'unauthorized' }, 401);
@@ -258,7 +260,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     if (b.notes !== undefined) fields.notes = String(b.notes).slice(0, 4000);
     if (b.next_follow_up !== undefined) {
       const d = String(b.next_follow_up || '').trim();
-      if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) return json({ error: 'Use a date like 2026-09-01.' }, 400);
+      if (d && !isRealDate(d)) return json({ error: 'Use a date like 2026-09-01.' }, 400);
       fields.next_follow_up = d || null;
     }
     if (me.role === 'admin' && b.creator_slug !== undefined) {
@@ -272,6 +274,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
   }
 
   const contactMatch = p.match(/^\/api\/contacts\/(\d+)$/);
+  if (contactMatch && !recordId(contactMatch[1])) return json({ error: 'not found' }, 404);
   if (contactMatch && req.method === 'GET') {
     const me = await whoami(req, url, env, db);
     if (!me.role || me.role === 'pending') return json({ error: 'unauthorized' }, 401);
@@ -305,7 +308,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     const asked = url.searchParams.get('creator');
     const creator_slug = me.role === 'admin' ? (asked || null) : me.creator_slug;
     if (me.role !== 'admin' && !creator_slug) return json({ error: 'This account is not linked to a creator.' }, 403);
-    const rows = await pf.exportRows({ creator_slug, from: url.searchParams.get('from') || null, to: url.searchParams.get('to') || null });
+    const rows = await pf.exportRows({ creator_slug, from: dateParam(url.searchParams.get('from')), to: dateParam(url.searchParams.get('to')) });
     await pf.audit(me.email, 'export.csv', creator_slug || 'network', { rows: rows.length });
     const name = `digital-collective-${creator_slug || 'network'}-${new Date().toISOString().slice(0, 10)}.csv`;
     return new Response(toCsv(rows), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${name}"` } });
@@ -394,7 +397,7 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     if (me.role !== 'admin') return json({ error: 'unauthorized' }, 401);
     const b = await req.json().catch(() => ({}));
     const ids = b.contact_id ? [Number(b.contact_id)]
-      : await pf.contactsToEnrich({ limit: Math.min(Number(b.limit) || 200, 200), staleBefore: b.all ? '9999' : null });
+      : await pf.contactsToEnrich({ limit: Math.min(Number(b.limit) || 200, 200), staleBefore: b.all ? '9999-12-31' : null });
     const results = [];
     for (const id of ids) {
       try { const r = await enrichContact(pf, id, { env, fetchFn: fetch }); if (r) results.push({ id, score: r.score, email_status: r.email_status, dup_of: r.dup_of }); }

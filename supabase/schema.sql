@@ -329,3 +329,159 @@ create policy admins_all_consents on consents for all using (is_admin());
 drop policy if exists admins_all_audit on audit_log;
 create policy admins_all_audit on audit_log for select using (is_admin());
 -- verifications: no policy on purpose; only the service key reads tokens.
+
+-- ===========================================================================
+-- Hardening. Safe to re-run. Tested against Postgres with Supabase's roles
+-- (anon, authenticated, service_role) and default grants.
+
+-- Columns the Worker reads and writes on D1 that Postgres was missing; without
+-- them every creator page query fails on Supabase.
+alter table creators add column if not exists avatar_cached text;
+alter table creators add column if not exists avatar_checked_at timestamptz;
+alter table creators add column if not exists gather_alt_label text;
+alter table creators add column if not exists gather_alt_url text;
+alter table creators add column if not exists know_god_cta_label text;
+alter table creators add column if not exists grow_cta_label text;
+alter table creators add column if not exists gather_cta_label text;
+alter table applications add column if not exists agreements text;
+
+-- The anon key is public (it ships to the browser for magic links), so the
+-- browser roles get nothing by default. The Worker uses the service role,
+-- which keeps full access. Only what is granted back below is reachable.
+revoke all on all tables in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+revoke execute on all functions in schema public from public, anon;
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+alter default privileges in schema public revoke all on sequences from anon, authenticated;
+alter default privileges in schema public revoke execute on functions from anon;
+-- PUBLIC's execute comes from the global default, which a per-schema entry
+-- can't take away; only the global form removes it for future functions.
+alter default privileges revoke execute on functions from public;
+
+-- The directory: row policy decides which creators, column grants decide
+-- which fields. Never email, phone, key_hash or agreements.
+grant select (slug, name, display_name, handle, topic, avatar_url, back_url, created_at)
+  on creators to anon, authenticated;
+
+-- Signed-in creators and admins read through the policies below.
+grant select on leads, group_signups, contacts, responses, events, communications, consents, audit_log
+  to authenticated;
+
+-- Helpers: pinned search_path (no hijacking through a writable schema),
+-- case-insensitive email, callable only by signed-in users.
+create or replace function auth_email() returns text language sql stable
+  set search_path = '' as $$
+  select nullif(lower(trim(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email')), '')
+$$;
+create or replace function is_admin() returns boolean language sql stable security definer
+  set search_path = '' as $$
+  select exists (select 1 from public.admins a
+                 where lower(a.email) = public.auth_email() and a.role = 'admin')
+$$;
+create or replace function my_creator_slugs() returns setof text language sql stable security definer
+  set search_path = '' as $$
+  select c.slug from public.creators c
+   where lower(c.email) = public.auth_email()
+     and not exists (select 1 from public.admins a
+                     where lower(a.email) = public.auth_email() and a.role <> 'creator')
+  union
+  select creator_slug from public.admins
+   where lower(email) = public.auth_email() and role = 'creator' and creator_slug is not null
+$$;
+revoke execute on function auth_email(), is_admin(), my_creator_slugs() from public, anon;
+grant execute on function auth_email(), is_admin(), my_creator_slugs() to authenticated, service_role;
+
+-- The lead view runs with the caller's rights, so RLS applies to it.
+alter view lead_database set (security_invoker = on);
+revoke all on lead_database from anon;
+grant select on lead_database to authenticated;
+
+-- Policies, rebuilt: browser roles only ever read, each policy names its
+-- role, and helper calls are wrapped in (select …) so they run once per query.
+drop policy if exists "directory is public" on creators;
+create policy "directory is public" on creators for select to anon, authenticated
+  using (handle is not null and slug <> 'default' and coalesce(status, 'active') = 'active');
+drop policy if exists "creators read themselves" on creators;
+
+drop policy if exists "creators read their own leads" on leads;
+create policy "creators read their own leads" on leads for select to authenticated
+  using ((select is_admin()) or creator_slug in (select my_creator_slugs()));
+drop policy if exists "creators read their own signups" on group_signups;
+create policy "creators read their own signups" on group_signups for select to authenticated
+  using ((select is_admin()) or creator_slug in (select my_creator_slugs()));
+
+drop policy if exists admins_all_contacts on contacts;
+drop policy if exists creators_own_contacts on contacts;
+drop policy if exists read_contacts on contacts;
+create policy read_contacts on contacts for select to authenticated using (
+  (select is_admin()) or exists (select 1 from responses r
+    where r.contact_id = contacts.id and r.creator_slug in (select my_creator_slugs())));
+drop policy if exists admins_all_responses on responses;
+drop policy if exists creators_own_responses on responses;
+drop policy if exists read_responses on responses;
+create policy read_responses on responses for select to authenticated
+  using ((select is_admin()) or creator_slug in (select my_creator_slugs()));
+drop policy if exists admins_all_events on events;
+drop policy if exists creators_own_events on events;
+drop policy if exists read_events on events;
+create policy read_events on events for select to authenticated
+  using ((select is_admin()) or creator_slug in (select my_creator_slugs()));
+drop policy if exists admins_all_communications on communications;
+drop policy if exists creators_own_communications on communications;
+drop policy if exists read_communications on communications;
+create policy read_communications on communications for select to authenticated
+  using ((select is_admin()) or creator_slug in (select my_creator_slugs()));
+drop policy if exists admins_all_consents on consents;
+drop policy if exists read_consents on consents;
+create policy read_consents on consents for select to authenticated using ((select is_admin()));
+drop policy if exists admins_all_audit on audit_log;
+drop policy if exists read_audit on audit_log;
+create policy read_audit on audit_log for select to authenticated using ((select is_admin()));
+
+-- Integrity. NOT VALID only spares rows already present when this runs; every
+-- later insert is checked, including a copy from D1, so copy creators before
+-- admins and fix any admin pointing at a missing creator first.
+do $$ begin
+  alter table admins add constraint admins_role_check
+    check (role in ('admin', 'creator', 'pending')) not valid;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table admins add constraint admins_creator_slug_fkey
+    foreign key (creator_slug) references creators (slug) on update cascade on delete set null not valid;
+exception when duplicate_object then null; end $$;
+
+-- Indexes, only where a query the Worker runs needs one: the group-signup
+-- join to leads, creator-key sign-in, and a contact's communications. The
+-- unique one keeps one response per lead, as on D1.
+create index if not exists signups_lead_idx         on group_signups (lead_id);
+create index if not exists creators_key_hash_idx    on creators (key_hash);
+create unique index if not exists responses_lead_uidx on responses (lead_id) where lead_id is not null;
+create index if not exists communications_contact_idx on communications (contact_id);
+
+-- updated_at keeps itself current.
+create or replace function touch_updated_at() returns trigger language plpgsql
+  set search_path = '' as $$
+begin new.updated_at := now(); return new; end $$;
+revoke execute on function touch_updated_at() from public, anon, authenticated;
+drop trigger if exists contacts_touch on contacts;
+create trigger contacts_touch before update on contacts for each row execute function touch_updated_at();
+drop trigger if exists settings_touch on settings;
+create trigger settings_touch before update on settings for each row execute function touch_updated_at();
+
+-- Consent evidence is append-only, even for the service role.
+create or replace function consents_append_only() returns trigger language plpgsql
+  set search_path = '' as $$
+begin raise exception 'consents are append-only'; end $$;
+revoke execute on function consents_append_only() from public, anon, authenticated;
+drop trigger if exists consents_no_change on consents;
+create trigger consents_no_change before update or delete on consents
+  for each row execute function consents_append_only();
+drop trigger if exists consents_no_truncate on consents;
+create trigger consents_no_truncate before truncate on consents
+  for each statement execute function consents_append_only();
+
+-- Leads with no creator link are attributed to 'default' (worker.js), and
+-- leads.creator_slug references creators, so that row has to exist. No handle,
+-- so it never shows in the directory.
+insert into creators (slug, name, mode) values ('default', 'Digital Collective', 'default')
+  on conflict (slug) do nothing;

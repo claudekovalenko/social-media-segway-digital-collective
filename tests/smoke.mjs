@@ -14,6 +14,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { people } from '../accounts/people.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -231,6 +232,40 @@ async function run(base) {
     await go(page, '/admin.html');
     await page.waitForTimeout(1200);
   });
+
+  // Live only: every creator in accounts/people.txt can sign in and has a
+  // working link, directory entry and photo. Reads only; nothing is submitted.
+  if (LIVE) {
+    for (const p of people()) {
+      await check(`creator account works: ${p.name} (/${p.slug})`, async (page) => {
+        const login = await page.request.post(base + '/api/admin/login', { data: { email: p.email, password: p.password } });
+        expect(login.ok(), `sign-in as ${p.email} → ${login.status()}`);
+        const { token } = await login.json();
+        const me = await (await page.request.get(base + '/api/auth/me', { headers: { authorization: `Bearer ${token}` } })).json();
+        expect(me.role === 'creator' && me.creator_slug === p.slug, `signed in as ${JSON.stringify(me)}`);
+        const leads = await page.request.get(base + '/api/creator/leads', { headers: { authorization: `Bearer ${token}` } });
+        expect(leads.ok(), `their dashboard data → ${leads.status()}`);
+        const c = await page.request.get(`${base}/c/${p.slug}`, { maxRedirects: 0 });
+        expect(c.status() === 302 && (c.headers().location || '').includes(`creator=${encodeURIComponent(p.slug)}`), `/c/${p.slug} → ${c.status()}`);
+        const r = await go(page, '/' + p.slug);
+        expect(r && r.ok(), `/${p.slug} → ${r && r.status()}`);
+        const dir = await (await page.request.get(base + '/api/directory')).json();
+        const rows = Array.isArray(dir) ? dir : dir.creators || [];
+        expect(rows.some((d) => d.slug === p.slug && d.handle === `@${p.handle}`), `not in the directory as @${p.handle}`);
+      });
+      if (!p.photo) continue; // none listed for them yet
+      await check(`creator photo shows: ${p.name}`, async (page) => {
+        // The first view starts the photo lookup; the result is kept.
+        let photo = '';
+        for (let i = 0; i < 3 && !photo; i++) {
+          if (i) await page.waitForTimeout(4000);
+          const pub = await (await page.request.get(`${base}/api/creators/${p.slug}`)).json();
+          photo = (pub.creator || pub).avatar_url || '';
+        }
+        expect(photo, `no photo for ${p.slug} (${p.photo} not readable, nor their Instagram?)`);
+      });
+    }
+  }
 }
 
 // ---- main -------------------------------------------------------------------

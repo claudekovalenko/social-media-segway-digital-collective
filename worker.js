@@ -1,7 +1,9 @@
 import { makeDb, usingSupabase, emailFromToken } from './db.js';
+import { connect, postgresD1 } from './pg.js';
+import { COPY_ORDER, copyPage, finish as finishCopy, compareCounts } from './copy-to-postgres.js';
 import { handlePlatform, sendFollowUp } from './platform-routes.js';
 import { enrichContact } from './enrich.js';
-import { platform, rateLimited, clientIp } from './platform.js';
+import { platform, rateLimited, clientIp, isRealDate, recordId } from './platform.js';
 
 // Cloudflare Worker backend for the Faith Journey funnel.
 // Static files in public/ are served by Workers Assets; this handles /api/* and /c/*.
@@ -43,8 +45,9 @@ const DEFAULT_LINKS = {
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
 
-// A creator can give a YouTube channel address as their photo. Reading that
-// page costs a second or two, which is far too slow to do while someone waits
+// A creator can give a YouTube channel or Instagram profile address as their
+// photo; its page names the profile picture (og:image). Reading that page
+// costs a second or two, which is far too slow to do while someone waits
 // for a page to load. So the resolved image address is kept in the database
 // and handed back at once; when it is stale the refresh happens after the
 // response has already been sent, and the next visitor gets the new one.
@@ -53,7 +56,9 @@ const AVATAR_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 function isChannelUrl(url) {
   try {
     const u = new URL(url);
-    return u.hostname.replace(/^(www|m)\./, '') === 'youtube.com'
+    const host = u.hostname.replace(/^(www|m)\./, '');
+    if (host === 'instagram.com') return /^\/[\w.]{1,30}\/?$/.test(u.pathname);
+    return host === 'youtube.com'
       && /^\/(@[\w.-]+|channel\/[\w-]+|c\/[\w.-]+|user\/[\w.-]+)\/?$/.test(u.pathname);
   } catch { return false; }
 }
@@ -65,8 +70,21 @@ async function readChannelAvatar(url) {
     });
     if (!res.ok) return null;
     const m = (await res.text()).match(/property="og:image" content="([^"]+)"/);
-    return m ? m[1] : null;
+    // Instagram writes & as &amp; inside the attribute.
+    return m ? m[1].replace(/&amp;/g, '&') : null;
   } catch { return null; }
+}
+
+// Where to look for a creator's photo, in order: the address they gave, then,
+// when that is a YouTube channel, their Instagram profile (from their handle)
+// in case YouTube doesn't hand the picture over.
+function photoSources(row) {
+  const out = [row.avatar_url];
+  const handle = String(row.handle || '').trim().replace(/^@/, '');
+  let youtube = false;
+  try { youtube = new URL(row.avatar_url).hostname.replace(/^(www|m)\./, '') === 'youtube.com'; } catch {}
+  if (youtube && /^(?=.*\w)[\w.]{1,30}$/.test(handle)) out.push(`https://www.instagram.com/${handle}/`);
+  return out;
 }
 
 // Returns straight away. `after` is given any slow refresh work to run once
@@ -75,14 +93,17 @@ function avatarFor(row, db, after) {
   if (!row || !row.avatar_url) return row;
   if (!isChannelUrl(row.avatar_url)) { row.avatar_url = row.avatar_url; return row; }
   const age = row.avatar_checked_at ? Date.now() - Date.parse(row.avatar_checked_at) : Infinity;
-  if (row.avatar_cached && age < AVATAR_MAX_AGE_MS) { row.avatar_url = row.avatar_cached; return row; }
-  const channel = row.avatar_url;
+  // Looked up recently (found or not): no new lookup until it goes stale.
+  if (age < AVATAR_MAX_AGE_MS) { row.avatar_url = row.avatar_cached || ''; return row; }
+  const sources = photoSources(row);
   const slug = row.slug;
   if (after) {
     after((async () => {
-      const found = await readChannelAvatar(channel);
-      if (!found) return;
-      await db.updateCreatorLinks(slug, { avatar_cached: found, avatar_checked_at: new Date().toISOString() })
+      let found = null;
+      for (const source of sources) if (!found) found = await readChannelAvatar(source);
+      // Nothing found: keep any older picture, and don't ask again for a while.
+      const fields = found ? { avatar_cached: found } : {};
+      await db.updateCreatorLinks(slug, { ...fields, avatar_checked_at: new Date().toISOString() })
         .catch(() => {});
     })());
   }
@@ -338,13 +359,106 @@ async function isAdmin(req, url, env, db) {
 // A duplicate slug is the caller's problem; anything else is ours and should say so.
 function creatorInsertError(err) {
   const msg = String(err && err.message || err);
-  if (/UNIQUE|unique/.test(msg)) return json({ error: 'That link name is already taken.' }, 409);
+  if (/UNIQUE|unique/.test(msg)) {
+    return json({ error: /email/i.test(msg)
+      ? 'That email already belongs to another creator.'
+      : 'That link name is already taken.' }, 409);
+  }
   return json({ error: 'Could not create the creator: ' + msg }, 500);
 }
 
+// With a Postgres connection configured (HYPERDRIVE or DATABASE_URL), each
+// request gets its own client: Workers can't share a socket between requests,
+// so it is opened lazily and closed once the response and any waitUntil work
+// are done (Hyperdrive keeps the real connections warm).
+//
+// DATABASE_MODE decides which database serves the site:
+//   (unset) or "d1"  D1 serves everything; Postgres is used only by the copy.
+//   "paused"         D1 still serves pages, but saving is paused so a final
+//                    copy can run while D1 can't change.
+//   "postgres"       Postgres serves everything. Copying is refused from here
+//                    on, so nothing can overwrite what Postgres now holds.
+function databaseMode(env) {
+  const m = String(env.DATABASE_MODE || '').trim().toLowerCase();
+  if (m === '' || m === 'd1' || m === 'postgres' || m === 'paused') return m || 'd1';
+  // A typo must not quietly mean "D1, copying allowed": pause saving instead,
+  // which keeps the data safe and makes the mistake obvious.
+  console.error(`DATABASE_MODE "${env.DATABASE_MODE}" is not d1, paused or postgres; treating it as paused.`);
+  return 'paused';
+}
+
+function withPostgres(env) {
+  const mode = databaseMode(env);
+  const url = (env.HYPERDRIVE && env.HYPERDRIVE.connectionString) || env.DATABASE_URL;
+  if (!url) return { env, done: null, mode, unavailable: mode === 'postgres' };
+  let client;
+  try {
+    client = connect(url, { max: 1 });
+  } catch (err) {
+    // A bad connection string must not take down a site still served by D1.
+    console.error('Postgres connection string rejected:', err.message);
+    return { env, done: null, mode, unavailable: mode === 'postgres' };
+  }
+  return {
+    env: { ...env, DB: mode === 'postgres' ? postgresD1(client) : env.DB, D1: env.DB, PG: client },
+    done: () => client.end({ timeout: 5 }),
+    mode,
+  };
+}
+
+// While paused, anything that would save something waits; pages still load.
+// Signing in and the copy itself stay open so the admin can finish the move.
+// Some links save when opened (unsubscribe, email verification, the export's
+// audit entry), so they wait too; an unsubscribe must never be lost.
+const WRITING_GETS = new Set(['/api/unsubscribe', '/api/verify', '/api/export.csv']);
+function savingPaused(req, mode) {
+  if (mode !== 'paused' || ['HEAD', 'OPTIONS'].includes(req.method)) return false;
+  const p = new URL(req.url).pathname;
+  if (req.method === 'GET') return WRITING_GETS.has(p);
+  return p.startsWith('/api/') && p !== '/api/admin/login' && p !== '/api/admin/copy-to-postgres';
+}
+
+// What a visitor sees when something fails on our side. The detail goes to the
+// Worker's log, never to the browser.
+// Includes a missing database (3D000) and refused credentials (28000, 28P01).
+const CONNECTION_ERROR = /ECONNREFUSED|ENOTFOUND|CONNECT_TIMEOUT|ETIMEDOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|too many connections|\b(3D000|28000|28P01|57P0[123])\b/i;
+function serverError(err) {
+  console.error(err && err.stack || err);
+  const down = CONNECTION_ERROR.test(String(err && (err.code || '') + ' ' + (err.message || '')));
+  return down
+    ? json({ error: 'The database is unavailable right now. Please try again in a minute.' }, 503)
+    : json({ error: 'Something went wrong on our side. Please try again.' }, 500);
+}
+
 export default {
-  async fetch(req, env, ctx) {
-    const after = (p) => { try { ctx.waitUntil(p); } catch { /* no context: skip the refresh */ } };
+  async fetch(req, rawEnv, ctx) {
+    const { env, done, unavailable, mode } = withPostgres(rawEnv);
+    if (unavailable) return json({ error: 'The database is unavailable right now. Please try again in a minute.' }, 503);
+    if (savingPaused(req, mode)) {
+      if (done) try { ctx.waitUntil(done()); } catch { /* no context */ }
+      return json({ error: 'We are moving to a new database. Saving is paused for a minute or two; please try again shortly.' }, 503);
+    }
+    if (!done) return handle(req, env, ctx);
+    const pending = [];
+    const trackedCtx = {
+      waitUntil: (p) => { pending.push(p); try { ctx.waitUntil(p); } catch { /* no context */ } },
+      passThroughOnException: () => ctx.passThroughOnException?.(),
+    };
+    try {
+      return await handle(req, env, trackedCtx);
+    } finally {
+      const close = Promise.allSettled(pending).then(done);
+      try { ctx.waitUntil(close); } catch { await close; }
+    }
+  },
+};
+
+async function handle(req, env, ctx) {
+  {
+    // Background work (photo refresh, enrichment) saves; not while paused.
+    const after = databaseMode(env) === 'paused'
+      ? () => {}
+      : (p) => { try { ctx.waitUntil(p); } catch { /* no context: skip the refresh */ } };
     const url = new URL(req.url);
     const p = url.pathname;
     const db = makeDb(env);
@@ -355,7 +469,7 @@ export default {
         accountSecretFor, newAccessKey, sha256hex, defaultLinks, SESSION_HOURS, RESERVED_PATHS);
       if (handled) return handled;
     } catch (err) {
-      return json({ error: err.message }, 500);
+      return serverError(err);
     }
 
     try {
@@ -404,6 +518,10 @@ export default {
         const email = String(b.email || '').trim().toLowerCase().slice(0, 200) || null;
         if (!slug || !name) return json({ error: 'slug and name are required' }, 400);
         if (email && !/.+@.+\..+/.test(email)) return json({ error: 'that email looks wrong' }, 400);
+        // One creator per email: sign-in finds a creator by email.
+        if (email && await db.creatorByEmail(email).catch(() => null)) {
+          return json({ error: 'that link name or email is already taken' }, 409);
+        }
         // The key is shown once at signup; only its hash is stored.
         const accessKey = newAccessKey();
         const keyHash = await sha256hex(accessKey);
@@ -424,7 +542,8 @@ export default {
       if (p === '/api/directory' && req.method === 'GET') {
         const creators = await db.directory();
         for (const c of creators) avatarFor(c, db, after);
-        return json({ creators });
+        // The photo bookkeeping stays server-side; the page needs avatar_url only.
+        return json({ creators: creators.map(({ avatar_cached, avatar_checked_at, ...c }) => c) });
       }
 
       // What the dashboard needs to start a magic-link sign-in, if configured.
@@ -432,6 +551,32 @@ export default {
       if (p === '/api/admin/status' && req.method === 'GET') {
         const count = await db.countAdmins().catch(() => 0);
         return json({ has_accounts: count > 0 || adminLogins(env).size > 0 });
+      }
+
+      // Copy D1 into Postgres, one page per call: {table, after} copies the
+      // next page and says where to resume; {finish: true} fixes the id
+      // counters and compares row counts. Admins only; safe to repeat.
+      if (p === '/api/admin/copy-to-postgres' && req.method === 'POST') {
+        const who = await isAdmin(req, url, env, db);
+        if (!who.ok) return json({ error: 'unauthorized' }, 401);
+        if (!env.PG || !env.D1) {
+          return json({ error: 'Needs both the D1 binding and a Postgres connection (HYPERDRIVE or DATABASE_URL).' }, 400);
+        }
+        // Once Postgres is live it holds newer data than D1; copying again
+        // would overwrite it.
+        if (databaseMode(env) === 'postgres') {
+          return json({ error: 'Postgres is already live (DATABASE_MODE=postgres); copying from D1 now would overwrite newer data.' }, 409);
+        }
+        const b = await req.json().catch(() => ({}));
+        if (b.finish) {
+          await finishCopy(env.PG);
+          return json({ ok: true, counts: await compareCounts(env.D1, env.PG) });
+        }
+        const table = b.table || COPY_ORDER[0];
+        if (!COPY_ORDER.includes(table)) return json({ error: 'unknown table', tables: COPY_ORDER }, 400);
+        const page = await copyPage(env.D1, env.PG, table, Number(b.after) || 0);
+        const next = page.done ? COPY_ORDER[COPY_ORDER.indexOf(table) + 1] || null : table;
+        return json({ ...page, next_table: next, next_after: page.done ? 0 : page.after });
       }
 
       // Create an admin account. The very first one is open, because a brand
@@ -464,9 +609,22 @@ export default {
 
         if (role === 'creator') {
           creatorSlug = String(b.creator_slug || email.split('@')[0] || '')
-            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
-          if (!creatorSlug) return json({ error: 'Give the creator a link name.' }, 400);
+            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+          if (creatorSlug.replace(/-/g, '').length < 3) {
+            return json({ error: 'Give the creator a link name of at least 3 letters or numbers.' }, 400);
+          }
+          if (RESERVED_PATHS.has(creatorSlug) || creatorSlug === 'default') {
+            return json({ error: 'That link name is reserved.' }, 400);
+          }
           const already = await db.creatorBySlug(creatorSlug);
+          // An existing link can only be joined by the creator it belongs to;
+          // anyone else would be handed that creator's leads.
+          if (already) {
+            const owner = await db.creatorByEmail(email).catch(() => null);
+            if (!owner || owner.slug !== creatorSlug) {
+              return json({ error: 'That link name belongs to another creator.' }, 409);
+            }
+          }
           if (!already) {
             accessKey = newAccessKey();
             try {
@@ -791,7 +949,9 @@ export default {
           fields.avatar_cached = isChannelUrl(fields.avatar_url)
             ? await readChannelAvatar(fields.avatar_url)
             : fields.avatar_url;
-          fields.avatar_checked_at = new Date().toISOString();
+          // Not found now: leave it unchecked, so the next page view tries again
+          // with the Instagram fallback.
+          fields.avatar_checked_at = fields.avatar_cached ? new Date().toISOString() : null;
         }
         if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
         await db.updateCreatorLinks(slug, fields);
@@ -800,9 +960,10 @@ export default {
 
       // ---- CRM: move a lead along and set the next follow-up ---------------
       if (p.startsWith('/api/leads/') && (req.method === 'PATCH' || req.method === 'POST')) {
-        const id = Number(p.split('/')[3]);
+        const id = recordId(p.split('/')[3]);
         const me = await whoami(req, url, env, db);
         if (!me.role || me.role === 'pending') return json({ error: 'unauthorized' }, 401);
+        if (!id) return json({ error: 'not found' }, 404);
         const lead = await db.leadById(id);
         if (!lead) return json({ error: 'not found' }, 404);
         // A creator may only touch leads that came through their own link.
@@ -822,7 +983,7 @@ export default {
         if (b.notes !== undefined) fields.notes = String(b.notes).slice(0, 4000);
         if (b.next_follow_up !== undefined) {
           const d = String(b.next_follow_up || '').trim();
-          if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+          if (d && !isRealDate(d)) {
             return json({ error: 'Use a date like 2026-09-01.' }, 400);
           }
           fields.next_follow_up = d || null;
@@ -913,7 +1074,8 @@ export default {
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
         avatarFor(pub, db, after);
-        return json({ ...pub, defaults: await defaultLinks(db) });
+        const { avatar_cached, avatar_checked_at, ...shown } = pub;
+        return json({ ...shown, defaults: await defaultLinks(db) });
       }
 
       if (p === '/api/leads' && req.method === 'POST') {
@@ -930,7 +1092,12 @@ export default {
         if (!VALID_STEPS.has(step)) return json({ error: 'invalid step' }, 400);
         if (!name || !/.+@.+\..+/.test(email)) return json({ error: 'name and a valid email are required' }, 400);
         const interested = b.interested_in_group ? 1 : 0;
-        const creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
+        // A link to a creator who doesn't exist (a typo, or one removed) still
+        // keeps the person's answer: it goes to the collective instead.
+        let creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
+        if (creatorSlug !== 'default' && !(await db.creatorBySlug(creatorSlug).catch(() => null))) {
+          creatorSlug = 'default';
+        }
         const path = VALID_PATHS.has(b.path) ? b.path : null;
         const country = String(b.country || '').slice(0, 8) || null;
         const language = String(b.language || '').slice(0, 8) || null;
@@ -1026,7 +1193,8 @@ export default {
         // response is still attributed to the real creator.
         const aliases = await creatorAliases(db);
         const slug = aliases[vanity[1]] || vanity[1];
-        const owner = await db.creatorBySlug(slug).catch(() => null);
+        // A database failure answers 503 (via serverError), not "no such creator".
+        const owner = await db.creatorBySlug(slug);
         if (!owner || owner.status === 'suspended') {
           // Unknown or disabled creator: a real page, not the default funnel.
           const res404 = await env.ASSETS.fetch(new Request(new URL('/unavailable', url), req));
@@ -1047,7 +1215,7 @@ export default {
       // Anything else falls through to static assets.
       return env.ASSETS.fetch(req);
     } catch (err) {
-      return json({ error: err.message }, 500);
+      return serverError(err);
     }
-  },
-};
+  }
+}

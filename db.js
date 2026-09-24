@@ -1,9 +1,12 @@
-// One data layer, two backends.
+// One data layer, three backends.
 //
-// The Worker calls these methods and doesn't care where the rows live. When
-// SUPABASE_URL and SUPABASE_SERVICE_KEY are set the adapter talks to Postgres
-// through Supabase's REST API; otherwise it falls back to the D1 database, so
-// the site keeps working while the migration is in progress.
+// The Worker calls these methods and doesn't care where the rows live:
+//   Postgres (HYPERDRIVE binding or DATABASE_URL) — the system of record. The
+//     worker swaps env.DB for a D1-shaped Postgres client (pg.js), so the same
+//     queries below run there; the schema is supabase/schema.sql.
+//   Supabase REST (SUPABASE_URL + SUPABASE_SERVICE_KEY) — the older partial
+//     path, kept until Postgres is live.
+//   D1 — the fallback, so the site keeps working while a move is in progress.
 
 let ensureOnce = null;
 let platformColsOnce = null;
@@ -14,6 +17,7 @@ let platformColsOnce = null;
 // into a single read, and on a database that is already up to date, no writes
 // at all.
 async function addMissingColumns(DB, wanted) {
+  if (DB.postgres) return; // supabase/schema.sql owns the Postgres schema
   const byTable = new Map();
   for (const [table, col, type] of wanted) {
     if (!byTable.has(table)) byTable.set(table, []);
@@ -50,19 +54,21 @@ async function ensurePlatformColumns(DB) {
 }
 
 export function makeDb(env) {
+  if (env.DB && env.DB.postgres) return d1Adapter(env.DB);
   return env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY
     ? supabaseAdapter(env.SUPABASE_URL.replace(/\/+$/, ''), env.SUPABASE_SERVICE_KEY)
     : d1Adapter(env.DB);
 }
 
 export function usingSupabase(env) {
+  if (env.DB && env.DB.postgres) return false;
   return Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY);
 }
 
 // ---------------------------------------------------------------- D1 (SQLite)
 function d1Adapter(DB) {
   return {
-    backend: 'd1',
+    backend: DB.postgres ? 'postgres' : 'd1',
 
     async createCreator(c) {
       await DB.prepare(
@@ -98,7 +104,7 @@ function d1Adapter(DB) {
       await this.ensureAdmins();
       await ensurePlatformColumns(DB);
       const r = await DB.prepare(
-        `SELECT slug, name, handle, topic, back_url, avatar_url, avatar_cached FROM creators
+        `SELECT slug, name, handle, topic, back_url, avatar_url, avatar_cached, avatar_checked_at FROM creators
          WHERE handle IS NOT NULL AND handle != '' AND slug != 'default'
            AND (status IS NULL OR status != 'suspended') ORDER BY created_at ASC`).all();
       return r.results;
@@ -109,7 +115,7 @@ function d1Adapter(DB) {
         `INSERT INTO leads (step, name, email, phone, city, message, decision,
                             interested_in_group, group_slot, slot_note, path,
                             country, language, consent, consent_at, creator_slug)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, datetime('now'), ?)`
       ).bind(l.step, l.name, l.email, l.phone, l.city, l.message, l.decision,
         l.interested_in_group ? 1 : 0, l.group_slot, l.slot_note, l.path,
         l.country, l.language, l.creator_slug).run();
@@ -148,6 +154,7 @@ function d1Adapter(DB) {
     async ensureAdmins() {
       // Once per Worker isolate. Before this, every call re-ran the CREATE
       // TABLEs and ten ALTER TABLE attempts — dozens of D1 round trips per page.
+      if (DB.postgres) return;
       if (!ensureOnce) ensureOnce = (async () => {
       await DB.batch([
         DB.prepare(

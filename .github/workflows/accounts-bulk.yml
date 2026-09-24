@@ -1,0 +1,127 @@
+name: Create creator accounts in bulk
+
+# Run from the Actions tab (Run workflow) with an admin's email and password.
+# Uses accounts/people.txt unless a list is pasted. One person per line:
+#
+#   First Last @instagramhandle [photo: YouTube channel or Instagram profile]
+#
+# Each line becomes a creator account on the live site:
+#   - sign-in:  firstlast@digitalcollective.com (lowercase, letters only)
+#   - password: their first name, lowercase
+#   - link:     /c/<handle>, using the platform's default videos
+#   - photo:    the address listed, if any (a YouTube channel falls back to
+#               their Instagram when YouTube gives no picture); none if not
+#
+# Lines that already have an account are skipped, not reset. Goes through
+# the site's own API, the same way the single "Create or reset an account"
+# workflow does.
+
+on:
+  workflow_dispatch:
+    inputs:
+      people:
+        description: 'One per line (or separated by ;): First Last @handle. Empty = accounts/people.txt'
+        required: false
+      admin_email:
+        description: An admin's email (optional; the ADMIN_KEY repo secret is used otherwise)
+        required: false
+      admin_password:
+        description: That admin's password (masked in the log)
+        required: false
+      dry_run:
+        description: Only show what would be created
+        type: boolean
+        default: false
+
+jobs:
+  accounts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask secrets
+        env:
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+        run: '[ -z "$ADMIN_PASSWORD" ] || echo "::add-mask::$ADMIN_PASSWORD"' 
+      - uses: actions/checkout@v4
+      - name: Create accounts
+        env:
+          SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          DOMAIN: digitalcollective.com
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+          PEOPLE: ${{ inputs.people }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ -z "$PEOPLE" ]; then PEOPLE=$(grep -v '^[[:space:]]*#' accounts/people.txt || true); fi
+          if [ "$DRY_RUN" != "true" ]; then
+            if [ -n "$ADMIN_EMAIL" ]; then
+              login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+              TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
+              [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
+              echo "::add-mask::$TOKEN"
+              AUTH="authorization: Bearer $TOKEN"
+            elif [ -n "$ADMIN_KEY" ]; then
+              AUTH="x-admin-key: $ADMIN_KEY"
+            else
+              echo "No admin sign-in: give admin_email/admin_password or set the ADMIN_KEY repo secret"; exit 1
+            fi
+          fi
+
+          # Read the list first, so a reader failure fails the run.
+          printf '%s\n' "$PEOPLE" | tr ';' '\n' | node accounts/people.mjs - > /tmp/people.jsonl
+          created=0; skipped=0; failed=0; seen=' '
+          # One reader for the list (accounts/people.mjs, also used by the
+          # tests); it refuses unclear lines instead of guessing. Newlines or
+          # semicolons separate people (the Actions input box is one line on
+          # some browsers).
+          while IFS= read -r person; do
+            line=$(jq -r '.line' <<<"$person")
+            if jq -e 'has("error")' <<<"$person" >/dev/null; then
+              echo "✗ '$line' — $(jq -r '.error' <<<"$person")"; failed=$((failed+1)); continue
+            fi
+            name=$(jq -r '.name' <<<"$person"); email=$(jq -r '.email' <<<"$person")
+            password=$(jq -r '.password' <<<"$person"); slug=$(jq -r '.slug' <<<"$person")
+            handle=$(jq -r '.handle' <<<"$person"); photo=$(jq -r '.photo // empty' <<<"$person")
+            case "$seen" in *" $email "*)
+              echo "✗ $name → $email is already used by someone earlier in this list"; failed=$((failed+1)); continue ;;
+            esac
+            seen="$seen$email "
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "• $name → $email  link: /c/$slug  photo: ${photo:-none}"; continue
+            fi
+
+            body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
+              '{email:$e,password:$p,role:"creator",name:$n,creator_slug:$s,handle:$h}')
+            code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
+              -H "content-type: application/json" -H "$AUTH" --data "$body")
+            case "$code" in
+              200|201)
+                echo "✓ $name → $email  link: /c/$slug  photo: ${photo:-none}"; created=$((created+1))
+                # The photo listed for them, if any (a YouTube channel falls back
+                # to their Instagram on the site when YouTube gives no picture).
+                if [ -n "$photo" ]; then
+                  pbody=$(jq -nc --arg s "$slug" --arg u "$photo" '{slug:$s,avatar_url:$u}')
+                  pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
+                    -H "content-type: application/json" -H "$AUTH" --data "$pbody")
+                  [ "$pcode" = 200 ] || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
+                fi
+                ;;
+              409)
+                echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1))
+                # Give them the listed photo only if they have none yet; never
+                # replace one they chose.
+                if [ -n "$photo" ] && [ -z "$(curl -s "$SITE/api/creators/$slug" | jq -r '(.creator // .).avatar_url // empty')" ]; then
+                  pbody=$(jq -nc --arg s "$slug" --arg u "$photo" '{slug:$s,avatar_url:$u}')
+                  pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
+                    -H "content-type: application/json" -H "$AUTH" --data "$pbody")
+                  [ "$pcode" = 200 ] && echo "  photo set: $photo" || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
+                fi
+                ;;
+              *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' /tmp/out 2>/dev/null)"; failed=$((failed+1)) ;;
+            esac
+          done < /tmp/people.jsonl
+
+          echo
+          echo "created: $created  already existed: $skipped  failed: $failed"
+          [ "$failed" = 0 ]

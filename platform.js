@@ -25,6 +25,17 @@ export const EVENT_TYPES = new Set([
   'form_open', 'form_submit', 'followup_return',
 ]);
 export const CONSENT_VERSION = '2026-09-01';
+
+// A calendar date like 2026-09-01 that actually exists (not 2026-02-30).
+export function isRealDate(d) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  const t = new Date(d + 'T00:00:00Z');
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d;
+}
+// A date filter from a query string: kept when real, otherwise ignored.
+export const dateParam = (v) => (v && isRealDate(v) ? v : null);
+// A record id from a URL: a positive whole number the database can hold.
+export const recordId = (v) => { const n = Number(v); return Number.isSafeInteger(n) && n > 0 ? n : null; };
 export const TERMS_VERSION = '0.1';
 export const FAITH_VERSION = '1.0';
 
@@ -32,6 +43,7 @@ let ready = null;
 
 export function platform(DB) {
   async function ensure() {
+    if (DB.postgres) return; // supabase/schema.sql owns the Postgres schema
     if (!ready) ready = (async () => {
       await DB.batch([
         DB.prepare(`CREATE TABLE IF NOT EXISTS contacts (
@@ -181,12 +193,19 @@ export function platform(DB) {
             c.consent_version || null, c.consent_at || null, row.id).run();
         return { id: row.id, created: false };
       }
-      const r = await DB.prepare(`INSERT INTO contacts
-          (email, phone, name, first_creator_slug, city, country, language, consent_version, consent_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .bind(email, phone, c.name || null, c.creator_slug || 'default', c.city || null,
-          c.country || null, c.language || null, c.consent_version || null, c.consent_at || null).run();
-      return { id: r.meta.last_row_id, created: true };
+      try {
+        const r = await DB.prepare(`INSERT INTO contacts
+            (email, phone, name, first_creator_slug, city, country, language, consent_version, consent_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+          .bind(email, phone, c.name || null, c.creator_slug || 'default', c.city || null,
+            c.country || null, c.language || null, c.consent_version || null, c.consent_at || null).run();
+        return { id: r.meta.last_row_id, created: true };
+      } catch (err) {
+        // The same person submitted twice at once and the other request made
+        // the contact first: use theirs.
+        if (!email || !/unique|duplicate key/i.test(String(err.message)) || c._retried) throw err;
+        return this.upsertContact({ ...c, _retried: true });
+      }
     },
 
     // Records one grant or revocation. Called for every channel separately.

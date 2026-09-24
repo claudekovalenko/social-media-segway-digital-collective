@@ -19,44 +19,107 @@ Each creator gets a shareable link like `/c/their-name`. Every lead that comes t
 
 The site installs to the home screen (manifest + service worker + icons). Static pages work offline; forms and live data always use the network.
 
-## Database: Supabase (Postgres) or D1
+## Database: Postgres
 
-The Worker reads and writes through one small adapter (`db.js`). If
-`SUPABASE_URL` and `SUPABASE_SERVICE_KEY` are set it uses Postgres on Supabase;
-otherwise it falls back to the Cloudflare D1 database, so the site keeps working
-while a migration is in progress. `GET /api/admin/leads` reports which backend
-answered, as `backend`.
+Everything is stored in Postgres: creators, leads, accounts, contacts,
+responses, events, consent records, the audit log. The schema is
+`supabase/schema.sql` (plain Postgres; it also sets up Supabase's row-level
+security). Any Postgres host works; Supabase is the one it's set up for.
 
-### Moving to Supabase
+How the Worker reaches it (`pg.js`, `db.js`):
 
-1. Create a project at supabase.com (the free tier is fine to start; note that
-   free projects pause after a period of inactivity).
-2. In **SQL Editor → New query**, paste and run `supabase/schema.sql`. It creates
-   the tables, indexes and row-level security policies.
-3. From **Project Settings → API**, copy the project URL, the `anon` key and the
-   `service_role` key. The service role key is a full-access secret — it belongs
-   only in Worker secrets, never in a page.
-4. Give them to the Worker:
+- With a **Hyperdrive** binding named `HYPERDRIVE` (or a `DATABASE_URL`
+  secret) **and** the Worker secret `DATABASE_MODE` set to `postgres`, the
+  Worker opens a Postgres connection per request and runs every query there.
+  The existing queries are written in SQLite's dialect; `pg.js` translates the
+  few differences and returns rows in the same shapes, so the rest of the code
+  doesn't change.
+- Until then the old Cloudflare D1 database keeps serving the site; a
+  configured Postgres connection is used only by the copy below, so live data
+  never lands in two places. `DATABASE_MODE=paused` keeps pages up on D1 but
+  pauses saving, for the final copy.
+
+`GET /api/admin/leads` reports which one answered, as `backend`
+(`postgres`, `supabase` or `d1`).
+
+### Moving from D1 to Postgres
+
+1. **Create the database.** For production, use a plan with daily backups and
+   no automatic pausing (Supabase Pro or equivalent). In Supabase:
+   **SQL Editor → New query**, paste and run `supabase/schema.sql`. It's safe to
+   run again after pulling changes.
+2. **Connect the Worker through Hyperdrive** (pools connections close to the
+   Worker, so each request doesn't pay for a new database login). Use the
+   database's connection string (Supabase: **Connect → Session pooler** or
+   direct, with the database password):
 
    ```bash
-   npx wrangler secret put SUPABASE_URL
-   npx wrangler secret put SUPABASE_SERVICE_KEY
-   npx wrangler secret put SUPABASE_ANON_KEY
-   npx wrangler deploy
+   npx wrangler hyperdrive create digital-collective --connection-string="postgres://…"
    ```
 
-5. In **Authentication → URL Configuration**, add the dashboard address to the
-   redirect allow-list so magic links come back to the right place, e.g.
-   `https://<your-site>/dashboard.html`.
+   and add the id it prints to `wrangler.toml`:
+
+   ```toml
+   [[hyperdrive]]
+   binding = "HYPERDRIVE"
+   id = "<id>"
+   ```
+
+   (Or, without Hyperdrive, set the connection string as a `DATABASE_URL`
+   Worker secret with the **Set a Worker secret** workflow.) Keep the
+   `[[d1_databases]]` block for now: the copy reads from it.
+3. **Deploy.** The site still runs on D1; nothing has switched yet.
+4. **Copy what's in D1:** **Actions → Copy D1 into Postgres → Run workflow**.
+   Rows keep their ids; while D1 is live you can run it as often as you like
+   (it refreshes Postgres); it ends with a row count comparison.
+   - Rows whose parent is missing in D1 (a signup for a deleted lead) are
+     skipped and listed.
+   - Leads for a creator that no longer exists keep their link through an
+     archived, unlisted placeholder creator.
+   - A row Postgres refuses (an impossible date, a duplicate email) is listed
+     with the reason and the run fails; fix it in D1 and run again.
+5. **Pause saving:** set the Worker secret `DATABASE_MODE` to `paused` (with the
+   **Set a Worker secret** workflow). Pages keep working; forms, unsubscribe
+   and verification links answer "saving is paused, try again in a minute" for
+   the minute or two this takes. Wait about 30 seconds before the next step,
+   so requests already in flight finish. (Any value other than `d1`, `paused`
+   or `postgres` is treated as `paused`, so a typo can't lose data.)
+6. **Final copy:** run **Copy D1 into Postgres** once more. D1 can't change
+   now, so this copy is complete.
+7. **Switch:** set `DATABASE_MODE` to `postgres`. From this moment the site
+   reads and writes Postgres, and the copy refuses to run again, because
+   Postgres now holds newer data than D1.
+8. Check the dashboard, then remove the `[[d1_databases]]` block once you're
+   happy. Setting `DATABASE_MODE` back to `d1` returns the site to D1, but
+   anything written after the switch exists only in Postgres, so treat that as
+   an emergency step, not a routine one.
+
+Tests: `npm run test:postgres` runs the whole API against D1 (SQLite) and
+Postgres side by side and fails on any difference (needs a local Postgres).
+
+### Magic-link sign-in (optional, Supabase Auth)
+
+1. From **Project Settings → API**, copy the project URL and the `anon` key
+   (the anon key is public by design; the schema gives it access to nothing
+   but the creator directory). Set them as `SUPABASE_URL` and
+   `SUPABASE_ANON_KEY` Worker secrets. Don't set `SUPABASE_SERVICE_KEY` once
+   Postgres is connected: the Worker talks to the database directly.
+2. In **Authentication → URL Configuration**, add the dashboard address to the
+   redirect allow-list, e.g. `https://<your-site>/dashboard.html`.
+3. Keep **Confirm email** on in **Authentication → Providers → Email**. Sign-in
+   trusts the email address, so without confirmation anyone could sign up with
+   an admin's address.
 
 Creators then sign in by entering their email and clicking the link Supabase
 sends. The Worker verifies that token with Supabase and matches the creator by
-email, so a creator only ever sees their own leads. The access keys issued at
-signup keep working as a fallback.
+email, so a creator only ever sees their own leads.
 
 ## Deploying to Cloudflare (production)
 
-The app runs as a Cloudflare Worker (`worker.js`) with a D1 database. The database `faith-journey-funnel` already exists on the Cloudflare account with the schema applied, and `wrangler.toml` is fully configured. To deploy:
+The app runs as a Cloudflare Worker (`worker.js`). Its data belongs in
+Postgres (see **Database: Postgres** above). Until the Postgres connection is
+deployed it still reads and writes the D1 database `faith-journey-funnel`,
+which `wrangler.toml` binds. To deploy:
 
 ```bash
 npx wrangler login          # one-time browser login (or set CLOUDFLARE_API_TOKEN)
@@ -160,6 +223,23 @@ selector, so access can be granted, downgraded, or revoked (set to `pending`)
 at any time. An admin can't remove their own admin access, and only admins can
 change anyone's tier.
 
+### Adding a group of creators at once
+
+GitHub → **Actions → Create creator accounts in bulk → Run workflow**. Paste one
+person per line (or separate them with `;`) as `First Last @handle`. Each becomes
+a creator on the default videos, signing in as `firstlast@digitalcollective.com`
+with their first name in lowercase as the password, and linked at `/c/<handle>`.
+Each new creator's photo is set to their Instagram profile
+(`https://www.instagram.com/<handle>/`), read the same way as a YouTube
+channel photo: the Worker reads the profile page's picture, keeps it, and
+refreshes it every six hours. Tick **dry run** first to see the list without
+creating anything. Anyone who already has an account is left alone. Change a
+password afterwards with the **Create or reset an account** workflow.
+
+After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
+signs in as each person in `accounts/people.txt` and checks their dashboard
+data, `/c/` link, short link, directory entry and photo. It only reads.
+
 ### What the network does and doesn't endorse
 
 The statement of faith carries a clause saying plainly that Digital Collective
@@ -253,11 +333,12 @@ consent text that was shown. Nothing is enriched in the browser.
 **Supabase.** `supabase/schema.sql` is the full Postgres schema, including
 the `consents` evidence table, the enrichment columns on `contacts`, a
 `lead_database` view (contact + latest response + score) and row-level
-security: admins see everything, a signed-in creator sees only their own
-responses and the contacts behind them, consent evidence is admin-only. The
-Worker talks to Postgres with the service key when `SUPABASE_URL` and
-`SUPABASE_SERVICE_KEY` are set and to D1 otherwise; the pipeline is the same
-on both.
+security: the public anon key reaches only the creator directory, admins see
+everything, a signed-in creator sees only their own responses and the
+contacts behind them, consent evidence is admin-only, and no browser role can
+write. The Worker connects to Postgres directly (Hyperdrive or
+`DATABASE_URL`) and falls back to D1 until that connection is deployed; the
+pipeline is the same on both.
 
 **External data sources.** `enrich.js` has one generic hook: if
 `ENRICH_PROVIDER_URL` (and optionally `ENRICH_API_KEY`) is set, the cleaned
@@ -293,8 +374,9 @@ and the creator dashboard read the same rows.
 
 ## The platform layer
 
-Everything below was added to match the developer proposal. It runs on D1
-today; `supabase/schema.sql` carries the same tables for Postgres.
+Everything below was added to match the developer proposal. It runs on
+Postgres once connected (D1 until then); `supabase/schema.sql` carries its
+tables.
 
 **People and responses.** Every form submission still writes a `leads` row
 (the old shape), and also upserts a **contact** (one per person, matched on

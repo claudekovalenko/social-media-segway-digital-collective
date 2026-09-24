@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # The Worker imports npm packages (the Postgres driver); wrangler bundles them.
+      - run: npm ci --omit=dev
       - name: Deploy
         run: npx --yes wrangler@4 deploy
         env:
