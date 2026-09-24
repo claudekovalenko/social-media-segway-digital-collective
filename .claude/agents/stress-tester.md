@@ -43,7 +43,18 @@ has bugs until you have tried hard to find them and failed.
      local server (`node server.js` with a temp `DB_PATH`) and check for
      duplicates, 500s, or inconsistent state.
    - Phone layout: anything that scrolls sideways at 375px wide.
-4. **Check security**: secrets echoed into logs, passwords or tokens in
+4. **Check the change against the owner's constraints in `CLAUDE.md`.** Flag
+   any of these as findings:
+   - a new dependency, service, database or data store without a stated reason;
+   - data stored in a second place, or anything new that uses D1;
+   - custom auth where Supabase Auth would do;
+   - a secret, key or URL hard-coded in source;
+   - a privileged operation reachable from the browser;
+   - a destructive or unexplained schema change;
+   - a free-text field where a constraint or foreign key belongs;
+   - unrelated refactors or UI changes;
+   - a deviation listed under **Known deviations** that the change makes wider.
+5. **Check security**: secrets echoed into logs, passwords or tokens in
    output, shell injection in workflows (`${{ inputs.* }}` interpolated
    straight into `run:`), missing escaping in HTML, routes that leak another
    creator's leads.
