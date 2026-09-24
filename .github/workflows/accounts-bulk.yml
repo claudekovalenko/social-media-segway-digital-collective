@@ -1,6 +1,7 @@
 name: Create creator accounts in bulk
 
-# Run from the Actions tab. Paste one person per line:
+# Runs when accounts/people.txt changes on this branch, or from the Actions
+# tab with a pasted list. One person per line:
 #
 #   First Last @handle
 #
@@ -14,17 +15,20 @@ name: Create creator accounts in bulk
 # workflow does.
 
 on:
+  push:
+    branches: [claude/bulk-account-creation-rr8542]
+    paths: [accounts/people.txt]
   workflow_dispatch:
     inputs:
       people:
-        description: 'One per line (or separated by ;): First Last @handle'
-        required: true
+        description: 'One per line (or separated by ;): First Last @handle. Empty = accounts/people.txt'
+        required: false
       admin_email:
-        description: An existing admin's email (to authorize this)
-        required: true
+        description: An admin's email (optional; the ADMIN_KEY repo secret is used otherwise)
+        required: false
       admin_password:
         description: That admin's password (masked in the log)
-        required: true
+        required: false
       dry_run:
         description: Only show what would be created
         type: boolean
@@ -36,6 +40,7 @@ jobs:
     steps:
       - name: Mask secrets
         run: echo "::add-mask::${{ inputs.admin_password }}"
+      - uses: actions/checkout@v4
       - name: Create accounts
         env:
           SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
@@ -43,13 +48,22 @@ jobs:
           ADMIN_EMAIL: ${{ inputs.admin_email }}
           ADMIN_PASSWORD: ${{ inputs.admin_password }}
           PEOPLE: ${{ inputs.people }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
+          if [ -z "$PEOPLE" ]; then PEOPLE=$(grep -v '^[[:space:]]*#' accounts/people.txt); fi
           if [ "$DRY_RUN" != "true" ]; then
-            login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
-            TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
-            [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
-            echo "::add-mask::$TOKEN"
+            if [ -n "$ADMIN_EMAIL" ]; then
+              login=$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+              TOKEN=$(curl -s -X POST "$SITE/api/admin/login" -H "content-type: application/json" --data "$login" | jq -r '.token // empty')
+              [ -n "$TOKEN" ] || { echo "admin sign-in failed"; exit 1; }
+              echo "::add-mask::$TOKEN"
+              AUTH="authorization: Bearer $TOKEN"
+            elif [ -n "$ADMIN_KEY" ]; then
+              AUTH="x-admin-key: $ADMIN_KEY"
+            else
+              echo "No admin sign-in: give admin_email/admin_password or set the ADMIN_KEY repo secret"; exit 1
+            fi
           fi
 
           created=0; skipped=0; failed=0
@@ -78,7 +92,7 @@ jobs:
             body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
               '{email:$e,password:$p,role:"creator",name:$n,creator_slug:$s,handle:$h}')
             code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
-              -H "content-type: application/json" -H "authorization: Bearer $TOKEN" --data "$body")
+              -H "content-type: application/json" -H "$AUTH" --data "$body")
             case "$code" in
               200|201) echo "✓ $name → $email  link: /c/$slug"; created=$((created+1)) ;;
               409)     echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1)) ;;

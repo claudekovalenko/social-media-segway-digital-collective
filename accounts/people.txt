@@ -1,0 +1,9 @@
+# One person per line: First Last @instagramhandle
+# Pushing a change to this file on the accounts branch creates the new
+# accounts on the live site (.github/workflows/accounts-bulk.yml).
+# Existing accounts are skipped.
+Jessica Brown @ajessicabrown
+Dayne Kamela @litwithprayer
+Josiah Alipate @therealcoachjosiah
+Ivan Kovalenko @ivan.a.kovalenko
+Joel Bomberger @joelbomb
