@@ -412,8 +412,9 @@ something that works today.
 1. **Two databases during the move (D1 and Postgres).** Production still runs
    on Cloudflare D1. The code can use Postgres (`pg.js`) and falls back to D1
    when no Postgres connection is configured.
-   - Why: the move to Supabase/Postgres is in progress; the Supabase project
-     isn't created yet.
+   - Why: the move to Supabase/Postgres is in progress. The Supabase project
+     exists (organization "Digitalcollective", free plan) and has
+     `supabase/schema.sql` loaded, but the site isn't connected to it yet.
    - Authoritative: D1 until the Worker secret `DATABASE_MODE` is `postgres`;
      Postgres from then on. A configured connection alone switches nothing.
    - Sync: none. It is a one-way copy (`copy-to-postgres.js`), repeatable only
