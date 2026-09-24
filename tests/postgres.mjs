@@ -33,8 +33,6 @@ const ADMIN_KEY = 'test-admin-key';
 
 const arg = (k) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || '').split('=').slice(1).join('=') || null;
 
-if (arg('backend')) await child(arg('backend'), arg('out'));
-else await parent();
 
 // =========================================================================
 // parent: set up both databases, run both children, compare
@@ -661,3 +659,7 @@ function sqliteD1(db) {
     async exec(sql) { db.exec(sql); },
   };
 }
+
+// Dispatch last, so every top-level constant above is initialised.
+if (arg('backend')) await child(arg('backend'), arg('out'));
+else await parent();
