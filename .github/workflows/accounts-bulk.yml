@@ -11,8 +11,9 @@ name: Create creator accounts in bulk
 #   - sign-in:  firstlast@digitalcollective.com (lowercase, letters only)
 #   - password: their first name, lowercase
 #   - link:     /c/<handle>
-#   - page:     the three videos copied from another creator (videos_from),
-#               and the card at the foot of the page opening their Instagram
+#   - page:     the three videos and the next-step and course links copied
+#               from another creator (videos_from), and the card at the foot
+#               of the page opening their Instagram
 #   - photo:    the address listed, if any (a YouTube channel falls back to
 #               their Instagram when YouTube gives no picture); none if not
 #
@@ -33,11 +34,11 @@ on:
         description: That admin's password (masked in the log)
         required: false
       videos_from:
-        description: New accounts get the three videos from this creator's page (link name)
+        description: New accounts get the videos and next-step and course links from this creator's page (link name)
         required: false
-        default: acraigbrown
+        default: craigbrown
       fill_existing:
-        description: Also fill empty videos and card link on accounts that already exist (a cleared field counts as empty; never their photo)
+        description: Also fill empty videos, links and card link on accounts that already exist (a cleared field counts as empty; never their photo)
         type: boolean
         default: false
       update_photos:
@@ -106,21 +107,23 @@ jobs:
             jq -c '.creator // .' <<<"$out"
           }
 
-          # The videos to copy (only web addresses), from that creator's page.
-          VIDEO_KEYS='["know_god_video_url","grow_video_url","find_church_video_url"]'
+          # What to copy (only web addresses) from that creator's page: the
+          # videos, and the next-step and course links. Not their church-finder
+          # link, which is their own.
+          COPY_KEYS='["know_god_video_url","know_god_next_url","grow_video_url","grow_course_url","find_church_video_url"]'
           source='{}'
           if [ -n "$VIDEOS_FROM" ]; then
-            [[ "$VIDEOS_FROM" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] || { echo "videos_from must be a creator's link name, like acraigbrown."; exit 1; }
-            source=$(read_page "$VIDEOS_FROM") || { echo "Could not read the creator page '$VIDEOS_FROM' to copy videos from."; exit 1; }
-            source=$(jq -c --argjson keys "$VIDEO_KEYS" '. as $c | reduce $keys[] as $k ({};
+            [[ "$VIDEOS_FROM" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] || { echo "videos_from must be a creator's link name, like craigbrown."; exit 1; }
+            source=$(read_page "$VIDEOS_FROM") || { echo "Could not read the creator page '$VIDEOS_FROM' to copy from."; exit 1; }
+            source=$(jq -c --argjson keys "$COPY_KEYS" '. as $c | reduce $keys[] as $k ({};
               if ($c[$k] | type) == "string" and ($c[$k] | test("^https?://")) then .[$k] = $c[$k] else . end)' <<<"$source")
-            echo "Videos from /c/$VIDEOS_FROM:"
-            jq -r --argjson keys "$VIDEO_KEYS" '. as $c | $keys[] | "  \(.): \($c[.] // "(none: uses the collective default)")"' <<<"$source"
+            echo "Copied from /c/$VIDEOS_FROM:"
+            jq -r --argjson keys "$COPY_KEYS" '. as $c | $keys[] | "  \(.): \($c[.] // "(none: uses the collective default)")"' <<<"$source"
             echo
           fi
 
           # What to fill in on a page. A page made in this run is known to be
-          # empty, so it gets the videos, the card link to their Instagram and
+          # empty, so it gets the copied videos and links, the card link to their Instagram and
           # the listed photo. A page that already existed is changed only with
           # fill_existing, only if it was read, only where a field is empty,
           # and never its photo (a creator's own photo may not show yet).
@@ -140,7 +143,7 @@ jobs:
                 *) echo "  ✗ could not read their page; left as is"; failed=$((failed+1)); return ;;
               esac
             fi
-            fields=$(jq -nc --argjson src "$source" --argjson c "$cur" --argjson keys "$VIDEO_KEYS" \
+            fields=$(jq -nc --argjson src "$source" --argjson c "$cur" --argjson keys "$COPY_KEYS" \
                      --arg ig "https://www.instagram.com/$2/" --arg photo "$3" --arg new "$kind" --arg update "$([ "$DRY_RUN" = true ] && echo true || echo "$UPDATE_PHOTOS")" --arg fill "$([ "$DRY_RUN" = true ] && echo true || echo "$FILL_EXISTING")" '
               (reduce $keys[] as $k ({}; if (($c[$k] // "") == "") and ($src[$k] != null) then .[$k] = $src[$k] else . end))
               + (if ($c.back_url // "") == "" then {back_url: $ig} else {} end)
@@ -211,7 +214,7 @@ jobs:
                 ;;
               409)
                 # The account is left as it is; with fill_existing its page gets
-                # the empty videos and card link filled in.
+                # the empty videos, links and card link filled in.
                 echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1))
                 fill "$slug" "$handle" "$photo" existing
                 ;;
