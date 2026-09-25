@@ -266,6 +266,14 @@ function d1Adapter(DB) {
         .bind(passHash, email).run();
     },
 
+    // Replaces the password only if it is still `oldHash`; false if someone
+    // changed it in between.
+    async changeAccountPassword(email, oldHash, passHash) {
+      const r = await DB.prepare(`UPDATE admins SET pass_hash = ? WHERE email = lower(?) AND pass_hash = ?`)
+        .bind(passHash, email, oldHash).run();
+      return (r.meta && r.meta.changes) > 0;
+    },
+
     async setAccountRole(email, role, creatorSlug) {
       await this.ensureAdmins();
       await DB.prepare(`UPDATE admins SET role = ?, creator_slug = ? WHERE email = lower(?)`)
@@ -484,6 +492,15 @@ function supabaseAdapter(url, serviceKey) {
         method: 'PATCH',
         body: JSON.stringify({ pass_hash: passHash }),
       });
+    },
+
+    async changeAccountPassword(email, oldHash, passHash) {
+      const rows = await rest(`admins?email=eq.${encodeURIComponent(email.toLowerCase())}&pass_hash=eq.${encodeURIComponent(oldHash)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ pass_hash: passHash }),
+      });
+      return Array.isArray(rows) && rows.length > 0;
     },
 
     async setAccountRole(email, role, creatorSlug) {

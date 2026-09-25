@@ -50,9 +50,11 @@ try {
   // ---- the real Worker, served locally ------------------------------------
   const realFetch = globalThis.fetch;
   const photoFetches = [];
+  let photoSitesDown = false;
   globalThis.fetch = async (input, init) => {
     const u = new URL(typeof input === 'string' ? input : input.url);
     if (u.hostname === '127.0.0.1') return realFetch(input, init);
+    if (photoSitesDown && /(youtube\.com|instagram\.com|direct\.me)$/.test(u.hostname)) return new Response('down', { status: 503 });
     // A stand-in Instagram profile page, shaped like the real one's <head>.
     // A stand-in YouTube channel page; a channel whose address contains
     // "broken" gives no picture, to exercise the fallback to Instagram.
@@ -60,6 +62,13 @@ try {
       photoFetches.push(u.pathname);
       if (u.pathname.includes('broken')) return new Response('<html><head></head></html>', { headers: { 'content-type': 'text/html' } });
       return new Response(`<html><head><meta property="og:image" content="https://yt.example${u.pathname}.jpg" /></head></html>`,
+        { headers: { 'content-type': 'text/html' } });
+    }
+    // A stand-in direct.me link-in-bio page.
+    if (u.hostname === 'direct.me') {
+      photoFetches.push(u.pathname);
+      if (u.pathname.includes('noimg')) return new Response('<html><head></head></html>', { headers: { 'content-type': 'text/html' } });
+      return new Response(`<html><head><meta property="og:image" content="https://dm.example${u.pathname}.jpg" /></head></html>`,
         { headers: { 'content-type': 'text/html' } });
     }
     if (u.hostname === 'www.instagram.com') {
@@ -112,10 +121,10 @@ try {
     'import yaml,sys; d=yaml.safe_load(sys.stdin); print([s for s in d["jobs"]["accounts"]["steps"] if s.get("name")=="Create accounts"][0]["run"])'],
     { input: yaml, encoding: 'utf8' }).stdout;
   // Asynchronous: the script calls the server running in this process.
-  const runWorkflow = () => new Promise((resolve) => {
+  const runWorkflow = (extra = {}) => new Promise((resolve) => {
     const child = spawn('bash', ['--noprofile', '--norc', '-eo', 'pipefail', '-c', script], {
       cwd: ROOT,
-      env: { ...process.env, SITE, DOMAIN: 'digitalcollective.com', ADMIN_KEY: env.ADMIN_KEY, PEOPLE: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', DRY_RUN: '' },
+      env: { ...process.env, SITE, DOMAIN: 'digitalcollective.com', ADMIN_KEY: env.ADMIN_KEY, PEOPLE: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', DRY_RUN: '', VIDEOS_FROM: 'acraigbrown', FILL_EXISTING: '', ...extra },
     });
     let stdout = '', stderr = '';
     child.stdout.on('data', (d) => { stdout += d; });
@@ -129,10 +138,45 @@ try {
   await api('/api/admin/accounts', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY }, body: {
     email: early.email, password: early.password, role: 'creator', name: early.name, creator_slug: early.slug, handle: '@' + early.handle } });
 
+  // Craig's page, whose three videos everyone gets unless they chose their own.
+  const VIDEOS = { know_god_video_url: 'https://www.youtube.com/watch?v=know1', grow_video_url: 'https://www.youtube.com/watch?v=grow2',
+    find_church_video_url: 'https://www.youtube.com/watch?v=church3' };
+  await api('/api/admin/accounts', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY }, body: {
+    email: 'craig@example.org', password: 'craig-pass', role: 'creator', name: 'Craig Brown', creator_slug: 'acraigbrown', handle: '@acraigbrown' } });
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: 'acraigbrown', ...VIDEOS, back_url: 'https://craig.example/', know_god_next_url: 'https://craig.example/course' } });
+  // The account made by hand chose its own first video; that must stay.
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } });
+
+  // A dry run before anyone exists lists everyone and changes nothing.
+  const dry = await runWorkflow({ DRY_RUN: 'true' });
+  // Each person's line is followed by what they would get.
+  const dryBlocks = dry.stdout.split(/^• /m).slice(1);
+  check(dry.status === 0 && dryBlocks.length === listPeople().length && dryBlocks.every((b) => /would set/.test(b)),
+    'a dry run lists what every person would get', dry.stdout.slice(-400) + dry.stderr);
+
+  // One person registered their own page (same email) before the run: the
+  // new sign-in is joined to it and their own video must stay.
+  const joined = listPeople().find((x) => x.slug === 'ivan-a-kovalenko');
+  await api('/api/creators/register', { method: 'POST', body: { slug: joined.slug, name: joined.name, email: joined.email,
+    handle: '@' + joined.handle, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } });
+
   console.log('Workflow, first run:');
   const first = await runWorkflow();
   console.log(first.stdout.replace(/^/gm, '    ').trimEnd());
   check(first.status === 0, 'workflow succeeded', first.stderr);
+
+  // The account that already existed was left alone by a normal run.
+  const untouched = ((await api(`/api/creators/${early.slug}`)).json || {});
+  check(!untouched.grow_video_url && !untouched.back_url, 'an existing account is left as is without fill_existing',
+    JSON.stringify([untouched.grow_video_url, untouched.back_url]));
+  console.log('\nWorkflow with fill_existing:');
+  const filling = await runWorkflow({ FILL_EXISTING: 'true' });
+  console.log(filling.stdout.replace(/^/gm, '    ').trimEnd());
+  check(filling.status === 0, 'workflow with fill_existing succeeded', filling.stderr);
+  const stillNoPhoto = ((await api(`/api/creators/${early.slug}`)).json || {});
+  check(!stillNoPhoto.avatar_url, 'fill_existing leaves an existing account\'s photo alone', String(stillNoPhoto.avatar_url));
 
   const people = listPeople();
   const refused = people.filter((p) => p.error);
@@ -170,10 +214,12 @@ try {
     const photo = again.json?.creator?.avatar_url ?? again.json?.avatar_url;
     // The photo listed for them: YouTube (stubbed), Instagram (stubbed), or none.
     const src = p.photo ? new URL(p.photo) : null;
-    p.expectedPhoto = !src ? ''
+    // An account that already existed never gets a photo from the list.
+    p.expectedPhoto = !src || p.slug === early.slug ? ''
       : src.hostname.endsWith('youtube.com') ? `https://yt.example${src.pathname}.jpg`
+      : src.hostname === 'direct.me' ? `https://dm.example${src.pathname}.jpg`
       : `https://cdn.example/${src.pathname.replace(/\//g, '')}.jpg?a=1&b=2`;
-    const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : 'Instagram';
+    const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : src.hostname === 'direct.me' ? 'direct.me' : 'Instagram';
     check((photo || '') === p.expectedPhoto, `${kind} photo${src ? ' shows' : ' (none listed)'} on their page`,
       `got ${JSON.stringify(photo)}; fetched: ${photoFetches.join(', ')}`);
 
@@ -211,6 +257,121 @@ try {
   check((fb.json?.creator?.avatar_url ?? fb.json?.avatar_url) === `https://cdn.example/${q.handle}.jpg?a=1&b=2`,
     'when YouTube gives no picture, their Instagram photo is used',
     JSON.stringify(fb.json?.creator?.avatar_url ?? fb.json?.avatar_url));
+
+  // Videos copied from Craig, the card leads to their own Instagram, and
+  // nothing they chose themselves (or Craig's own links) was copied over.
+  for (const p of people) {
+    const row = (await api(`/api/creators/${p.slug}`)).json || {};
+    const c = row.creator || row;
+    const own = p.slug === early.slug || p.slug === joined.slug;
+    const want = own ? { ...VIDEOS, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } : VIDEOS;
+    check(Object.entries(want).every(([k, v]) => c[k] === v), `${p.name}: has the videos (their own choice kept)`,
+      JSON.stringify([c.know_god_video_url, c.grow_video_url, c.find_church_video_url]));
+    check(c.back_url === `https://www.instagram.com/${p.handle}/` && !c.know_god_next_url,
+      `${p.name}: their card opens their Instagram; Craig's own links not copied`, JSON.stringify([c.back_url, c.know_god_next_url]));
+  }
+
+  // Everyone can change their own password.
+  console.log('\nChanging passwords:');
+  for (const p of people) {
+    const pw = (body, token = p.token) => api('/api/auth/password', { method: 'POST', token, body });
+    const wrong = await pw({ current_password: 'nope', new_password: 'a-new-password-1' });
+    const short = await pw({ current_password: p.password, new_password: 'short' });
+    const noSession = await pw({ current_password: p.password, new_password: 'a-new-password-1' }, null);
+    const ok = await pw({ current_password: p.password, new_password: `${p.password}-Stronger-2026` });
+    const oldToken = await api('/api/auth/me', { token: p.token });
+    const newToken = await api('/api/auth/me', { token: ok.json?.token });
+    const oldLogin = await api('/api/admin/login', { method: 'POST', body: { email: p.email, password: p.password } });
+    const newLogin = await api('/api/admin/login', { method: 'POST', body: { email: p.email, password: `${p.password}-Stronger-2026` } });
+    check(wrong.status === 400 && short.status === 400 && noSession.status === 401,
+      `${p.name}: wrong current password, too-short password and no sign-in are refused`,
+      `${wrong.status} ${short.status} ${noSession.status}`);
+    check(ok.status === 200 && newToken.status === 200 && oldToken.status === 401,
+      `${p.name}: password changed, stays signed in, older sign-ins end`,
+      `${ok.status} ${ok.text.slice(0, 80)} new:${newToken.status} old:${oldToken.status}`);
+    check(oldLogin.status === 401 && newLogin.status === 200, `${p.name}: only the new password works`,
+      `old:${oldLogin.status} new:${newLogin.status}`);
+    p.token = newLogin.json?.token;
+  }
+  // Odd input gets a plain refusal.
+  const odd = people[1];
+  for (const [label, body] of [['no body', null], ['non-text password', { current_password: 'x', new_password: { a: 1 } }],
+    ['spaces only', { current_password: 'x', new_password: '         ' }]]) {
+    const r = await api('/api/auth/password', { method: 'POST', token: odd.token, body });
+    check(r.status === 400, `odd input refused (${label})`, String(r.status));
+  }
+  // Two changes at the same moment: one wins, the other is told so.
+  const both = await Promise.all(['First-Parallel-1', 'Second-Parallel-2'].map((np) =>
+    api('/api/auth/password', { method: 'POST', token: odd.token, body: { current_password: `${odd.password}-Stronger-2026`, new_password: np } })));
+  check(both.filter((r) => r.status === 200).length === 1 && both.some((r) => r.status === 409),
+    'two changes at once: exactly one succeeds', both.map((r) => r.status).join(','));
+  // Guesses sent all at once still count: at most 5 get checked.
+  const w = people[2];
+  const burst = await Promise.all(Array.from({ length: 20 }, (_, i) => api('/api/auth/password', { method: 'POST', token: w.token,
+    headers: { 'cf-connecting-ip': '7.7.7.7' }, body: { current_password: 'guess-' + i, new_password: 'whatever-long-1' } })));
+  check(burst.filter((r) => r.status === 400).length <= 5, 'guesses sent all at once are capped at 5',
+    burst.map((r) => r.status).join(','));
+
+  // Guessing is stopped: after 5 wrong current passwords the account waits.
+  const g = people[0];
+  let last;
+  for (let i = 0; i < 6; i++) last = await api('/api/auth/password', { method: 'POST', token: g.token,
+    body: { current_password: 'guess-' + i, new_password: 'whatever-long-1' } });
+  check(last.status === 429, 'repeated wrong current passwords are slowed down', String(last.status));
+  const adminKeyTry = await api('/api/auth/password', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { current_password: 'x', new_password: 'whatever-long-1' } });
+  check(adminKeyTry.status === 401, 'the admin key alone cannot change a password', String(adminKeyTry.status));
+
+  // update_photos: an existing account gets the photo listed for it.
+  console.log('\nWorkflow with update_photos:');
+  const photos = await runWorkflow({ UPDATE_PHOTOS: 'true' });
+  console.log(photos.stdout.replace(/^/gm, '    ').trimEnd());
+  await api(`/api/creators/${early.slug}`);
+  const updated = ((await api(`/api/creators/${early.slug}`)).json || {});
+  check(photos.status === 0 && updated.avatar_url === `https://yt.example${new URL(early.photo).pathname}.jpg`,
+    'update_photos gives an existing account its listed photo', String(updated.avatar_url));
+
+  // Nothing changed in the list: a second update_photos run leaves photos alone.
+  const photosAgain = await runWorkflow({ UPDATE_PHOTOS: 'true' });
+  check(photosAgain.status === 0 && !/set: photo/.test(photosAgain.stdout), 'update_photos changes nothing when no photo changed',
+    photosAgain.stdout.slice(-300));
+  // The same photo address saved again while the photo sites are down: the
+  // picture stays.
+  const before = (await api(`/api/creators/${early.slug}`)).json?.avatar_url;
+  photoSitesDown = true;
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: early.photo } });
+  const during = (await api(`/api/creators/${early.slug}`)).json;
+  check(before && during?.avatar_url === before, 'the same photo saved while a photo site is down keeps the picture',
+    JSON.stringify([before, during?.avatar_url]));
+  // A new address while they're down: the old face goes, and the new one
+  // appears once the site answers again.
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: 'https://www.youtube.com/@someone-new' } });
+  const changed = (await api(`/api/creators/${early.slug}`)).json;
+  photoSitesDown = false;
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: 'https://www.youtube.com/@someone-new' } });
+  const back = (await api(`/api/creators/${early.slug}`)).json;
+  check(!changed?.avatar_url && changed?.photo_source === 'https://www.youtube.com/@someone-new'
+      && back?.avatar_url === 'https://yt.example/@someone-new.jpg',
+    'a new photo saved while a photo site is down drops the old one, then shows once it is back',
+    JSON.stringify([changed?.avatar_url, back?.avatar_url]));
+  // The dry run shows a photo change that needs update_photos.
+  const dryPhoto = await runWorkflow({ DRY_RUN: 'true' });
+  check(dryPhoto.status === 0 && /would set with update_photos: photo/.test(dryPhoto.stdout),
+    'the dry run shows a photo change that needs update_photos', dryPhoto.stdout.slice(-400));
+  // A new photo address whose page has no picture: the old picture goes.
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: 'https://direct.me/noimg' } });
+  const noImg = (await api(`/api/creators/${early.slug}`)).json;
+  check(!noImg?.avatar_url && noImg?.photo_source === 'https://direct.me/noimg',
+    'a replaced photo whose new page has no picture no longer shows the old one', JSON.stringify([noImg?.avatar_url, noImg?.photo_source]));
+  // Instagram handles may end in .me; an address written with @ is refused.
+  const { readPeople } = await import('../accounts/people.mjs');
+  check(readPeople('Rene Smith @rene.me')[0].handle === 'rene.me', 'a handle like @rene.me is read as a handle');
+  check(readPeople('Rene Smith @rene @https://direct.me/rene')[0].error && readPeople('Rene Smith @rene @direct.me/rene')[0].error,
+    'a photo address written with @ is refused, not dropped');
 
   console.log('\nWorkflow, second run (nothing should change):');
   const second = await runWorkflow();

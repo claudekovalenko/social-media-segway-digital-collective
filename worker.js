@@ -3,7 +3,7 @@ import { connect, postgresD1 } from './pg.js';
 import { COPY_ORDER, copyPage, finish as finishCopy, compareCounts } from './copy-to-postgres.js';
 import { handlePlatform, sendFollowUp } from './platform-routes.js';
 import { enrichContact } from './enrich.js';
-import { platform, rateLimited, clientIp, isRealDate, recordId } from './platform.js';
+import { platform, rateLimited, uncount, clientIp, isRealDate, recordId } from './platform.js';
 
 // Cloudflare Worker backend for the Faith Journey funnel.
 // Static files in public/ are served by Workers Assets; this handles /api/* and /c/*.
@@ -45,8 +45,9 @@ const DEFAULT_LINKS = {
 
 const SETTING_KEYS = Object.keys(DEFAULT_LINKS);
 
-// A creator can give a YouTube channel or Instagram profile address as their
-// photo; its page names the profile picture (og:image). Reading that page
+// A creator can give a YouTube channel, Instagram profile or direct.me
+// link-in-bio page as their photo; its page names the profile picture
+// (og:image). Reading that page
 // costs a second or two, which is far too slow to do while someone waits
 // for a page to load. So the resolved image address is kept in the database
 // and handed back at once; when it is stale the refresh happens after the
@@ -58,6 +59,7 @@ function isChannelUrl(url) {
     const u = new URL(url);
     const host = u.hostname.replace(/^(www|m)\./, '');
     if (host === 'instagram.com') return /^\/[\w.]{1,30}\/?$/.test(u.pathname);
+    if (host === 'direct.me') return /^\/[\w.-]{1,40}\/?$/.test(u.pathname);
     return host === 'youtube.com'
       && /^\/(@[\w.-]+|channel\/[\w-]+|c\/[\w.-]+|user\/[\w.-]+)\/?$/.test(u.pathname);
   } catch { return false; }
@@ -102,6 +104,9 @@ function avatarFor(row, db, after) {
       let found = null;
       for (const source of sources) if (!found) found = await readChannelAvatar(source);
       // Nothing found: keep any older picture, and don't ask again for a while.
+      // (A page with no picture can't be told apart from a login or consent
+      // wall, so a picture is never dropped here; saving a new photo address
+      // is what drops one.)
       const fields = found ? { avatar_cached: found } : {};
       await db.updateCreatorLinks(slug, { ...fields, avatar_checked_at: new Date().toISOString() })
         .catch(() => {});
@@ -719,6 +724,60 @@ async function handle(req, env, ctx) {
         });
       }
 
+      // Change your own password: current password + new one. Only for an
+      // account signed in with its password (not the admin key, a creator
+      // access key, or a login configured in ADMIN_LOGINS). Changing it ends
+      // every other sign-in for that account, because sessions are signed
+      // with the password hash; a fresh one is returned.
+      if (p === '/api/auth/password' && req.method === 'POST') {
+        const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+        const session = bearer.startsWith('dcs.') ? await readSession(env, bearer) : null;
+        const account = session ? await db.adminByEmail(session.email) : null;
+        if (!account) return json({ error: 'Sign in with your email and password first.' }, 401);
+        // Also set in ADMIN_LOGINS: that password signs its sessions, so a
+        // change here would not end them. Changed where it is configured.
+        if (adminLogins(env).has(account.email)) {
+          return json({ error: 'This sign-in is configured on the server; change it there.' }, 400);
+        }
+        const b = await req.json().catch(() => null);
+        if (!b || typeof b.current_password !== 'string' || typeof b.new_password !== 'string') {
+          return json({ error: 'Send current_password and new_password.' }, 400);
+        }
+        const current = b.current_password;
+        const next = b.new_password;
+        if (!next.trim() || [...next].length < 8 || [...next].length > 200) {
+          return json({ error: 'Use a new password of 8 to 200 characters.' }, 400);
+        }
+        if (next === current) return json({ error: 'Choose a password different from the current one.' }, 400);
+        // Every attempt is counted before the (slow) check, so guesses sent all
+        // at once can't slip past; a right password takes its count back. 5
+        // wrong per account and 10 per address in 15 minutes.
+        const WINDOW = 15 * 60_000;
+        const byAccount = `pwfail:${account.email}`;
+        const byAddress = `pwfail:${clientIp(req)}`;
+        const overAccount = rateLimited(byAccount, 5, WINDOW);
+        const overAddress = rateLimited(byAddress, 10, WINDOW);
+        if (overAccount || overAddress) {
+          return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
+        }
+        if (!(await passwordMatches(current, account.pass_hash))) {
+          return json({ error: 'Your current password is not right.' }, 400);
+        }
+        uncount(byAccount);
+        uncount(byAddress);
+        // Only if nobody changed it since it was checked.
+        if (!(await db.changeAccountPassword(account.email, account.pass_hash, await hashPassword(next)))) {
+          return json({ error: 'Your password was just changed elsewhere. Sign in again.' }, 409);
+        }
+        await platform(env.DB).audit(account.email, 'account.password_changed', account.email, null).catch(() => {});
+        const token = await signSession(
+          env,
+          { email: account.email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },
+          await accountSecretFor(env, account.email)
+        );
+        return json({ ok: true, token });
+      }
+
       // Applications waiting on a decision.
       if (p === '/api/admin/applications' && req.method === 'GET') {
         const who = await isAdmin(req, url, env, db);
@@ -946,12 +1005,22 @@ async function handle(req, env, ctx) {
         // waiting for the first background refresh. Saving is a deliberate
         // act, so a second spent here costs nobody a page load.
         if (fields.avatar_url !== undefined) {
-          fields.avatar_cached = isChannelUrl(fields.avatar_url)
+          const found = isChannelUrl(fields.avatar_url)
             ? await readChannelAvatar(fields.avatar_url)
             : fields.avatar_url;
-          // Not found now: leave it unchecked, so the next page view tries again
-          // with the Instagram fallback.
-          fields.avatar_checked_at = fields.avatar_cached ? new Date().toISOString() : null;
+          if (found) {
+            fields.avatar_cached = found;
+            fields.avatar_checked_at = new Date().toISOString();
+          } else {
+            // No picture from it right now (the site may be down). The
+            // picture shown must come from this address: the same address
+            // saved again keeps it, a new or cleared one drops it. Either
+            // way it is left unchecked so the next page view tries again,
+            // with the Instagram fallback.
+            const before = await db.creatorBySlug(slug);
+            if (!fields.avatar_url || fields.avatar_url !== (before && before.avatar_url)) fields.avatar_cached = null;
+            fields.avatar_checked_at = null;
+          }
         }
         if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
         await db.updateCreatorLinks(slug, fields);
@@ -1073,6 +1142,9 @@ async function handle(req, env, ctx) {
         if (!row || row.status === 'suspended') return json({ error: 'creator not found' }, 404);
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
+        // The address their photo comes from (a public profile page), before
+        // it's swapped for the picture itself.
+        pub.photo_source = row.avatar_url || null;
         avatarFor(pub, db, after);
         const { avatar_cached, avatar_checked_at, ...shown } = pub;
         return json({ ...shown, defaults: await defaultLinks(db) });

@@ -653,6 +653,12 @@ export function rateLimited(key, limit, windowMs) {
   return recent.length > limit;
 }
 
+// Takes back the most recent count for `key` (an attempt that turned out fine).
+export function uncount(key) {
+  const b = buckets.get(key);
+  if (b && b.length) b.pop();
+}
+
 export function clientIp(req) {
   return req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for') || 'unknown';
 }

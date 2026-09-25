@@ -226,11 +226,48 @@ async function run(base) {
     });
   }
 
+  if (!LIVE) await check('dashboard: a signed-in creator can change their password', async (page) => {
+    let sent = null;
+    await page.route('**/api/creator/leads', (r) => r.fulfill({ json: {
+      creator: { ...CREATOR_ROW, name: 'Craig Brown', slug: CREATOR }, link: `/c/${CREATOR}`,
+      leads: [], counts: [], role: 'creator' } }));
+    await page.route('**/api/analytics*', (r) => r.fulfill({ json: { funnel: { sessions: 0, views: 0, know_open: 0, know_submit: 0, grow_click: 0, connect_click: 0, reported_commitments: 0, discipleship_starts: 0, church_connections: 0, conversion: { view_to_know: 0, know_to_submit: 0, view_to_commitment: 0 } }, by_source: [], by_creator: [] } }));
+    await page.route('**/api/responses*', (r) => r.fulfill({ json: { responses: [] } }));
+    await page.route('**/api/auth/password', (r) => { sent = r.request().postDataJSON(); r.fulfill({ json: { ok: true, token: 'dcs.new.token' } }); });
+    await page.addInitScript(() => sessionStorage.setItem('dc_admin_token', 'dcs.old.token'));
+    await go(page, '/dashboard.html');
+    await page.waitForTimeout(1200);
+    const fold = page.locator('#passwordFold');
+    expect(await visible(fold), 'the "Your password" section did not appear');
+    await fold.locator('summary').click();
+    await page.fill('#changePassword [name=current_password]', 'craig');
+    await page.fill('#changePassword [name=new_password]', 'a-longer-password');
+    await page.fill('#changePassword [name=confirm]', 'a-different-one');
+    await page.click('#changePassword button[type=submit]');
+    expect(/match/.test(await page.locator('#changePassword .crm-saved').textContent()), 'mismatched new passwords not caught');
+    expect(sent === null, 'sent a request although the new passwords differ');
+    await page.fill('#changePassword [name=confirm]', 'a-longer-password');
+    await page.click('#changePassword button[type=submit]');
+    await page.waitForTimeout(500);
+    expect(/changed/i.test(await page.locator('#changePassword .crm-saved').textContent()), 'no confirmation shown');
+    expect(sent && sent.current_password === 'craig' && sent.new_password === 'a-longer-password', 'wrong request: ' + JSON.stringify(sent));
+    expect(await page.evaluate(() => sessionStorage.getItem('dc_admin_token')) === 'dcs.new.token', 'kept the old sign-in');
+    // What the page does next uses the new sign-in, not the one it loaded with.
+    let usedAuth = null;
+    await page.route('**/api/creator/followup', (r) => { usedAuth = r.request().headers().authorization; r.fulfill({ json: { ok: true } }); });
+    await page.evaluate(() => { const f = document.getElementById('followupFold'); if (f) f.hidden = false; });
+    await page.locator('#followupFold summary').click();
+    await page.click('#followup button[type=submit]');
+    await page.waitForTimeout(500);
+    expect(usedAuth === 'Bearer dcs.new.token', 'next action used ' + usedAuth);
+  });
+
   await check('dashboard and admin pages load without script errors (signed out)', async (page) => {
     await go(page, '/dashboard.html');
     await page.waitForTimeout(1200);
     await go(page, '/admin.html');
     await page.waitForTimeout(1200);
+    expect(!(await visible(page.locator('#passwordFold'))), 'password section shown while signed out');
   });
 
   // Live only: every creator in accounts/people.txt can sign in and has a

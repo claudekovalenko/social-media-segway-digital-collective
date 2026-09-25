@@ -276,6 +276,26 @@
       <div class="audit"><ul id="auditList"></ul></div>
       </details>
 
+      <details class="fold" id="passwordFold" hidden>
+      <summary class="section">Your password</summary>
+      <form class="app-card" id="changePassword">
+        <p class="app-meta">Choose a new password: at least 8 characters, not one you use anywhere else.</p>
+        <label>Current password
+          <input name="current_password" type="password" autocomplete="current-password" required>
+        </label>
+        <label>New password
+          <input name="new_password" type="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <label>New password again
+          <input name="confirm" type="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <div class="app-actions">
+          <button type="submit" class="btn-small go">Change password</button>
+          <span class="crm-saved"></span>
+        </div>
+      </form>
+      </details>
+
     </div>
 
     <footer>
@@ -324,7 +344,9 @@
     }
 
     function credentials() {
-      if (token) return { Authorization: 'Bearer ' + token };
+      // Read each time: changing your password replaces the stored sign-in.
+      const current = sessionStorage.getItem('dc_admin_token');
+      if (current) return { Authorization: 'Bearer ' + current };
       if (key) return { 'x-admin-key': key };
       return null;
     }
@@ -842,6 +864,7 @@
 
     load();
   </script>
+  <script src="password.js"></script>
   <script>// Nothing is cached on the device any more. This only re-registers where a
     // worker is already installed, so that device picks up sw.js and clears
     // itself out. A first-time visitor registers nothing and loads once.

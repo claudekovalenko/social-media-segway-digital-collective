@@ -213,6 +213,12 @@ and chooses the tier at that moment:
 - **as a creator** — gets their own `/c/<slug>` link and sees only its leads
 - **as an admin** — gets the whole database
 
+Anyone signed in with their password can change it themselves under **Your
+password** at the bottom of the dashboard or the database page: current
+password, then a new one of at least 8 characters. Every other sign-in for
+that account ends; wrong current passwords are limited to 5 per account in 15
+minutes.
+
 If someone forgets their password, an admin sets a new one from the same
 **Who has access** row — there is no self-service reset, and only admins can do
 it. Sign-in says which half is wrong: an unknown email offers the sign-up form
@@ -235,6 +241,18 @@ channel photo: the Worker reads the profile page's picture, keeps it, and
 refreshes it every six hours. Tick **dry run** first to see the list without
 creating anything. Anyone who already has an account is left alone. Change a
 password afterwards with the **Create or reset an account** workflow.
+
+Each account the run creates also gets its page set up: the three videos
+copied from another creator's page (`acraigbrown` unless you name a different
+one in **videos_from**; only the videos, not that creator's own button links),
+the creator card at the foot of the page opening their Instagram, and the
+listed photo. Accounts that already exist are left alone, unless you tick
+**fill_existing**: then empty videos and an empty card link are filled in
+(never the photo, and only when their page could be read). A field a creator
+cleared on purpose looks empty too, so use it for accounts nobody has touched
+yet. **update_photos** gives accounts that already exist the photo listed for
+them, replacing their current one: use it when a photo in the list changes. A
+photo can be a YouTube channel, an Instagram profile or a direct.me page.
 
 After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
 signs in as each person in `accounts/people.txt` and checks their dashboard

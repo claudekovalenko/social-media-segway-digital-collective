@@ -2,8 +2,8 @@
 //
 //   First Last @instagramhandle [photo]
 //
-// where the optional photo is their YouTube channel (or Instagram profile)
-// address. With no photo the account starts without one. Anything unclear is
+// where the optional photo is their YouTube channel, Instagram profile or
+// direct.me page address. With no photo the account starts without one. Anything unclear is
 // refused with a reason rather than guessed at, because the bulk-accounts
 // workflow creates real accounts from this.
 //
@@ -37,18 +37,26 @@ function photoAddress(token) {
   if (host === 'instagram.com' && parts.length === 1 && /^(?=.*\w)[\w.]{1,30}$/.test(parts[0])) {
     return { url: `https://www.instagram.com/${parts[0]}/` };
   }
-  return { error: `"${token}" is not a YouTube channel or Instagram profile` };
+  // A link-in-bio page; tracking like ?utm_source=… is dropped.
+  if (host === 'direct.me' && parts.length === 1 && /^(?=.*\w)[\w.-]{1,40}$/.test(parts[0])) {
+    return { url: `https://direct.me/${parts[0]}` };
+  }
+  return { error: `"${token}" is not a YouTube channel, Instagram profile or direct.me page` };
 }
 
 export function parsePerson(raw) {
   const line = raw.trim();
   const tokens = line.split(/\s+/);
-  const looksLikeAddress = (t) => /[/:]|^www\.|\.(com|be|org|net)\b/i.test(t);
-  const handles = tokens.filter((t) => t.startsWith('@') && !looksLikeAddress(t));
+  // A handle is @name (Instagram allows dots, so @jess.me is a handle); an
+  // address has a slash or colon, starts with www., or ends in a domain.
+  const looksLikeAddress = (t) => !t.startsWith('@') && /[/:]|^www\.|\.(com|be|org|net|me)\b/i.test(t);
+  const handles = tokens.filter((t) => t.startsWith('@') && !/[/:]/.test(t));
   const addresses = tokens.filter(looksLikeAddress);
   const words = tokens.filter((t) => !t.startsWith('@') && !looksLikeAddress(t));
 
   const fail = (why) => ({ line, error: why });
+  const odd = tokens.find((t) => t.startsWith('@') && /[/:]/.test(t));
+  if (odd) return fail(`"${odd}" is neither an @instagramhandle nor a photo address`);
   if (handles.length !== 1) return fail('needs exactly one @instagramhandle');
   const handle = handles[0].slice(1);
   if (!/^(?=.*\w)[\w.]{1,30}$/.test(handle)) return fail(`"@${handle}" is not an Instagram handle`);
