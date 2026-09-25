@@ -62,6 +62,12 @@ try {
       return new Response(`<html><head><meta property="og:image" content="https://yt.example${u.pathname}.jpg" /></head></html>`,
         { headers: { 'content-type': 'text/html' } });
     }
+    // A stand-in direct.me link-in-bio page.
+    if (u.hostname === 'direct.me') {
+      photoFetches.push(u.pathname);
+      return new Response(`<html><head><meta property="og:image" content="https://dm.example${u.pathname}.jpg" /></head></html>`,
+        { headers: { 'content-type': 'text/html' } });
+    }
     if (u.hostname === 'www.instagram.com') {
       const handle = u.pathname.replace(/\//g, '');
       photoFetches.push(handle);
@@ -164,6 +170,8 @@ try {
   const filling = await runWorkflow({ FILL_EXISTING: 'true' });
   console.log(filling.stdout.replace(/^/gm, '    ').trimEnd());
   check(filling.status === 0, 'workflow with fill_existing succeeded', filling.stderr);
+  const stillNoPhoto = ((await api(`/api/creators/${early.slug}`)).json || {});
+  check(!stillNoPhoto.avatar_url, 'fill_existing leaves an existing account\'s photo alone', String(stillNoPhoto.avatar_url));
 
   const people = listPeople();
   const refused = people.filter((p) => p.error);
@@ -204,8 +212,9 @@ try {
     // An account that already existed never gets a photo from the list.
     p.expectedPhoto = !src || p.slug === early.slug ? ''
       : src.hostname.endsWith('youtube.com') ? `https://yt.example${src.pathname}.jpg`
+      : src.hostname === 'direct.me' ? `https://dm.example${src.pathname}.jpg`
       : `https://cdn.example/${src.pathname.replace(/\//g, '')}.jpg?a=1&b=2`;
-    const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : 'Instagram';
+    const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : src.hostname === 'direct.me' ? 'direct.me' : 'Instagram';
     check((photo || '') === p.expectedPhoto, `${kind} photo${src ? ' shows' : ' (none listed)'} on their page`,
       `got ${JSON.stringify(photo)}; fetched: ${photoFetches.join(', ')}`);
 
@@ -307,6 +316,15 @@ try {
   const adminKeyTry = await api('/api/auth/password', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
     body: { current_password: 'x', new_password: 'whatever-long-1' } });
   check(adminKeyTry.status === 401, 'the admin key alone cannot change a password', String(adminKeyTry.status));
+
+  // update_photos: an existing account gets the photo listed for it.
+  console.log('\nWorkflow with update_photos:');
+  const photos = await runWorkflow({ UPDATE_PHOTOS: 'true' });
+  console.log(photos.stdout.replace(/^/gm, '    ').trimEnd());
+  await api(`/api/creators/${early.slug}`);
+  const updated = ((await api(`/api/creators/${early.slug}`)).json || {});
+  check(photos.status === 0 && updated.avatar_url === `https://yt.example${new URL(early.photo).pathname}.jpg`,
+    'update_photos gives an existing account its listed photo', String(updated.avatar_url));
 
   console.log('\nWorkflow, second run (nothing should change):');
   const second = await runWorkflow();

@@ -2,8 +2,8 @@
 //
 //   First Last @instagramhandle [photo]
 //
-// where the optional photo is their YouTube channel (or Instagram profile)
-// address. With no photo the account starts without one. Anything unclear is
+// where the optional photo is their YouTube channel, Instagram profile or
+// direct.me page address. With no photo the account starts without one. Anything unclear is
 // refused with a reason rather than guessed at, because the bulk-accounts
 // workflow creates real accounts from this.
 //
@@ -37,13 +37,17 @@ function photoAddress(token) {
   if (host === 'instagram.com' && parts.length === 1 && /^(?=.*\w)[\w.]{1,30}$/.test(parts[0])) {
     return { url: `https://www.instagram.com/${parts[0]}/` };
   }
-  return { error: `"${token}" is not a YouTube channel or Instagram profile` };
+  // A link-in-bio page; tracking like ?utm_source=… is dropped.
+  if (host === 'direct.me' && parts.length === 1 && /^(?=.*\w)[\w.-]{1,40}$/.test(parts[0])) {
+    return { url: `https://direct.me/${parts[0]}` };
+  }
+  return { error: `"${token}" is not a YouTube channel, Instagram profile or direct.me page` };
 }
 
 export function parsePerson(raw) {
   const line = raw.trim();
   const tokens = line.split(/\s+/);
-  const looksLikeAddress = (t) => /[/:]|^www\.|\.(com|be|org|net)\b/i.test(t);
+  const looksLikeAddress = (t) => /[/:]|^www\.|\.(com|be|org|net|me)\b/i.test(t);
   const handles = tokens.filter((t) => t.startsWith('@') && !looksLikeAddress(t));
   const addresses = tokens.filter(looksLikeAddress);
   const words = tokens.filter((t) => !t.startsWith('@') && !looksLikeAddress(t));

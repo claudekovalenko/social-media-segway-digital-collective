@@ -40,6 +40,10 @@ on:
         description: Also fill empty videos and card link on accounts that already exist (a cleared field counts as empty; never their photo)
         type: boolean
         default: false
+      update_photos:
+        description: Give accounts that already exist the photo listed for them in people.txt (replaces their current one)
+        type: boolean
+        default: false
       dry_run:
         description: Only show what would be created
         type: boolean
@@ -67,6 +71,7 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run }}
           VIDEOS_FROM: ${{ inputs.videos_from }}
           FILL_EXISTING: ${{ inputs.fill_existing }}
+          UPDATE_PHOTOS: ${{ inputs.update_photos }}
         run: |
           if [ -z "$PEOPLE" ]; then PEOPLE=$(grep -v '^[[:space:]]*#' accounts/people.txt || true); fi
           # The typed pair, or else the saved pair; never one of each.
@@ -86,8 +91,10 @@ jobs:
             fi
           fi
 
+          # This run's own scratch files.
+          work=$(mktemp -d)
           # Read the list first, so a reader failure fails the run.
-          printf '%s\n' "$PEOPLE" | tr ';' '\n' | node accounts/people.mjs - > /tmp/people.jsonl
+          printf '%s\n' "$PEOPLE" | tr ';' '\n' | node accounts/people.mjs - > $work/people.jsonl
           # Reads a public creator page: prints it and succeeds only for a real
           # page (HTTP 200 with a slug); anything else is "could not read".
           read_page() {
@@ -121,8 +128,9 @@ jobs:
             local cur fields what fbody fcode kind=$4 rc
             if [ "$kind" = new ]; then cur='{}'
             else
-              # Without fill_existing a real run leaves existing pages unread.
-              if [ "$DRY_RUN" != "true" ] && [ "$FILL_EXISTING" != "true" ]; then return; fi
+              # Without fill_existing or update_photos a real run leaves existing
+              # pages unread.
+              if [ "$DRY_RUN" != "true" ] && [ "$FILL_EXISTING" != "true" ] && [ "$UPDATE_PHOTOS" != "true" ]; then return; fi
               cur=$(read_page "$1") && rc=0 || rc=$?
               case $rc in
                 0) ;;
@@ -133,10 +141,11 @@ jobs:
               esac
             fi
             fields=$(jq -nc --argjson src "$source" --argjson c "$cur" --argjson keys "$VIDEO_KEYS" \
-                     --arg ig "https://www.instagram.com/$2/" --arg photo "$3" --arg new "$kind" '
+                     --arg ig "https://www.instagram.com/$2/" --arg photo "$3" --arg new "$kind" --arg update "$UPDATE_PHOTOS" --arg fill "$([ "$DRY_RUN" = true ] && echo true || echo "$FILL_EXISTING")" '
               (reduce $keys[] as $k ({}; if (($c[$k] // "") == "") and ($src[$k] != null) then .[$k] = $src[$k] else . end))
               + (if ($c.back_url // "") == "" then {back_url: $ig} else {} end)
-              + (if $new == "new" and $photo != "" then {avatar_url: $photo} else {} end)')
+              + (if $photo != "" and ($new == "new" or ($update == "true" and $c.avatar_url != $photo)) then {avatar_url: $photo} else {} end)
+              | if $new != "new" and $fill != "true" then with_entries(select(.key == "avatar_url")) else . end')
             [ "$fields" = '{}' ] && { echo "  page already set up"; return; }
             what=$(jq -r 'keys | map(if . == "back_url" then "card → Instagram" elif . == "avatar_url" then "photo" else sub("_url$"; "") end) | join(", ")' <<<"$fields")
             if [ "$DRY_RUN" = "true" ]; then
@@ -145,9 +154,9 @@ jobs:
               return
             fi
             fbody=$(jq -c --arg s "$1" '. + {slug: $s}' <<<"$fields")
-            fcode=$(curl -s -o /tmp/fill -w '%{http_code}' -X POST "$SITE/api/creator/links" \
+            fcode=$(curl -s -o $work/fill -w '%{http_code}' -X POST "$SITE/api/creator/links" \
               -H "content-type: application/json" -H "$AUTH" --data "$fbody")
-            [ "$fcode" = 200 ] && echo "  set: $what" || { echo "  ✗ page not updated: $fcode $(jq -r '.error // empty' /tmp/fill 2>/dev/null)"; failed=$((failed+1)); }
+            [ "$fcode" = 200 ] && echo "  set: $what" || { echo "  ✗ page not updated: $fcode $(jq -r '.error // empty' $work/fill 2>/dev/null)"; failed=$((failed+1)); }
           }
 
           created=0; skipped=0; failed=0; seen=' '
@@ -175,7 +184,7 @@ jobs:
 
             body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
               '{email:$e,password:$p,role:"creator",name:$n,creator_slug:$s,handle:$h}')
-            code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
+            code=$(curl -s -o $work/out -w '%{http_code}' -X POST "$SITE/api/admin/accounts" \
               -H "content-type: application/json" -H "$AUTH" --data "$body")
             case "$code" in
               200|201)
@@ -183,7 +192,7 @@ jobs:
                 # A brand-new page comes with an access key. Without one, the
                 # sign-in was joined to a page that already existed (the same
                 # email had registered it), which is treated as existing.
-                if jq -e '.access_key | type == "string"' /tmp/out >/dev/null 2>&1; then
+                if jq -e '.access_key | type == "string"' $work/out >/dev/null 2>&1; then
                   fill "$slug" "$handle" "$photo" new
                 else
                   echo "  (joined to their existing page)"
@@ -196,9 +205,9 @@ jobs:
                 echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1))
                 fill "$slug" "$handle" "$photo" existing
                 ;;
-              *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' /tmp/out 2>/dev/null)"; failed=$((failed+1)) ;;
+              *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' $work/out 2>/dev/null)"; failed=$((failed+1)) ;;
             esac
-          done < /tmp/people.jsonl
+          done < $work/people.jsonl
 
           echo
           echo "created: $created  already existed: $skipped  failed: $failed"

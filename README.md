@@ -250,7 +250,9 @@ listed photo. Accounts that already exist are left alone, unless you tick
 **fill_existing**: then empty videos and an empty card link are filled in
 (never the photo, and only when their page could be read). A field a creator
 cleared on purpose looks empty too, so use it for accounts nobody has touched
-yet.
+yet. **update_photos** gives accounts that already exist the photo listed for
+them, replacing their current one: use it when a photo in the list changes. A
+photo can be a YouTube channel, an Instagram profile or a direct.me page.
 
 After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
 signs in as each person in `accounts/people.txt` and checks their dashboard
