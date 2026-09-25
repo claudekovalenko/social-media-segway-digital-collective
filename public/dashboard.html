@@ -222,7 +222,9 @@
     }
 
     function credentials() {
-      if (token) return { Authorization: 'Bearer ' + token };
+      // Read each time: changing your password replaces the stored sign-in.
+      const current = sessionStorage.getItem('dc_admin_token');
+      if (current) return { Authorization: 'Bearer ' + current };
       if (key) return { 'x-creator-key': key };
       return null;
     }

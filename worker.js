@@ -3,7 +3,7 @@ import { connect, postgresD1 } from './pg.js';
 import { COPY_ORDER, copyPage, finish as finishCopy, compareCounts } from './copy-to-postgres.js';
 import { handlePlatform, sendFollowUp } from './platform-routes.js';
 import { enrichContact } from './enrich.js';
-import { platform, rateLimited, recentCount, clientIp, isRealDate, recordId } from './platform.js';
+import { platform, rateLimited, uncount, clientIp, isRealDate, recordId } from './platform.js';
 
 // Cloudflare Worker backend for the Faith Journey funnel.
 // Static files in public/ are served by Workers Assets; this handles /api/* and /c/*.
@@ -729,27 +729,41 @@ async function handle(req, env, ctx) {
         const session = bearer.startsWith('dcs.') ? await readSession(env, bearer) : null;
         const account = session ? await db.adminByEmail(session.email) : null;
         if (!account) return json({ error: 'Sign in with your email and password first.' }, 401);
-        // Wrong current passwords are what's counted: 5 per account and 10 per
-        // address in 15 minutes stop guessing without getting in anyone's way.
-        const WINDOW = 15 * 60_000;
-        const byAccount = `pwfail:${account.email}`;
-        const byAddress = `pwfail:${clientIp(req)}`;
-        if (recentCount(byAccount, WINDOW) >= 5 || recentCount(byAddress, WINDOW) >= 10) {
-          return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
+        // Also set in ADMIN_LOGINS: that password signs its sessions, so a
+        // change here would not end them. Changed where it is configured.
+        if (adminLogins(env).has(account.email)) {
+          return json({ error: 'This sign-in is configured on the server; change it there.' }, 400);
         }
-        const b = await req.json().catch(() => ({}));
-        const current = String(b.current_password || '');
-        const next = String(b.new_password || '');
-        if (!(await passwordMatches(current, account.pass_hash))) {
-          rateLimited(byAccount, 5, WINDOW);
-          rateLimited(byAddress, 10, WINDOW);
-          return json({ error: 'Your current password is not right.' }, 400);
+        const b = await req.json().catch(() => null);
+        if (!b || typeof b.current_password !== 'string' || typeof b.new_password !== 'string') {
+          return json({ error: 'Send current_password and new_password.' }, 400);
         }
-        if (next.length < 8 || next.length > 200) {
+        const current = b.current_password;
+        const next = b.new_password;
+        if (!next.trim() || [...next].length < 8 || [...next].length > 200) {
           return json({ error: 'Use a new password of 8 to 200 characters.' }, 400);
         }
         if (next === current) return json({ error: 'Choose a password different from the current one.' }, 400);
-        await db.setAccountPassword(account.email, await hashPassword(next));
+        // Every attempt is counted before the (slow) check, so guesses sent all
+        // at once can't slip past; a right password takes its count back. 5
+        // wrong per account and 10 per address in 15 minutes.
+        const WINDOW = 15 * 60_000;
+        const byAccount = `pwfail:${account.email}`;
+        const byAddress = `pwfail:${clientIp(req)}`;
+        const overAccount = rateLimited(byAccount, 5, WINDOW);
+        const overAddress = rateLimited(byAddress, 10, WINDOW);
+        if (overAccount || overAddress) {
+          return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
+        }
+        if (!(await passwordMatches(current, account.pass_hash))) {
+          return json({ error: 'Your current password is not right.' }, 400);
+        }
+        uncount(byAccount);
+        uncount(byAddress);
+        // Only if nobody changed it since it was checked.
+        if (!(await db.changeAccountPassword(account.email, account.pass_hash, await hashPassword(next)))) {
+          return json({ error: 'Your password was just changed elsewhere. Sign in again.' }, 409);
+        }
         await platform(env.DB).audit(account.email, 'account.password_changed', account.email, null).catch(() => {});
         const token = await signSession(
           env,

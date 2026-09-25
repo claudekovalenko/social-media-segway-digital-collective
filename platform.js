@@ -653,11 +653,10 @@ export function rateLimited(key, limit, windowMs) {
   return recent.length > limit;
 }
 
-// How many times `key` was counted by rateLimited within the window, without
-// counting this look.
-export function recentCount(key, windowMs) {
-  const now = Date.now();
-  return (buckets.get(key) || []).filter((t) => now - t < windowMs).length;
+// Takes back the most recent count for `key` (an attempt that turned out fine).
+export function uncount(key) {
+  const b = buckets.get(key);
+  if (b && b.length) b.pop();
 }
 
 export function clientIp(req) {

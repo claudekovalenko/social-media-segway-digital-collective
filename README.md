@@ -242,12 +242,13 @@ refreshes it every six hours. Tick **dry run** first to see the list without
 creating anything. Anyone who already has an account is left alone. Change a
 password afterwards with the **Create or reset an account** workflow.
 
-Each run also fills in what's missing on each person's page, never
-replacing anything they set themselves: their creator card (the button at the
-foot of their page) opens their Instagram, and the three videos are copied
-from another creator's page, `acraigbrown` unless you name a different one
-(**videos_from**). Only the videos are copied, not that creator's own button
-links.
+Each account the run creates also gets its page set up: the three videos
+copied from another creator's page (`acraigbrown` unless you name a different
+one in **videos_from**; only the videos, not that creator's own button links),
+the creator card at the foot of the page opening their Instagram, and the
+listed photo. Accounts that already exist are left alone, unless you tick
+**fill_existing**: then empty videos and an empty card link are filled in
+(never the photo, and only when their page could be read).
 
 After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
 signs in as each person in `accounts/people.txt` and checks their dashboard

@@ -252,6 +252,14 @@ async function run(base) {
     expect(/changed/i.test(await page.locator('#changePassword .crm-saved').textContent()), 'no confirmation shown');
     expect(sent && sent.current_password === 'craig' && sent.new_password === 'a-longer-password', 'wrong request: ' + JSON.stringify(sent));
     expect(await page.evaluate(() => sessionStorage.getItem('dc_admin_token')) === 'dcs.new.token', 'kept the old sign-in');
+    // What the page does next uses the new sign-in, not the one it loaded with.
+    let usedAuth = null;
+    await page.route('**/api/creator/followup', (r) => { usedAuth = r.request().headers().authorization; r.fulfill({ json: { ok: true } }); });
+    await page.evaluate(() => { const f = document.getElementById('followupFold'); if (f) f.hidden = false; });
+    await page.locator('#followupFold summary').click();
+    await page.click('#followup button[type=submit]');
+    await page.waitForTimeout(500);
+    expect(usedAuth === 'Bearer dcs.new.token', 'next action used ' + usedAuth);
   });
 
   await check('dashboard and admin pages load without script errors (signed out)', async (page) => {

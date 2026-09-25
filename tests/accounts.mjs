@@ -112,10 +112,10 @@ try {
     'import yaml,sys; d=yaml.safe_load(sys.stdin); print([s for s in d["jobs"]["accounts"]["steps"] if s.get("name")=="Create accounts"][0]["run"])'],
     { input: yaml, encoding: 'utf8' }).stdout;
   // Asynchronous: the script calls the server running in this process.
-  const runWorkflow = () => new Promise((resolve) => {
+  const runWorkflow = (extra = {}) => new Promise((resolve) => {
     const child = spawn('bash', ['--noprofile', '--norc', '-eo', 'pipefail', '-c', script], {
       cwd: ROOT,
-      env: { ...process.env, SITE, DOMAIN: 'digitalcollective.com', ADMIN_KEY: env.ADMIN_KEY, PEOPLE: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', DRY_RUN: '', VIDEOS_FROM: 'acraigbrown' },
+      env: { ...process.env, SITE, DOMAIN: 'digitalcollective.com', ADMIN_KEY: env.ADMIN_KEY, PEOPLE: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', DRY_RUN: '', VIDEOS_FROM: 'acraigbrown', FILL_EXISTING: '', ...extra },
     });
     let stdout = '', stderr = '';
     child.stdout.on('data', (d) => { stdout += d; });
@@ -144,6 +144,15 @@ try {
   const first = await runWorkflow();
   console.log(first.stdout.replace(/^/gm, '    ').trimEnd());
   check(first.status === 0, 'workflow succeeded', first.stderr);
+
+  // The account that already existed was left alone by a normal run.
+  const untouched = ((await api(`/api/creators/${early.slug}`)).json || {});
+  check(!untouched.grow_video_url && !untouched.back_url, 'an existing account is left as is without fill_existing',
+    JSON.stringify([untouched.grow_video_url, untouched.back_url]));
+  console.log('\nWorkflow with fill_existing:');
+  const filling = await runWorkflow({ FILL_EXISTING: 'true' });
+  console.log(filling.stdout.replace(/^/gm, '    ').trimEnd());
+  check(filling.status === 0, 'workflow with fill_existing succeeded', filling.stderr);
 
   const people = listPeople();
   const refused = people.filter((p) => p.error);
@@ -181,7 +190,8 @@ try {
     const photo = again.json?.creator?.avatar_url ?? again.json?.avatar_url;
     // The photo listed for them: YouTube (stubbed), Instagram (stubbed), or none.
     const src = p.photo ? new URL(p.photo) : null;
-    p.expectedPhoto = !src ? ''
+    // An account that already existed never gets a photo from the list.
+    p.expectedPhoto = !src || p.slug === early.slug ? ''
       : src.hostname.endsWith('youtube.com') ? `https://yt.example${src.pathname}.jpg`
       : `https://cdn.example/${src.pathname.replace(/\//g, '')}.jpg?a=1&b=2`;
     const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : 'Instagram';
@@ -257,6 +267,25 @@ try {
       `old:${oldLogin.status} new:${newLogin.status}`);
     p.token = newLogin.json?.token;
   }
+  // Odd input gets a plain refusal.
+  const odd = people[1];
+  for (const [label, body] of [['no body', null], ['non-text password', { current_password: 'x', new_password: { a: 1 } }],
+    ['spaces only', { current_password: 'x', new_password: '         ' }]]) {
+    const r = await api('/api/auth/password', { method: 'POST', token: odd.token, body });
+    check(r.status === 400, `odd input refused (${label})`, String(r.status));
+  }
+  // Two changes at the same moment: one wins, the other is told so.
+  const both = await Promise.all(['First-Parallel-1', 'Second-Parallel-2'].map((np) =>
+    api('/api/auth/password', { method: 'POST', token: odd.token, body: { current_password: `${odd.password}-Stronger-2026`, new_password: np } })));
+  check(both.filter((r) => r.status === 200).length === 1 && both.some((r) => r.status === 409),
+    'two changes at once: exactly one succeeds', both.map((r) => r.status).join(','));
+  // Guesses sent all at once still count: at most 5 get checked.
+  const w = people[2];
+  const burst = await Promise.all(Array.from({ length: 20 }, (_, i) => api('/api/auth/password', { method: 'POST', token: w.token,
+    headers: { 'cf-connecting-ip': '7.7.7.7' }, body: { current_password: 'guess-' + i, new_password: 'whatever-long-1' } })));
+  check(burst.filter((r) => r.status === 400).length <= 5, 'guesses sent all at once are capped at 5',
+    burst.map((r) => r.status).join(','));
+
   // Guessing is stopped: after 5 wrong current passwords the account waits.
   const g = people[0];
   let last;
