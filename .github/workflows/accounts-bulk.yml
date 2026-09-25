@@ -30,6 +30,10 @@ on:
       admin_password:
         description: That admin's password (masked in the log)
         required: false
+      videos_from:
+        description: Copy the three videos from this creator's page (link name) to anyone who has none of their own
+        required: false
+        default: acraigbrown
       dry_run:
         description: Only show what would be created
         type: boolean
@@ -55,6 +59,7 @@ jobs:
           PEOPLE: ${{ inputs.people }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           DRY_RUN: ${{ inputs.dry_run }}
+          VIDEOS_FROM: ${{ inputs.videos_from }}
         run: |
           if [ -z "$PEOPLE" ]; then PEOPLE=$(grep -v '^[[:space:]]*#' accounts/people.txt || true); fi
           # The typed pair, or else the saved pair; never one of each.
@@ -76,6 +81,42 @@ jobs:
 
           # Read the list first, so a reader failure fails the run.
           printf '%s\n' "$PEOPLE" | tr ';' '\n' | node accounts/people.mjs - > /tmp/people.jsonl
+          # The videos to copy, read from that creator's public page.
+          VIDEO_KEYS='["know_god_video_url","grow_video_url","find_church_video_url"]'
+          source='{}'
+          if [ -n "$VIDEOS_FROM" ]; then
+            source=$(curl -s "$SITE/api/creators/$VIDEOS_FROM")
+            jq -e '(.creator // .).slug' <<<"$source" >/dev/null || { echo "No creator page '$VIDEOS_FROM' to copy videos from."; exit 1; }
+            echo "Videos from /c/$VIDEOS_FROM:"
+            jq -r --argjson keys "$VIDEO_KEYS" '(.creator // .) as $c | $keys[] | "  \(.): \($c[.] // "(none: uses the collective default)")"' <<<"$source"
+            echo
+          fi
+
+          # What to fill in on someone's page: only fields they haven't set.
+          #   - the listed photo
+          #   - their creator card (the button at the foot) → their Instagram
+          #   - the videos copied from $VIDEOS_FROM
+          fill_for() {  # slug handle photo → JSON of fields to set ({} if none)
+            cur=$(curl -s "$SITE/api/creators/$1"); jq -e . >/dev/null 2>&1 <<<"$cur" || cur='{}'
+            jq -nc --argjson src "$source" --argjson cur "$cur" --argjson keys "$VIDEO_KEYS" \
+                   --arg ig "https://www.instagram.com/$2/" --arg photo "$3" '
+              ($cur.creator // $cur) as $c | ($src.creator // $src) as $f |
+              (reduce $keys[] as $k ({}; if (($c[$k] // "") == "") and (($f[$k] // "") != "")
+                                          then .[$k] = $f[$k] else . end))
+              + (if ($c.back_url // "") == "" then {back_url: $ig} else {} end)
+              + (if $photo != "" and ($c.avatar_url // "") == "" then {avatar_url: $photo} else {} end)'
+          }
+          fill() {  # slug handle photo
+            fields=$(fill_for "$1" "$2" "$3")
+            [ "$fields" = '{}' ] && { echo "  page already set up"; return; }
+            what=$(jq -r 'keys | map(if . == "back_url" then "card → Instagram" elif . == "avatar_url" then "photo" else sub("_url$"; "") end) | join(", ")' <<<"$fields")
+            if [ "$DRY_RUN" = "true" ]; then echo "  would set: $what"; return; fi
+            fbody=$(jq -c --arg s "$1" '. + {slug: $s}' <<<"$fields")
+            fcode=$(curl -s -o /tmp/fill -w '%{http_code}' -X POST "$SITE/api/creator/links" \
+              -H "content-type: application/json" -H "$AUTH" --data "$fbody")
+            [ "$fcode" = 200 ] && echo "  set: $what" || { echo "  ✗ page not updated: $fcode $(jq -r '.error // empty' /tmp/fill 2>/dev/null)"; failed=$((failed+1)); }
+          }
+
           created=0; skipped=0; failed=0; seen=' '
           # One reader for the list (accounts/people.mjs, also used by the
           # tests); it refuses unclear lines instead of guessing. Newlines or
@@ -95,7 +136,8 @@ jobs:
             seen="$seen$email "
 
             if [ "$DRY_RUN" = "true" ]; then
-              echo "• $name → $email  link: /c/$slug  photo: ${photo:-none}"; continue
+              echo "• $name → $email  link: /c/$slug  photo: ${photo:-none}"
+              fill "$slug" "$handle" "$photo"; continue
             fi
 
             body=$(jq -nc --arg e "$email" --arg p "$password" --arg n "$name" --arg s "$slug" --arg h "@$handle" \
@@ -105,25 +147,12 @@ jobs:
             case "$code" in
               200|201)
                 echo "✓ $name → $email  link: /c/$slug  photo: ${photo:-none}"; created=$((created+1))
-                # The photo listed for them, if any (a YouTube channel falls back
-                # to their Instagram on the site when YouTube gives no picture).
-                if [ -n "$photo" ]; then
-                  pbody=$(jq -nc --arg s "$slug" --arg u "$photo" '{slug:$s,avatar_url:$u}')
-                  pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
-                    -H "content-type: application/json" -H "$AUTH" --data "$pbody")
-                  [ "$pcode" = 200 ] || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
-                fi
+                fill "$slug" "$handle" "$photo"
                 ;;
               409)
+                # The account is left as it is; its page gets only what's missing.
                 echo "– $name → $email already has an account (left as is)"; skipped=$((skipped+1))
-                # Give them the listed photo only if they have none yet; never
-                # replace one they chose.
-                if [ -n "$photo" ] && [ -z "$(curl -s "$SITE/api/creators/$slug" | jq -r '(.creator // .).avatar_url // empty')" ]; then
-                  pbody=$(jq -nc --arg s "$slug" --arg u "$photo" '{slug:$s,avatar_url:$u}')
-                  pcode=$(curl -s -o /tmp/photo -w '%{http_code}' -X POST "$SITE/api/creator/links" \
-                    -H "content-type: application/json" -H "$AUTH" --data "$pbody")
-                  [ "$pcode" = 200 ] && echo "  photo set: $photo" || echo "  (photo not set: $pcode $(jq -r '.error // empty' /tmp/photo 2>/dev/null))"
-                fi
+                fill "$slug" "$handle" "$photo"
                 ;;
               *)       echo "✗ $name → $email: $code $(jq -r '.error // empty' /tmp/out 2>/dev/null)"; failed=$((failed+1)) ;;
             esac

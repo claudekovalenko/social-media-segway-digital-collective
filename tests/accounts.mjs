@@ -115,7 +115,7 @@ try {
   const runWorkflow = () => new Promise((resolve) => {
     const child = spawn('bash', ['--noprofile', '--norc', '-eo', 'pipefail', '-c', script], {
       cwd: ROOT,
-      env: { ...process.env, SITE, DOMAIN: 'digitalcollective.com', ADMIN_KEY: env.ADMIN_KEY, PEOPLE: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', DRY_RUN: '' },
+      env: { ...process.env, SITE, DOMAIN: 'digitalcollective.com', ADMIN_KEY: env.ADMIN_KEY, PEOPLE: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', DRY_RUN: '', VIDEOS_FROM: 'acraigbrown' },
     });
     let stdout = '', stderr = '';
     child.stdout.on('data', (d) => { stdout += d; });
@@ -128,6 +128,17 @@ try {
   const early = listPeople().filter((x) => x.photo).at(-1);
   await api('/api/admin/accounts', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY }, body: {
     email: early.email, password: early.password, role: 'creator', name: early.name, creator_slug: early.slug, handle: '@' + early.handle } });
+
+  // Craig's page, whose three videos everyone gets unless they chose their own.
+  const VIDEOS = { know_god_video_url: 'https://www.youtube.com/watch?v=know1', grow_video_url: 'https://www.youtube.com/watch?v=grow2',
+    find_church_video_url: 'https://www.youtube.com/watch?v=church3' };
+  await api('/api/admin/accounts', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY }, body: {
+    email: 'craig@example.org', password: 'craig-pass', role: 'creator', name: 'Craig Brown', creator_slug: 'acraigbrown', handle: '@acraigbrown' } });
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: 'acraigbrown', ...VIDEOS, back_url: 'https://craig.example/', know_god_next_url: 'https://craig.example/course' } });
+  // The account made by hand chose its own first video; that must stay.
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } });
 
   console.log('Workflow, first run:');
   const first = await runWorkflow();
@@ -211,6 +222,18 @@ try {
   check((fb.json?.creator?.avatar_url ?? fb.json?.avatar_url) === `https://cdn.example/${q.handle}.jpg?a=1&b=2`,
     'when YouTube gives no picture, their Instagram photo is used',
     JSON.stringify(fb.json?.creator?.avatar_url ?? fb.json?.avatar_url));
+
+  // Videos copied from Craig, the card leads to their own Instagram, and
+  // nothing they chose themselves (or Craig's own links) was copied over.
+  for (const p of people) {
+    const row = (await api(`/api/creators/${p.slug}`)).json || {};
+    const c = row.creator || row;
+    const want = p.slug === early.slug ? { ...VIDEOS, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } : VIDEOS;
+    check(Object.entries(want).every(([k, v]) => c[k] === v), `${p.name}: has the videos (their own choice kept)`,
+      JSON.stringify([c.know_god_video_url, c.grow_video_url, c.find_church_video_url]));
+    check(c.back_url === `https://www.instagram.com/${p.handle}/` && !c.know_god_next_url,
+      `${p.name}: their card opens their Instagram; Craig's own links not copied`, JSON.stringify([c.back_url, c.know_god_next_url]));
+  }
 
   // Everyone can change their own password.
   console.log('\nChanging passwords:');
