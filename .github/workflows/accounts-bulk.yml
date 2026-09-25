@@ -5,7 +5,8 @@ name: Create creator accounts in bulk
 # ADMIN_PASSWORD repo secrets, unless an admin email/password is typed into
 # the form. One person per line:
 #
-#   First Last @instagramhandle [photo: YouTube channel or Instagram profile]
+#   First Last @instagramhandle [photo: YouTube channel, Instagram profile,
+#                                    direct.me page or image link]
 #
 # Each line becomes a creator account on the live site:
 #   - sign-in:  firstlast@digitalcollective.com (lowercase, letters only)

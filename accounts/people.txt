@@ -4,7 +4,7 @@
 # No photo listed = none until one is added.
 # Actions → Create creator accounts in bulk → Run workflow creates the new
 # accounts on the live site. Existing accounts are skipped.
-Jessica Brown @ajessicabrown https://direct.me/ajessicabrown
+Jessica Brown @ajessicabrown https://mystique.direct.me/IYmSw5FSEOHGUmEaSb8psJ7pMXM=/250x250/https%3A%2F%2Fcdn.direct.me%2Favatars%2F1300814.png%3F1744562415
 Dayne Kamela @litwithprayer https://www.youtube.com/channel/UCeOJdFKWlQrIqk0y1BntnDg
 Josiah Alipate @therealcoachjosiah https://www.youtube.com/@therealcoachjosiah
 Ivan Kovalenko @ivan.a.kovalenko
