@@ -248,7 +248,9 @@ one in **videos_from**; only the videos, not that creator's own button links),
 the creator card at the foot of the page opening their Instagram, and the
 listed photo. Accounts that already exist are left alone, unless you tick
 **fill_existing**: then empty videos and an empty card link are filled in
-(never the photo, and only when their page could be read).
+(never the photo, and only when their page could be read). A field a creator
+cleared on purpose looks empty too, so use it for accounts nobody has touched
+yet.
 
 After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
 signs in as each person in `accounts/people.txt` and checks their dashboard

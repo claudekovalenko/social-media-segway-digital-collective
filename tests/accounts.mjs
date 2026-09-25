@@ -140,6 +140,17 @@ try {
   await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
     body: { slug: early.slug, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } });
 
+  // A dry run before anyone exists lists everyone and changes nothing.
+  const dry = await runWorkflow({ DRY_RUN: 'true' });
+  check(dry.status === 0 && (dry.stdout.match(/would set/g) || []).length === listPeople().length,
+    'a dry run lists what every person would get', dry.stdout.slice(-400) + dry.stderr);
+
+  // One person registered their own page (same email) before the run: the
+  // new sign-in is joined to it and their own video must stay.
+  const joined = listPeople().find((x) => x.slug === 'ivan-a-kovalenko');
+  await api('/api/creators/register', { method: 'POST', body: { slug: joined.slug, name: joined.name, email: joined.email,
+    handle: '@' + joined.handle, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } });
+
   console.log('Workflow, first run:');
   const first = await runWorkflow();
   console.log(first.stdout.replace(/^/gm, '    ').trimEnd());
@@ -238,7 +249,8 @@ try {
   for (const p of people) {
     const row = (await api(`/api/creators/${p.slug}`)).json || {};
     const c = row.creator || row;
-    const want = p.slug === early.slug ? { ...VIDEOS, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } : VIDEOS;
+    const own = p.slug === early.slug || p.slug === joined.slug;
+    const want = own ? { ...VIDEOS, know_god_video_url: 'https://www.youtube.com/watch?v=theirown' } : VIDEOS;
     check(Object.entries(want).every(([k, v]) => c[k] === v), `${p.name}: has the videos (their own choice kept)`,
       JSON.stringify([c.know_god_video_url, c.grow_video_url, c.find_church_video_url]));
     check(c.back_url === `https://www.instagram.com/${p.handle}/` && !c.know_god_next_url,

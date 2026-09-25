@@ -37,7 +37,7 @@ on:
         required: false
         default: acraigbrown
       fill_existing:
-        description: Also fill empty videos and card link on accounts that already exist (never their photo)
+        description: Also fill empty videos and card link on accounts that already exist (a cleared field counts as empty; never their photo)
         type: boolean
         default: false
       dry_run:
@@ -118,17 +118,19 @@ jobs:
           # fill_existing, only if it was read, only where a field is empty,
           # and never its photo (a creator's own photo may not show yet).
           fill() {  # slug handle photo new|existing
-            local cur fields what fbody fcode kind=$4
+            local cur fields what fbody fcode kind=$4 rc
             if [ "$kind" = new ]; then cur='{}'
             else
-              cur=$(read_page "$1"); case $? in
+              # Without fill_existing a real run leaves existing pages unread.
+              if [ "$DRY_RUN" != "true" ] && [ "$FILL_EXISTING" != "true" ]; then return; fi
+              cur=$(read_page "$1") && rc=0 || rc=$?
+              case $rc in
                 0) ;;
                 # A dry run for someone not created yet: they would be new.
                 1) [ "$DRY_RUN" = "true" ] || { echo "  ✗ page not found"; failed=$((failed+1)); return; }
                    cur='{}'; kind=new ;;
                 *) echo "  ✗ could not read their page; left as is"; failed=$((failed+1)); return ;;
               esac
-              if [ "$DRY_RUN" != "true" ] && [ "$FILL_EXISTING" != "true" ]; then return; fi
             fi
             fields=$(jq -nc --argjson src "$source" --argjson c "$cur" --argjson keys "$VIDEO_KEYS" \
                      --arg ig "https://www.instagram.com/$2/" --arg photo "$3" --arg new "$kind" '
@@ -178,7 +180,15 @@ jobs:
             case "$code" in
               200|201)
                 echo "✓ $name → $email  link: /c/$slug  photo: ${photo:-none}"; created=$((created+1))
-                fill "$slug" "$handle" "$photo" new
+                # A brand-new page comes with an access key. Without one, the
+                # sign-in was joined to a page that already existed (the same
+                # email had registered it), which is treated as existing.
+                if jq -e '.access_key | type == "string"' /tmp/out >/dev/null 2>&1; then
+                  fill "$slug" "$handle" "$photo" new
+                else
+                  echo "  (joined to their existing page)"
+                  fill "$slug" "$handle" "$photo" existing
+                fi
                 ;;
               409)
                 # The account is left as it is; with fill_existing its page gets

@@ -449,6 +449,17 @@ something that works today.
    SQLite file (`data/funnel.db`). It never runs in production and holds only
    local test data.
 
+8. **Sign-in hardening still open** (found by the stress tests; older than
+   the password-change feature, not made worse by it):
+   - The attempt limiter lives in each Worker instance's memory, so it is
+     per-instance, and a retry during a lockout extends the lockout.
+   - An email can be both in `ADMIN_LOGINS` and in the accounts table; its
+     sessions are then signed with the `ADMIN_LOGINS` password.
+   - `/api/creators/register` is public, so anyone could register a page with
+     an expected email and link name before an admin creates that account;
+     the bulk workflow then joins the sign-in to that page instead of making
+     a new one.
+
 # Assumptions awaiting the owner's confirmation
 
 Business-logic decisions made during the Postgres work. Each is small and
