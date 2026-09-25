@@ -243,11 +243,12 @@ creating anything. Anyone who already has an account is left alone. Change a
 password afterwards with the **Create or reset an account** workflow.
 
 Each account the run creates also gets its page set up: the three videos
-copied from another creator's page (`acraigbrown` unless you name a different
-one in **videos_from**; only the videos, not that creator's own button links),
+and the next-step and course links copied from another creator's page
+(`craigbrown` unless you name a different one in **videos_from**; not their
+church-finder link, which is their own),
 the creator card at the foot of the page opening their Instagram, and the
 listed photo. Accounts that already exist are left alone, unless you tick
-**fill_existing**: then empty videos and an empty card link are filled in
+**fill_existing**: then empty videos, links and an empty card link are filled in
 (never the photo, and only when their page could be read). A field a creator
 cleared on purpose looks empty too, so use it for accounts nobody has touched
 yet. **update_photos** gives accounts that already exist the photo listed for
