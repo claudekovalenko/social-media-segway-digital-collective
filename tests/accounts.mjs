@@ -219,8 +219,10 @@ try {
     p.expectedPhoto = !src || p.slug === early.slug ? ''
       : src.hostname.endsWith('youtube.com') ? `https://yt.example${src.pathname}.jpg`
       : src.hostname === 'direct.me' ? `https://dm.example${src.pathname}.jpg`
-      : `https://cdn.example/${src.pathname.replace(/\//g, '')}.jpg?a=1&b=2`;
-    const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : src.hostname === 'direct.me' ? 'direct.me' : 'Instagram';
+      : src.hostname.endsWith('instagram.com') ? `https://cdn.example/${src.pathname.replace(/\//g, '')}.jpg?a=1&b=2`
+      : p.photo; // a direct image link is shown as it is
+    const kind = !src ? 'no' : src.hostname.endsWith('youtube.com') ? 'YouTube' : src.hostname === 'direct.me' ? 'direct.me'
+      : src.hostname.endsWith('instagram.com') ? 'Instagram' : 'image-link';
     check((photo || '') === p.expectedPhoto, `${kind} photo${src ? ' shows' : ' (none listed)'} on their page`,
       `got ${JSON.stringify(photo)}; fetched: ${photoFetches.join(', ')}`);
 
@@ -373,6 +375,12 @@ try {
   // Instagram handles may end in .me; an address written with @ is refused.
   const { readPeople } = await import('../accounts/people.mjs');
   check(readPeople('Rene Smith @rene.me')[0].handle === 'rene.me', 'a handle like @rene.me is read as a handle');
+  check(readPeople('Rene Smith @rene https://img.example/r/250/https%3A%2F%2Fcdn.example%2Frene.png%3F1')[0].photo
+      === 'https://img.example/r/250/https%3A%2F%2Fcdn.example%2Frene.png%3F1'
+      && readPeople('Rene Smith @rene https://example.com/about')[0].error
+      && readPeople('Rene Smith @rene https://img.example/x%E0%A4%A.png')[0].error
+      && readPeople('Rene Smith @rene https://u:p@img.example/x.png')[0].error && readPeople('Rene Smith @rene http://x.example/r.png')[0].error,
+    'a direct https image link is kept as it is; a web page, plain-http, broken or password-carrying link is refused');
   check(readPeople('Rene Smith @rene @https://direct.me/rene')[0].error && readPeople('Rene Smith @rene @direct.me/rene')[0].error,
     'a photo address written with @ is refused, not dropped');
 

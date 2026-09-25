@@ -2,10 +2,11 @@
 //
 //   First Last @instagramhandle [photo]
 //
-// where the optional photo is their YouTube channel, Instagram profile or
-// direct.me page address. With no photo the account starts without one. Anything unclear is
-// refused with a reason rather than guessed at, because the bulk-accounts
-// workflow creates real accounts from this.
+// where the optional photo is their YouTube channel, Instagram profile,
+// direct.me page address, or a direct https link to an image. With no photo
+// the account starts without one. Anything unclear is refused with a reason
+// rather than guessed at, because the bulk-accounts workflow creates real
+// accounts from this.
 //
 //   node accounts/people.mjs [file]   prints one JSON object per line
 //
@@ -41,7 +42,14 @@ function photoAddress(token) {
   if (host === 'direct.me' && parts.length === 1 && /^(?=.*\w)[\w.-]{1,40}$/.test(parts[0])) {
     return { url: `https://direct.me/${parts[0]}` };
   }
-  return { error: `"${token}" is not a YouTube channel, Instagram profile or direct.me page` };
+  // A direct link to an image (it may carry the image's own address inside,
+  // like an image resizer's link does); the site shows it as it is.
+  let path = '';
+  try { path = decodeURIComponent(u.pathname); } catch { /* a broken %-escape: not an image link */ }
+  if (u.protocol === 'https:' && !u.username && !u.password && /\.(png|jpe?g|webp|gif)(\?|$)/i.test(path)) {
+    return { url: u.toString() };
+  }
+  return { error: `"${token}" is not a YouTube channel, Instagram profile, direct.me page or image link` };
 }
 
 export function parsePerson(raw) {

@@ -253,7 +253,9 @@ listed photo. Accounts that already exist are left alone, unless you tick
 cleared on purpose looks empty too, so use it for accounts nobody has touched
 yet. **update_photos** gives accounts that already exist the photo listed for
 them, replacing their current one: use it when a photo in the list changes. A
-photo can be a YouTube channel, an Instagram profile or a direct.me page.
+photo can be a YouTube channel, an Instagram profile, a direct.me page, or a
+direct https link to an image (shown as it is; use one when the page itself
+won't hand its picture to the site).
 
 After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
 signs in as each person in `accounts/people.txt` and checks their dashboard
