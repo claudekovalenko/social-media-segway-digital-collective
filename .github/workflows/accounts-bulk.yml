@@ -123,7 +123,7 @@ jobs:
           fi
 
           # What to fill in on a page. A page made in this run is known to be
-          # empty, so it gets the videos, the card link to their Instagram and
+          # empty, so it gets the copied videos and links, the card link to their Instagram and
           # the listed photo. A page that already existed is changed only with
           # fill_existing, only if it was read, only where a field is empty,
           # and never its photo (a creator's own photo may not show yet).
