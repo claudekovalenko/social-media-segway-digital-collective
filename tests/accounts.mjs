@@ -212,6 +212,38 @@ try {
     'when YouTube gives no picture, their Instagram photo is used',
     JSON.stringify(fb.json?.creator?.avatar_url ?? fb.json?.avatar_url));
 
+  // Everyone can change their own password.
+  console.log('\nChanging passwords:');
+  for (const p of people) {
+    const pw = (body, token = p.token) => api('/api/auth/password', { method: 'POST', token, body });
+    const wrong = await pw({ current_password: 'nope', new_password: 'a-new-password-1' });
+    const short = await pw({ current_password: p.password, new_password: 'short' });
+    const noSession = await pw({ current_password: p.password, new_password: 'a-new-password-1' }, null);
+    const ok = await pw({ current_password: p.password, new_password: `${p.password}-Stronger-2026` });
+    const oldToken = await api('/api/auth/me', { token: p.token });
+    const newToken = await api('/api/auth/me', { token: ok.json?.token });
+    const oldLogin = await api('/api/admin/login', { method: 'POST', body: { email: p.email, password: p.password } });
+    const newLogin = await api('/api/admin/login', { method: 'POST', body: { email: p.email, password: `${p.password}-Stronger-2026` } });
+    check(wrong.status === 400 && short.status === 400 && noSession.status === 401,
+      `${p.name}: wrong current password, too-short password and no sign-in are refused`,
+      `${wrong.status} ${short.status} ${noSession.status}`);
+    check(ok.status === 200 && newToken.status === 200 && oldToken.status === 401,
+      `${p.name}: password changed, stays signed in, older sign-ins end`,
+      `${ok.status} ${ok.text.slice(0, 80)} new:${newToken.status} old:${oldToken.status}`);
+    check(oldLogin.status === 401 && newLogin.status === 200, `${p.name}: only the new password works`,
+      `old:${oldLogin.status} new:${newLogin.status}`);
+    p.token = newLogin.json?.token;
+  }
+  // Guessing is stopped: after 5 wrong current passwords the account waits.
+  const g = people[0];
+  let last;
+  for (let i = 0; i < 6; i++) last = await api('/api/auth/password', { method: 'POST', token: g.token,
+    body: { current_password: 'guess-' + i, new_password: 'whatever-long-1' } });
+  check(last.status === 429, 'repeated wrong current passwords are slowed down', String(last.status));
+  const adminKeyTry = await api('/api/auth/password', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { current_password: 'x', new_password: 'whatever-long-1' } });
+  check(adminKeyTry.status === 401, 'the admin key alone cannot change a password', String(adminKeyTry.status));
+
   console.log('\nWorkflow, second run (nothing should change):');
   const second = await runWorkflow();
   console.log(second.stdout.replace(/^/gm, '    ').trimEnd());

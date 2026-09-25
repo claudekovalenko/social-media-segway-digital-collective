@@ -213,6 +213,12 @@ and chooses the tier at that moment:
 - **as a creator** — gets their own `/c/<slug>` link and sees only its leads
 - **as an admin** — gets the whole database
 
+Anyone signed in with their password can change it themselves under **Your
+password** at the bottom of the dashboard or the database page: current
+password, then a new one of at least 8 characters. Every other sign-in for
+that account ends; wrong current passwords are limited to 5 per account in 15
+minutes.
+
 If someone forgets their password, an admin sets a new one from the same
 **Who has access** row — there is no self-service reset, and only admins can do
 it. Sign-in says which half is wrong: an unknown email offers the sign-up form

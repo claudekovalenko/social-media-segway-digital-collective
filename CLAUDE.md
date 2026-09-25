@@ -432,8 +432,9 @@ something that works today.
    significant change to sign-in and needs a decision.
 4. **Weak initial passwords for the bulk-created creators.** They are the
    person's lowercase first name, as the owner asked, and the naming scheme is
-   documented in this public repository. There is no self-service password
-   change and no sign-in rate limit yet.
+   documented in this public repository. Everyone can now change their own
+   password ("Your password" on the dashboard and admin pages); nothing makes
+   them do it yet, and sign-in itself has no attempt limit yet.
 5. **Hard-coded site URL** in several workflows, `public/app.js` and
    `package.json` (`faith-journey-funnel.faith-journey-funnel.workers.dev`).
    Not a secret, but it should come from configuration.

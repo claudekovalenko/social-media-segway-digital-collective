@@ -653,6 +653,13 @@ export function rateLimited(key, limit, windowMs) {
   return recent.length > limit;
 }
 
+// How many times `key` was counted by rateLimited within the window, without
+// counting this look.
+export function recentCount(key, windowMs) {
+  const now = Date.now();
+  return (buckets.get(key) || []).filter((t) => now - t < windowMs).length;
+}
+
 export function clientIp(req) {
   return req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for') || 'unknown';
 }

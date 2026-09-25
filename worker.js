@@ -3,7 +3,7 @@ import { connect, postgresD1 } from './pg.js';
 import { COPY_ORDER, copyPage, finish as finishCopy, compareCounts } from './copy-to-postgres.js';
 import { handlePlatform, sendFollowUp } from './platform-routes.js';
 import { enrichContact } from './enrich.js';
-import { platform, rateLimited, clientIp, isRealDate, recordId } from './platform.js';
+import { platform, rateLimited, recentCount, clientIp, isRealDate, recordId } from './platform.js';
 
 // Cloudflare Worker backend for the Faith Journey funnel.
 // Static files in public/ are served by Workers Assets; this handles /api/* and /c/*.
@@ -717,6 +717,46 @@ async function handle(req, env, ctx) {
           email: me.email, name: me.name || null,
           role: me.role, creator_slug: me.creator_slug || null,
         });
+      }
+
+      // Change your own password: current password + new one. Only for an
+      // account signed in with its password (not the admin key, a creator
+      // access key, or a login configured in ADMIN_LOGINS). Changing it ends
+      // every other sign-in for that account, because sessions are signed
+      // with the password hash; a fresh one is returned.
+      if (p === '/api/auth/password' && req.method === 'POST') {
+        const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+        const session = bearer.startsWith('dcs.') ? await readSession(env, bearer) : null;
+        const account = session ? await db.adminByEmail(session.email) : null;
+        if (!account) return json({ error: 'Sign in with your email and password first.' }, 401);
+        // Wrong current passwords are what's counted: 5 per account and 10 per
+        // address in 15 minutes stop guessing without getting in anyone's way.
+        const WINDOW = 15 * 60_000;
+        const byAccount = `pwfail:${account.email}`;
+        const byAddress = `pwfail:${clientIp(req)}`;
+        if (recentCount(byAccount, WINDOW) >= 5 || recentCount(byAddress, WINDOW) >= 10) {
+          return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
+        }
+        const b = await req.json().catch(() => ({}));
+        const current = String(b.current_password || '');
+        const next = String(b.new_password || '');
+        if (!(await passwordMatches(current, account.pass_hash))) {
+          rateLimited(byAccount, 5, WINDOW);
+          rateLimited(byAddress, 10, WINDOW);
+          return json({ error: 'Your current password is not right.' }, 400);
+        }
+        if (next.length < 8 || next.length > 200) {
+          return json({ error: 'Use a new password of 8 to 200 characters.' }, 400);
+        }
+        if (next === current) return json({ error: 'Choose a password different from the current one.' }, 400);
+        await db.setAccountPassword(account.email, await hashPassword(next));
+        await platform(env.DB).audit(account.email, 'account.password_changed', account.email, null).catch(() => {});
+        const token = await signSession(
+          env,
+          { email: account.email, exp: Date.now() + SESSION_HOURS * 3600 * 1000 },
+          await accountSecretFor(env, account.email)
+        );
+        return json({ ok: true, token });
       }
 
       // Applications waiting on a decision.
