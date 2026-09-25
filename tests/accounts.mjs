@@ -50,9 +50,11 @@ try {
   // ---- the real Worker, served locally ------------------------------------
   const realFetch = globalThis.fetch;
   const photoFetches = [];
+  let photoSitesDown = false;
   globalThis.fetch = async (input, init) => {
     const u = new URL(typeof input === 'string' ? input : input.url);
     if (u.hostname === '127.0.0.1') return realFetch(input, init);
+    if (photoSitesDown && /(youtube\.com|instagram\.com|direct\.me)$/.test(u.hostname)) return new Response('down', { status: 503 });
     // A stand-in Instagram profile page, shaped like the real one's <head>.
     // A stand-in YouTube channel page; a channel whose address contains
     // "broken" gives no picture, to exercise the fallback to Instagram.
@@ -325,6 +327,23 @@ try {
   const updated = ((await api(`/api/creators/${early.slug}`)).json || {});
   check(photos.status === 0 && updated.avatar_url === `https://yt.example${new URL(early.photo).pathname}.jpg`,
     'update_photos gives an existing account its listed photo', String(updated.avatar_url));
+
+  // Nothing changed in the list: a second update_photos run leaves photos alone.
+  const photosAgain = await runWorkflow({ UPDATE_PHOTOS: 'true' });
+  check(photosAgain.status === 0 && !/set: photo/.test(photosAgain.stdout), 'update_photos changes nothing when no photo changed',
+    photosAgain.stdout.slice(-300));
+  // A photo changed while the photo sites are down: the old picture stays.
+  const before = (await api(`/api/creators/${early.slug}`)).json?.avatar_url;
+  photoSitesDown = true;
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: 'https://www.youtube.com/@someone-new' } });
+  const during = (await api(`/api/creators/${early.slug}`)).json;
+  photoSitesDown = false;
+  check(before && during?.avatar_url === before && during?.photo_source === 'https://www.youtube.com/@someone-new',
+    'a photo site being down keeps the picture already shown', JSON.stringify([before, during?.avatar_url, during?.photo_source]));
+  // Instagram handles may end in .me.
+  const { readPeople } = await import('../accounts/people.mjs');
+  check(readPeople('Rene Smith @rene.me')[0].handle === 'rene.me', 'a handle like @rene.me is read as a handle');
 
   console.log('\nWorkflow, second run (nothing should change):');
   const second = await runWorkflow();

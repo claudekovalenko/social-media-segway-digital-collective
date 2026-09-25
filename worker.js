@@ -1002,12 +1002,19 @@ async function handle(req, env, ctx) {
         // waiting for the first background refresh. Saving is a deliberate
         // act, so a second spent here costs nobody a page load.
         if (fields.avatar_url !== undefined) {
-          fields.avatar_cached = isChannelUrl(fields.avatar_url)
+          const found = isChannelUrl(fields.avatar_url)
             ? await readChannelAvatar(fields.avatar_url)
             : fields.avatar_url;
-          // Not found now: leave it unchecked, so the next page view tries again
-          // with the Instagram fallback.
-          fields.avatar_checked_at = fields.avatar_cached ? new Date().toISOString() : null;
+          if (found) {
+            fields.avatar_cached = found;
+            fields.avatar_checked_at = new Date().toISOString();
+          } else {
+            // Not found now (the photo site may be down): keep the picture
+            // already shown, and leave it unchecked so the next page view
+            // tries again, with the Instagram fallback.
+            if (!fields.avatar_url) fields.avatar_cached = null;
+            fields.avatar_checked_at = null;
+          }
         }
         if (!Object.keys(fields).length) return json({ error: 'nothing to update' }, 400);
         await db.updateCreatorLinks(slug, fields);
@@ -1129,6 +1136,9 @@ async function handle(req, env, ctx) {
         if (!row || row.status === 'suspended') return json({ error: 'creator not found' }, 404);
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
+        // The address their photo comes from (a public profile page), before
+        // it's swapped for the picture itself.
+        pub.photo_source = row.avatar_url || null;
         avatarFor(pub, db, after);
         const { avatar_cached, avatar_checked_at, ...shown } = pub;
         return json({ ...shown, defaults: await defaultLinks(db) });

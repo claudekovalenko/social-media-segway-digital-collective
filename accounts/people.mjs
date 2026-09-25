@@ -47,8 +47,10 @@ function photoAddress(token) {
 export function parsePerson(raw) {
   const line = raw.trim();
   const tokens = line.split(/\s+/);
-  const looksLikeAddress = (t) => /[/:]|^www\.|\.(com|be|org|net|me)\b/i.test(t);
-  const handles = tokens.filter((t) => t.startsWith('@') && !looksLikeAddress(t));
+  // A handle is @name (Instagram allows dots, so @jess.me is a handle); an
+  // address has a slash or colon, starts with www., or ends in a domain.
+  const looksLikeAddress = (t) => !t.startsWith('@') && /[/:]|^www\.|\.(com|be|org|net|me)\b/i.test(t);
+  const handles = tokens.filter((t) => t.startsWith('@') && !/[/:]/.test(t));
   const addresses = tokens.filter(looksLikeAddress);
   const words = tokens.filter((t) => !t.startsWith('@') && !looksLikeAddress(t));
 
