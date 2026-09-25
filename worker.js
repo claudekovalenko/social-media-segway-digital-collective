@@ -104,6 +104,9 @@ function avatarFor(row, db, after) {
       let found = null;
       for (const source of sources) if (!found) found = await readChannelAvatar(source);
       // Nothing found: keep any older picture, and don't ask again for a while.
+      // (A page with no picture can't be told apart from a login or consent
+      // wall, so a picture is never dropped here; saving a new photo address
+      // is what drops one.)
       const fields = found ? { avatar_cached: found } : {};
       await db.updateCreatorLinks(slug, { ...fields, avatar_checked_at: new Date().toISOString() })
         .catch(() => {});
@@ -1009,10 +1012,13 @@ async function handle(req, env, ctx) {
             fields.avatar_cached = found;
             fields.avatar_checked_at = new Date().toISOString();
           } else {
-            // Not found now (the photo site may be down): keep the picture
-            // already shown, and leave it unchecked so the next page view
-            // tries again, with the Instagram fallback.
-            if (!fields.avatar_url) fields.avatar_cached = null;
+            // No picture from it right now (the site may be down). The
+            // picture shown must come from this address: the same address
+            // saved again keeps it, a new or cleared one drops it. Either
+            // way it is left unchecked so the next page view tries again,
+            // with the Instagram fallback.
+            const before = await db.creatorBySlug(slug);
+            if (!fields.avatar_url || fields.avatar_url !== (before && before.avatar_url)) fields.avatar_cached = null;
             fields.avatar_checked_at = null;
           }
         }

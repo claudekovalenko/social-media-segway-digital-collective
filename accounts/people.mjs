@@ -55,6 +55,8 @@ export function parsePerson(raw) {
   const words = tokens.filter((t) => !t.startsWith('@') && !looksLikeAddress(t));
 
   const fail = (why) => ({ line, error: why });
+  const odd = tokens.find((t) => t.startsWith('@') && /[/:]/.test(t));
+  if (odd) return fail(`"${odd}" is neither an @instagramhandle nor a photo address`);
   if (handles.length !== 1) return fail('needs exactly one @instagramhandle');
   const handle = handles[0].slice(1);
   if (!/^(?=.*\w)[\w.]{1,30}$/.test(handle)) return fail(`"@${handle}" is not an Instagram handle`);

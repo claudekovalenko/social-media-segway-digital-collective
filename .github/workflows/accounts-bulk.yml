@@ -141,7 +141,7 @@ jobs:
               esac
             fi
             fields=$(jq -nc --argjson src "$source" --argjson c "$cur" --argjson keys "$VIDEO_KEYS" \
-                     --arg ig "https://www.instagram.com/$2/" --arg photo "$3" --arg new "$kind" --arg update "$UPDATE_PHOTOS" --arg fill "$([ "$DRY_RUN" = true ] && echo true || echo "$FILL_EXISTING")" '
+                     --arg ig "https://www.instagram.com/$2/" --arg photo "$3" --arg new "$kind" --arg update "$([ "$DRY_RUN" = true ] && echo true || echo "$UPDATE_PHOTOS")" --arg fill "$([ "$DRY_RUN" = true ] && echo true || echo "$FILL_EXISTING")" '
               (reduce $keys[] as $k ({}; if (($c[$k] // "") == "") and ($src[$k] != null) then .[$k] = $src[$k] else . end))
               + (if ($c.back_url // "") == "" then {back_url: $ig} else {} end)
               + (if $photo != "" and ($new == "new" or ($update == "true" and ($c.photo_source // "") != $photo)) then {avatar_url: $photo} else {} end)
@@ -155,9 +155,13 @@ jobs:
               local photo_part rest_part
               photo_part=$(jq -r 'if has("avatar_url") then "photo" else "" end' <<<"$fields")
               rest_part=$(jq -r 'del(.avatar_url) | keys | map(if . == "back_url" then "card → Instagram" else sub("_url$"; "") end) | join(", ")' <<<"$fields")
-              [ -n "$photo_part" ] && { [ "$UPDATE_PHOTOS" = "true" ] && echo "  would set: photo" || echo "  would set with update_photos: photo"; }
-              [ -n "$rest_part" ] && { [ "$FILL_EXISTING" = "true" ] && echo "  would set: $rest_part" || echo "  would set with fill_existing: $rest_part"; }
-              return
+              if [ -n "$photo_part" ]; then
+                if [ "$UPDATE_PHOTOS" = "true" ]; then echo "  would set: photo"; else echo "  would set with update_photos: photo"; fi
+              fi
+              if [ -n "$rest_part" ]; then
+                if [ "$FILL_EXISTING" = "true" ]; then echo "  would set: $rest_part"; else echo "  would set with fill_existing: $rest_part"; fi
+              fi
+              return 0
             fi
             fbody=$(jq -c --arg s "$1" '. + {slug: $s}' <<<"$fields")
             fcode=$(curl -s -o "$work/fill" -w '%{http_code}' -X POST "$SITE/api/creator/links" \

@@ -67,6 +67,7 @@ try {
     // A stand-in direct.me link-in-bio page.
     if (u.hostname === 'direct.me') {
       photoFetches.push(u.pathname);
+      if (u.pathname.includes('noimg')) return new Response('<html><head></head></html>', { headers: { 'content-type': 'text/html' } });
       return new Response(`<html><head><meta property="og:image" content="https://dm.example${u.pathname}.jpg" /></head></html>`,
         { headers: { 'content-type': 'text/html' } });
     }
@@ -150,7 +151,9 @@ try {
 
   // A dry run before anyone exists lists everyone and changes nothing.
   const dry = await runWorkflow({ DRY_RUN: 'true' });
-  check(dry.status === 0 && (dry.stdout.match(/would set/g) || []).length === listPeople().length,
+  // Each person's line is followed by what they would get.
+  const dryBlocks = dry.stdout.split(/^• /m).slice(1);
+  check(dry.status === 0 && dryBlocks.length === listPeople().length && dryBlocks.every((b) => /would set/.test(b)),
     'a dry run lists what every person would get', dry.stdout.slice(-400) + dry.stderr);
 
   // One person registered their own page (same email) before the run: the
@@ -332,18 +335,43 @@ try {
   const photosAgain = await runWorkflow({ UPDATE_PHOTOS: 'true' });
   check(photosAgain.status === 0 && !/set: photo/.test(photosAgain.stdout), 'update_photos changes nothing when no photo changed',
     photosAgain.stdout.slice(-300));
-  // A photo changed while the photo sites are down: the old picture stays.
+  // The same photo address saved again while the photo sites are down: the
+  // picture stays.
   const before = (await api(`/api/creators/${early.slug}`)).json?.avatar_url;
   photoSitesDown = true;
   await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
-    body: { slug: early.slug, avatar_url: 'https://www.youtube.com/@someone-new' } });
+    body: { slug: early.slug, avatar_url: early.photo } });
   const during = (await api(`/api/creators/${early.slug}`)).json;
+  check(before && during?.avatar_url === before, 'the same photo saved while a photo site is down keeps the picture',
+    JSON.stringify([before, during?.avatar_url]));
+  // A new address while they're down: the old face goes, and the new one
+  // appears once the site answers again.
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: 'https://www.youtube.com/@someone-new' } });
+  const changed = (await api(`/api/creators/${early.slug}`)).json;
   photoSitesDown = false;
-  check(before && during?.avatar_url === before && during?.photo_source === 'https://www.youtube.com/@someone-new',
-    'a photo site being down keeps the picture already shown', JSON.stringify([before, during?.avatar_url, during?.photo_source]));
-  // Instagram handles may end in .me.
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: 'https://www.youtube.com/@someone-new' } });
+  const back = (await api(`/api/creators/${early.slug}`)).json;
+  check(!changed?.avatar_url && changed?.photo_source === 'https://www.youtube.com/@someone-new'
+      && back?.avatar_url === 'https://yt.example/@someone-new.jpg',
+    'a new photo saved while a photo site is down drops the old one, then shows once it is back',
+    JSON.stringify([changed?.avatar_url, back?.avatar_url]));
+  // The dry run shows a photo change that needs update_photos.
+  const dryPhoto = await runWorkflow({ DRY_RUN: 'true' });
+  check(dryPhoto.status === 0 && /would set with update_photos: photo/.test(dryPhoto.stdout),
+    'the dry run shows a photo change that needs update_photos', dryPhoto.stdout.slice(-400));
+  // A new photo address whose page has no picture: the old picture goes.
+  await api('/api/creator/links', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY },
+    body: { slug: early.slug, avatar_url: 'https://direct.me/noimg' } });
+  const noImg = (await api(`/api/creators/${early.slug}`)).json;
+  check(!noImg?.avatar_url && noImg?.photo_source === 'https://direct.me/noimg',
+    'a replaced photo whose new page has no picture no longer shows the old one', JSON.stringify([noImg?.avatar_url, noImg?.photo_source]));
+  // Instagram handles may end in .me; an address written with @ is refused.
   const { readPeople } = await import('../accounts/people.mjs');
   check(readPeople('Rene Smith @rene.me')[0].handle === 'rene.me', 'a handle like @rene.me is read as a handle');
+  check(readPeople('Rene Smith @rene @https://direct.me/rene')[0].error && readPeople('Rene Smith @rene @direct.me/rene')[0].error,
+    'a photo address written with @ is refused, not dropped');
 
   console.log('\nWorkflow, second run (nothing should change):');
   const second = await runWorkflow();
