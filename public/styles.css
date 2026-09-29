@@ -2893,7 +2893,14 @@ body.ig.jpn {
   --bg: #F5F0E7; --surface: #FFFFFF; --surface-2: #EDE6D9; --edge: #DCD3C3; --edge-lit: #cfc6b4;
   --text: #181817; --text-dim: #6b6962; --lime: #181817; --lime-ink: #F5F0E7; --ok: #69705E; --err: #A9533C;
   background-color: var(--ig-bg); color: var(--ig-text);
+  /* The first two layers fade the washes to plain ivory at the top and
+     bottom of the painted area, the colour the phone paints around the
+     page, so the washes never end in a line: not at the status bar, and
+     not where the painted area stops (mid-screen on a short page, or the
+     800px mark on pages that don't paint the whole height). */
   background-image:
+    linear-gradient(to bottom, var(--ig-bg) 0, rgba(245,240,231,0) 110px),
+    linear-gradient(to top, var(--ig-bg) 0, rgba(245,240,231,0) 140px),
     radial-gradient(ellipse 80% 30% at 15% 0%, rgba(169,83,60,0.16), transparent 70%),
     radial-gradient(ellipse 60% 26% at 85% 6%, rgba(178,139,70,0.18), transparent 70%),
     radial-gradient(ellipse 70% 24% at 50% 100%, rgba(105,112,94,0.12), transparent 70%);
@@ -2959,7 +2966,13 @@ body.ig.jpn input::placeholder, body.ig.jpn textarea::placeholder { color: #9a95
 body.ig.jpn input:focus, body.ig.jpn select:focus, body.ig.jpn textarea:focus { border-color: #A9533C; }
 body.ig.jpn .check input, body.ig.jpn input[type="checkbox"] { accent-color: #A9533C; }
 body.ig.jpn .check.fine, body.ig.jpn .check.fine a { color: var(--ig-dim); }
-body.ig.jpn.journey { background-image: radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.14), transparent 70%); }
+body.ig.jpn.journey {
+  /* Same plain-ivory edges as body.ig.jpn, so no line meets the phone's bars. */
+  background-image:
+    linear-gradient(to bottom, var(--ig-bg) 0, rgba(245,240,231,0) 110px),
+    linear-gradient(to top, var(--ig-bg) 0, rgba(245,240,231,0) 140px),
+    radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.14), transparent 70%);
+}
 body.ig.jpn.journey .step-card { background: #fff; background-color: #fff; box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.07); }
 body.ig.jpn.journey .step-card.open { box-shadow: 0 18px 44px rgba(24,24,23,0.12); }
 body.ig.jpn .video-placeholder { background: #EDE6D9; border: 1px solid var(--ig-line); color: var(--ig-dim); box-shadow: none; }
