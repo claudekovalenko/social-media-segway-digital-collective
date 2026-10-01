@@ -35,6 +35,7 @@ export async function unsubscribeUrl(env, url, contactId) {
 
 // Sends the collective's follow-up for one response, with the creator's own
 // greeting/message/button where they set them. Always logged; never throws.
+// Returns what happened: 'sent', 'skipped', 'failed' or 'suppressed'.
 export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, creator, step, name, email, defaults, settings }) {
   const type = RESPONSE_TYPES[step];
   // One gate for every channel, so a revocation cannot be missed by a code
@@ -42,10 +43,10 @@ export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, 
   const allowed = await pf.mayContact(contact_id, 'email').catch(() => ({ ok: false, reason: 'check failed' }));
   if (!allowed.ok) {
     await pf.logCommunication({ contact_id, response_id, creator_slug: creator?.slug, template: type, to_address: email, status: 'suppressed', error: allowed.reason });
-    return;
+    return 'suppressed';
   }
   const contact = await pf.contactById(contact_id).catch(() => null);
-  if (!contact) return;
+  if (!contact) return 'skipped';
   const tpl = { ...DEFAULT_TEMPLATES[type] };
   for (const k of Object.keys(tpl)) {
     const override = settings[`tpl_${type}_${k}`];
@@ -81,6 +82,7 @@ export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, 
     contact_id, response_id, creator_slug: slug, template: type, to_address: email, subject: mail.subject,
     provider: result.provider, provider_id: result.provider_id, status: result.status, error: result.error,
   });
+  return result.status;
 }
 
 export async function handlePlatform(req, url, env, db, whoami, hashPassword, signSession, accountSecretFor, newAccessKey, sha256hex, defaultLinks, SESSION_HOURS, RESERVED) {

@@ -3059,8 +3059,15 @@ body.ig.jpn .wrap-narrow label input, body.ig.jpn .wrap-narrow label select, bod
 body.ig.jpn .wrap-narrow input::placeholder { color: #9a958a; }
 body.ig .wrap-narrow label .pick-hint { display: inline; margin-left: 6px; font-weight: 500; letter-spacing: 0; text-transform: none; }
 
-/* Journey in button mode: one button under each video, no forms. */
-body.journey.buttons form[data-step], body.journey.buttons .gather-help { display: none !important; }
+/* Journey in button mode: one button under each video. Steps 1 and 2 open
+   their short form from that button (form.is-open); step 3 has none. */
+body.journey.buttons form[data-step]:not(.is-open), body.journey.buttons .gather-help { display: none !important; }
+body.journey form.is-done > input, body.journey form.is-done > label,
+body.journey form.is-done > button[type="submit"] { display: none !important; }
+body.journey .after-actions { margin-top: 6px; }
+body.journey .after-note { margin: 0 0 4px; font-size: 0.9rem; color: var(--ig-dim, #6b6962); }
+body.journey .after-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+body.journey .after-btn { flex: 1 1 180px; text-align: center; padding: 12px 16px; border-radius: 12px; font-weight: 600; text-decoration: none; }
 body.journey.buttons .step-cta { display: block; margin-top: 12px; text-align: center; }
 body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
 
@@ -3350,3 +3357,50 @@ body.ig .phone-frame { cursor: pointer; }
 .score-pill.hot { background: rgba(200, 255, 120, 0.22); color: var(--lime); }
 .score-pill.warm { background: rgba(255, 210, 120, 0.2); color: #f6c46a; }
 .score-pill.cold { background: rgba(255, 255, 255, 0.08); color: var(--muted, #aaa); }
+
+/* ==================================================================
+   DESKTOP ONLY (900px and wider). Phones are untouched: every rule
+   below sits inside these media queries. The home page keeps its two
+   columns but stops stretching edge to edge, the bio demo sits centred
+   over its caption, and from 1200px, where the intro column is wide
+   enough, the intro is sized for a big screen.
+   ================================================================== */
+@media (min-width: 900px) {
+  body.home.ig.network .wrap { max-width: 1180px; padding: 0 40px 88px; }
+  body.home.ig .ig-side .ig-stats span { white-space: nowrap; }
+  body.home.ig .land-title { font-size: 1.95rem; }
+  body.home.ig .land-copy { font-size: 1.02rem; }
+  body.home.ig .phone-frame { margin-left: auto; margin-right: auto; }
+  body.home.ig .phone-caption { text-align: center; }
+}
+@media (min-width: 1200px) {
+  body.home.ig.network .wrap { grid-template-columns: 420px minmax(0, 1fr); column-gap: 96px; }
+  body.home.ig .ig-side .ig-profile { gap: 28px; }
+  body.home.ig .ig-side .ig-avatar { width: 96px; height: 96px; }
+  body.home.ig .ig-side .ig-avatar svg { width: 42px; height: 42px; }
+  body.home.ig .ig-side .ig-stats b { font-size: 1.55rem; }
+  body.home.ig .ig-side .ig-stats span { font-size: 0.9rem; }
+  body.home.ig .ig-side .ig-name { font-size: 2.3rem; line-height: 1.05; margin-top: 26px; }
+  body.home.ig .ig-side .ig-cat { font-size: 0.98rem; margin-top: 6px; }
+  body.home.ig .ig-side .ig-lede { font-size: 1.32rem; line-height: 1.35; margin-top: 14px; }
+  body.home.ig .ig-side .ig-actions { margin-top: 26px; }
+  body.home.ig .ig-side .ig-actions a { padding-top: 14px; padding-bottom: 14px; font-size: 1rem; }
+  body.home.ig .ig-side .hero-url { font-size: 1rem; }
+}
+/* A short window can't show the whole intro while it sticks; let it scroll. */
+@media (min-width: 900px) and (max-height: 720px) {
+  body.home.ig .ig-side { position: static; }
+}
+
+/* Journey on wide screens: a wider column, and each video framed to its own
+   shape (--ar comes from the video itself; see fitVideo in app.js). A tall
+   video stops at about three-quarters of the window. Phones keep their
+   fixed-height tile. */
+@media (min-width: 900px) {
+  body.journey.ig .wrap { max-width: 820px; }
+  body.journey.ig .video-frame {
+    height: auto; aspect-ratio: var(--ar, 16 / 9);
+    width: min(100%, calc(74vh * var(--ar, 1.7778))); margin: 0 auto;
+  }
+  body.journey.ig .video-placeholder { height: auto; aspect-ratio: 16 / 9; }
+}
