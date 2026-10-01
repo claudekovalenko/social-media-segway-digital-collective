@@ -166,9 +166,10 @@ async function run(base) {
     await page.waitForTimeout(700);
     const form = page.locator('form[data-step="know_god"]');
     expect(!(await visible(form.locator('input[name="name"]'))), 'form showing before the button was pressed');
+    const before = page.url();  // the live site serves /journey.html as /journey
     await page.locator('#cta-know_god').click();
     await page.waitForTimeout(500);
-    expect(page.url().includes('journey.html'), 'the button left the page');
+    expect(page.url() === before, `the button left the page (${page.url()})`);
     expect(await visible(form.locator('input[name="name"]')), 'button did not open the form');
     await form.locator('input[name="name"]').fill('Test Person');
     await form.locator('input[name="email"]').fill('test@example.org');
