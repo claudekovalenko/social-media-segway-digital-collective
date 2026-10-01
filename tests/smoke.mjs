@@ -159,6 +159,10 @@ async function run(base) {
   });
 
   await check('creator page: "I made a commitment" opens a form, then offers the next steps', async (page) => {
+    // Never write a test lead into the live database: the form's send is
+    // answered here, so only the real page and its buttons are tested.
+    await page.route('**/api/leads', (route) => (route.request().method() === 'POST'
+      ? route.fulfill({ status: 201, json: { ok: true, emailed: true } }) : route.continue()));
     await go(page, `/journey.html?creator=${CREATOR}`);
     await page.waitForSelector('#know .step-head');
     await page.waitForTimeout(800);
@@ -166,9 +170,10 @@ async function run(base) {
     await page.waitForTimeout(700);
     const form = page.locator('form[data-step="know_god"]');
     expect(!(await visible(form.locator('input[name="name"]'))), 'form showing before the button was pressed');
+    const before = page.url();  // the live site serves /journey.html as /journey
     await page.locator('#cta-know_god').click();
     await page.waitForTimeout(500);
-    expect(page.url().includes('journey.html'), 'the button left the page');
+    expect(page.url() === before, `the button left the page (${page.url()})`);
     expect(await visible(form.locator('input[name="name"]')), 'button did not open the form');
     await form.locator('input[name="name"]').fill('Test Person');
     await form.locator('input[name="email"]').fill('test@example.org');
