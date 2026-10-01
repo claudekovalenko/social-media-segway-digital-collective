@@ -53,6 +53,30 @@ function toEmbedUrl(url) {
   } catch { return url; }
 }
 
+// Frames each video to its own shape (on wide screens; see styles.css):
+// a Shorts link is vertical, anything else on YouTube is asked for its size.
+async function fitVideo(iframe, url) {
+  let u;
+  try { u = new URL(url); } catch { return; }
+  const host = u.hostname.replace(/^(www|m)\./, '');
+  if (host === 'youtube-nocookie.com') {
+    const id = u.pathname.split('/')[2];
+    if (!/^[\w-]{6,20}$/.test(id || '')) return;
+    url = `https://www.youtube.com/watch?v=${id}`;
+  } else if (host !== 'youtube.com' && host !== 'youtu.be') return;
+  const set = (w, h) => {
+    iframe.style.setProperty('--ar', String(w / h));
+    iframe.classList.toggle('is-tall', h > w);
+  };
+  if (/^\/shorts\//.test(u.pathname)) { set(9, 16); return; }
+  try {
+    const res = await fetch(`${API_BASE}/api/video-shape?url=${encodeURIComponent(url)}`);
+    if (!res.ok) return;
+    const { width, height } = await res.json();
+    if (width > 0 && height > 0) set(width, height);
+  } catch { /* keep the default 16:9 frame */ }
+}
+
 function embed(containerId, url, placeholderText) {
   const el = document.getElementById(containerId);
   if (url) {
@@ -62,6 +86,7 @@ function embed(containerId, url, placeholderText) {
     iframe.allow = 'autoplay; fullscreen; picture-in-picture';
     iframe.allowFullscreen = true;
     el.replaceChildren(iframe);
+    fitVideo(iframe, url);
   } else {
     const ph = document.createElement('div');
     ph.className = 'video-placeholder';
@@ -109,10 +134,15 @@ async function loadCreator() {
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
   // Buttons under the videos: each points where the creator (or the
   // collective) says the next step is.
-  showStepButton('cta-know_god', creator.know_god_next_url || fallback.know_god_next_url, 'grow',
-    creator.know_god_cta_label || fallback.know_god_cta_label || t('cta1'));
-  showStepButton('cta-grow_with_god', creator.grow_course_url || fallback.grow_course_url, 'connect',
-    creator.grow_cta_label || fallback.grow_cta_label || t('cta2'));
+  // Steps 1 and 2: the button opens a short form; the creator's own link is
+  // offered once the person has sent it (see afterSubmit).
+  nextLinks.know_god = creator.know_god_next_url || fallback.know_god_next_url || '';
+  nextLinks.grow_with_god = creator.grow_course_url || fallback.grow_course_url || '';
+  nextLinks.creatorName = creator.slug !== 'default' ? (creator.display_name || creator.name || '') : '';
+  showStepButton('cta-know_god', null, 'grow',
+    creator.know_god_cta_label || fallback.know_god_cta_label || t('cta1'), 'know_god');
+  showStepButton('cta-grow_with_god', null, 'connect',
+    creator.grow_cta_label || fallback.grow_cta_label || t('cta2'), 'grow_with_god');
   showCreatorCard(creator);
   showGatherAlt(creator.gather_alt_url || fallback.gather_alt_url, creator.gather_alt_label || fallback.gather_alt_label);
   showGatherLink(
@@ -271,7 +301,46 @@ applyLanguage();
 // otherwise everyone gets the collective's default partner.
 // Every video gets a button. With a destination set it opens there in a new
 // tab; without one it moves the person on to the next step on this page.
-function showStepButton(id, url, nextStepId, label) {
+// Note when each step is first opened, however it opened (a tap, a button,
+// a deep link), for the spam timer in openStepForm.
+new MutationObserver((changes) => {
+  for (const c of changes) {
+    const card = c.target;
+    if (card.classList.contains('open') && !card.dataset.openedAt) card.dataset.openedAt = String(Date.now());
+  }
+}).observe(document.querySelector('.steps') || document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+
+// Where steps 1 and 2 lead once their form is sent: the creator's own links.
+const nextLinks = { know_god: '', grow_with_god: '', creatorName: '' };
+
+// Opens a step's own short form in place of its button.
+function openStepForm(step, button) {
+  const form = document.querySelector(`form[data-step="${step}"]`);
+  if (!form) return;
+  form.classList.add('is-open');
+  if (button) button.hidden = true;
+  // The spam timer starts when the person opened this step to watch its
+  // video, not when the form appeared: a form already filled in from the step
+  // before can honestly be sent within a second (track.js won't restart it).
+  if (!form.dataset.t0) form.dataset.t0 = form.closest('.step-card')?.dataset.openedAt || String(Date.now());
+  if (!form.dataset.opened && window.jpTrack) jpTrack('form_open', form.closest('.step-card')?.id || null);
+  form.dataset.opened = '1';
+  // Focus the first thing left to do, so keyboard and screen-reader users
+  // land in the form rather than on a button that just disappeared.
+  const todo = [...form.querySelectorAll('input[name="name"], input[name="email"], input[name="consent"]')]
+    .find((el) => (el.type === 'checkbox' ? !el.checked : !el.value)) || form.querySelector('button[type="submit"]');
+  setTimeout(() => { if (todo) todo.focus({ preventScroll: true }); form.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60);
+}
+
+function openStep(stepId) {
+  const next = document.getElementById(stepId);
+  if (!next) return;
+  document.querySelectorAll('.step-card.open').forEach((c) => closeStep(c));
+  next.classList.add('open');
+  setTimeout(() => next.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
+}
+
+function showStepButton(id, url, nextStepId, label, formStep) {
   const a = document.getElementById(id);
   if (!a) return;
   a.hidden = false;
@@ -282,7 +351,11 @@ function showStepButton(id, url, nextStepId, label) {
     span.removeAttribute('data-i18n');
     span.textContent = label;
   }
-  if (url) {
+  if (formStep) {
+    a.href = '#'; a.removeAttribute('target');
+    a.setAttribute('aria-expanded', 'false');
+    a.onclick = (e) => { e.preventDefault(); a.setAttribute('aria-expanded', 'true'); openStepForm(formStep, a); };
+  } else if (url) {
     a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.onclick = null;
   } else {
     a.href = '#' + nextStepId; a.removeAttribute('target');
@@ -412,6 +485,46 @@ function remember(data) {
   prefillForms();
 }
 
+// Once a step's form is sent: say where the confirmation went, fold the
+// fields away, and offer the next steps.
+function afterSubmit(form, data, body) {
+  const box = form.querySelector('.after-actions');
+  if (!box) return;
+  form.classList.add('is-done');
+  const note = document.createElement('p');
+  note.className = 'after-note';
+  note.textContent = body && body.emailed ? t('sent_to', { email: data.email }) : '';
+  const row = document.createElement('div');
+  row.className = 'after-row';
+  let moveOn = null;  // the pending move to the course; any tap here cancels it
+  const button = (text, primary, onClick, href) => {
+    const el = document.createElement('a');
+    el.className = primary ? 'btn-primary after-btn' : 'btn-ghost after-btn';
+    el.textContent = text;
+    el.addEventListener('click', () => clearTimeout(moveOn));
+    if (href) { el.href = href; el.target = '_blank'; el.rel = 'noopener'; }
+    else { el.href = '#'; el.addEventListener('click', (e) => { e.preventDefault(); onClick(); }); }
+    return el;
+  };
+  const web = (link) => /^https?:\/\//i.test(link || '') ? link : '';
+  const who = nextLinks.creatorName ? t('continue_with', { name: nextLinks.creatorName.split(' ')[0] }) : t('continue');
+  if (data.step === 'know_god') {
+    row.append(button(t('next_grow'), true, () => openStep('grow')));
+    if (web(nextLinks.know_god)) row.append(button(who, false, null, nextLinks.know_god));
+  } else if (data.step === 'grow_with_god') {
+    if (web(nextLinks.grow_with_god)) row.append(button(t('go_course'), true, null, nextLinks.grow_with_god));
+    row.append(button(t('next_connect'), !web(nextLinks.grow_with_god), () => openStep('connect')));
+  }
+  box.replaceChildren(...(note.textContent ? [note] : []), row);
+  box.hidden = false;
+  // Step 2 goes straight on to the course, in this tab: a new tab opened
+  // after the form is sent would be blocked as a pop-up on most phones.
+  // The button above stays as a way back in if the move is slow.
+  if (data.step === 'grow_with_god' && web(nextLinks.grow_with_god)) {
+    moveOn = setTimeout(() => location.assign(nextLinks.grow_with_god), 1600);
+  }
+}
+
 // Submit each step's form to the leads API.
 document.querySelectorAll('form[data-step]').forEach((form) => {
   form.addEventListener('submit', async (e) => {
@@ -443,6 +556,14 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
     const success = form.querySelector('.success');
     const error = form.querySelector('.error');
     success.style.display = error.style.display = 'none';
+    if (data.sms_consent && !String(data.phone || '').trim()) {
+      error.textContent = t('sms_needs_phone');
+      error.style.display = 'block';
+      return;
+    }
+    const submit = form.querySelector('button[type="submit"]');
+    if (submit.disabled) return;
+    submit.disabled = true;  // one send per press, however fast the clicks
     try {
       const res = await fetch(API_BASE + '/api/leads', {
         method: 'POST',
@@ -453,10 +574,12 @@ document.querySelectorAll('form[data-step]').forEach((form) => {
       if (!res.ok) throw new Error(body.error || t('err'));
       success.style.display = 'block';
       form.querySelector('button').disabled = true;
+      afterSubmit(form, data, body);
       // Tick the step off, so the three numbers read as progress.
       form.closest('.step-card').classList.add('done');
       remember(data);  // save typing on the next step
     } catch (err) {
+      submit.disabled = false;
       error.textContent = err.message;
       error.style.display = 'block';
     }

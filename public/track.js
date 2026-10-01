@@ -55,7 +55,7 @@
   }, true);
   document.addEventListener('focusin', (e) => {
     const form = e.target.closest('form[data-step]');
-    if (form && !form.dataset.opened) { form.dataset.opened = '1'; form.dataset.t0 = String(Date.now()); jpTrack('form_open', sectionOf(form)); }
+    if (form && !form.dataset.opened) { form.dataset.opened = '1'; if (!form.dataset.t0) form.dataset.t0 = String(Date.now()); jpTrack('form_open', sectionOf(form)); }
   });
   // Deep links open a section without a click.
   if (location.hash) { const id = location.hash.slice(1); if (document.getElementById(id)) { seen.add(id); jpTrack('section_open', id); } }

@@ -59,6 +59,7 @@ const MOCKS = {
   '/api/directory': { creators: [{ slug: CREATOR, name: 'Craig Brown', handle: 'acraigbrown', topic: 'Discipleship', back_url: 'https://instagram.com/acraigbrown' }] },
   '/api/defaults': {},
   '/api/events': { ok: true },
+  '/api/video-shape': { width: 200, height: 113 },
 };
 async function mockApi(page) {
   await page.route('**/api/**', (route) => {
@@ -68,7 +69,7 @@ async function mockApi(page) {
       return slug === CREATOR || slug === 'default'
         ? route.fulfill({ json: CREATOR_ROW }) : route.fulfill({ status: 404, json: { error: 'creator not found' } });
     }
-    if (u.pathname === '/api/leads' && route.request().method() === 'POST') return route.fulfill({ status: 201, json: { ok: true } });
+    if (u.pathname === '/api/leads' && route.request().method() === 'POST') return route.fulfill({ status: 201, json: { ok: true, emailed: true } });
     if (u.pathname === '/api/apply' && route.request().method() === 'POST') return route.fulfill({ status: 201, json: { ok: true } });
     if (MOCKS[u.pathname]) return route.fulfill({ json: MOCKS[u.pathname] });
     return route.fulfill({ status: 401, json: { error: 'unauthorized' } });
@@ -155,6 +156,33 @@ async function run(base) {
     }
     expect((await page.locator('#cta-know_god').textContent()).trim().length > 0, 'first button has no label');
     expect(await visible(page.locator('#creatorCard')), 'creator card at the bottom missing');
+  });
+
+  await check('creator page: "I made a commitment" opens a form, then offers the next steps', async (page) => {
+    await go(page, `/journey.html?creator=${CREATOR}`);
+    await page.waitForSelector('#know .step-head');
+    await page.waitForTimeout(800);
+    await page.locator('#know .step-head').click();
+    await page.waitForTimeout(700);
+    const form = page.locator('form[data-step="know_god"]');
+    expect(!(await visible(form.locator('input[name="name"]'))), 'form showing before the button was pressed');
+    await page.locator('#cta-know_god').click();
+    await page.waitForTimeout(500);
+    expect(page.url().includes('journey.html'), 'the button left the page');
+    expect(await visible(form.locator('input[name="name"]')), 'button did not open the form');
+    await form.locator('input[name="name"]').fill('Test Person');
+    await form.locator('input[name="email"]').fill('test@example.org');
+    await form.locator('input[name="consent"]').check();
+    await page.waitForTimeout(1600);
+    await form.locator('button[type="submit"]').click();
+    await page.waitForTimeout(600);
+    expect((await form.locator('.after-note').textContent()).includes('test@example.org'), 'no confirmation line');
+    await form.getByText('Next: Grow with God').click();
+    await page.waitForTimeout(700);
+    expect(await page.locator('#grow').evaluate((el) => el.classList.contains('open')), 'Grow with God did not open');
+    await page.locator('#cta-grow_with_god').click();
+    await page.waitForTimeout(400);
+    expect(await page.locator('form[data-step="grow_with_god"] input[name="email"]').inputValue() === 'test@example.org', 'second form not filled in');
   });
 
   await check('creator page: unknown creator still shows the collective defaults', async (page, { bad }) => {

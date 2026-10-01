@@ -527,15 +527,20 @@ async function handle(req, env, ctx) {
         if (email && await db.creatorByEmail(email).catch(() => null)) {
           return json({ error: 'that link name or email is already taken' }, 409);
         }
+        // Links get the same check as the links route: web addresses only.
+        for (const key of ['know_god_video_url', 'grow_course_url', 'find_church_video_url']) {
+          const value = String(b[key] || '').trim();
+          if (value && !/^https?:\/\//i.test(value)) return json({ error: 'Links must start with http:// or https://' }, 400);
+        }
         // The key is shown once at signup; only its hash is stored.
         const accessKey = newAccessKey();
         const keyHash = await sha256hex(accessKey);
         try {
           await db.createCreator({
             slug, name, email, mode, handle, topic, key_hash: keyHash,
-            know_god_video_url: b.know_god_video_url || null,
-            grow_course_url: b.grow_course_url || null,
-            find_church_video_url: b.find_church_video_url || null,
+            know_god_video_url: String(b.know_god_video_url || '').trim().slice(0, 500) || null,
+            grow_course_url: String(b.grow_course_url || '').trim().slice(0, 500) || null,
+            find_church_video_url: String(b.find_church_video_url || '').trim().slice(0, 500) || null,
           });
         } catch {
           return json({ error: 'that link name or email is already taken' }, 409);
@@ -1129,6 +1134,38 @@ async function handle(req, env, ctx) {
         });
       }
 
+      // A YouTube video's real shape (wide or vertical), so each creator's
+      // video is framed to fit it. YouTube's own oEmbed answer, cached a week.
+      if (p === '/api/video-shape' && req.method === 'GET') {
+        let target;
+        try { target = new URL(url.searchParams.get('url') || ''); } catch { return json({ error: 'not a web address' }, 400); }
+        const host = target.hostname.toLowerCase().replace(/^(www|m)\./, '');
+        if (target.protocol !== 'https:' || !['youtube.com', 'youtu.be'].includes(host)) {
+          return json({ error: 'only YouTube links' }, 400);
+        }
+        const cache = typeof caches !== 'undefined' ? caches.default : null;
+        const key = new Request(`${url.origin}/api/video-shape?url=${encodeURIComponent(target.toString())}`);
+        const hit = cache && await cache.match(key).catch(() => null);
+        if (hit) return hit;
+        // Only lookups that reach YouTube count; cached answers are free, so a
+        // church or school sharing one address isn't cut off.
+        if (rateLimited(`shape:${clientIp(req)}`, 120, 60_000)) return json({ error: 'Too many requests.' }, 429);
+        let width = null, height = null;
+        try {
+          const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(target.toString())}`);
+          if (r.ok) {
+            const o = await r.json();
+            if (Number(o.width) > 0 && Number(o.height) > 0) { width = Number(o.width); height = Number(o.height); }
+          }
+        } catch { /* unknown shape: the page keeps its default frame */ }
+        const res = json({ width, height });
+        if (width) {
+          res.headers.set('cache-control', 'public, max-age=604800');
+          if (cache) after(cache.put(key, res.clone()).catch(() => {}));
+        }
+        return res;
+      }
+
       // The network's defaults on their own, for a page whose creator slug
       // doesn't resolve.
       if (p === '/api/defaults' && req.method === 'GET') {
@@ -1190,6 +1227,7 @@ async function handle(req, env, ctx) {
         // The platform record: one contact per person, one response per
         // submission, then the collective's follow-up in the creator's name.
         let recorded = null;
+        let emailed = false;
         try {
           const pf = platform(env.DB);
           recorded = await pf.recordSubmission({
@@ -1219,14 +1257,14 @@ async function handle(req, env, ctx) {
           // Identify, clean, deduplicate, score: runs after the reply goes out.
           after(enrichContact(pf, recorded.contact_id, { env, fetchFn: fetch }).catch((e) => console.error('enrich failed', e.message)));
           const creator = creatorSlug !== 'default' ? await db.creatorBySlug(creatorSlug).catch(() => null) : null;
-          await sendFollowUp(env, url, db, pf, {
+          emailed = 'sent' === await sendFollowUp(env, url, db, pf, {
             contact_id: recorded.contact_id, response_id: recorded.response_id, creator, step, name, email,
             defaults: await defaultLinks(db), settings: await db.settings().catch(() => ({})),
           });
         } catch (err) {
           console.error('platform record failed', err.message);
         }
-        return json({ ok: true, response_id: recorded?.response_id || null }, 201);
+        return json({ ok: true, response_id: recorded?.response_id || null, emailed }, 201);
       }
 
       if (p === '/api/admin/leads' && req.method === 'GET') {
