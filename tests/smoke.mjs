@@ -159,6 +159,10 @@ async function run(base) {
   });
 
   await check('creator page: "I made a commitment" opens a form, then offers the next steps', async (page) => {
+    // Never write a test lead into the live database: the form's send is
+    // answered here, so only the real page and its buttons are tested.
+    await page.route('**/api/leads', (route) => (route.request().method() === 'POST'
+      ? route.fulfill({ status: 201, json: { ok: true, emailed: true } }) : route.continue()));
     await go(page, `/journey.html?creator=${CREATOR}`);
     await page.waitForSelector('#know .step-head');
     await page.waitForTimeout(800);
