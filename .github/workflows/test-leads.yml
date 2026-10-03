@@ -1,0 +1,47 @@
+name: Put test leads through a creator page
+
+# Run by hand from the Actions tab. A real browser fills in "I made a
+# commitment" and the Grow with God form on a creator's page for each test
+# lead (Test 1 at test1@example.com, Test 2, ...), exactly as a visitor would.
+# These are saved in the live database like any other response. Then it signs
+# in with the ADMIN_EMAIL / ADMIN_PASSWORD repo secrets and lists the test rows
+# it finds. example.com is a reserved domain: no email ever reaches anyone.
+
+on:
+  workflow_dispatch:
+    inputs:
+      creator:
+        description: Creator link name
+        required: true
+        default: craigbrown
+      count:
+        description: How many test leads (1-9)
+        required: true
+        default: '5'
+
+permissions:
+  contents: read
+
+# One run at a time: a second one queues instead of racing the first.
+concurrency:
+  group: test-leads
+  cancel-in-progress: false
+
+jobs:
+  leads:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Put the test leads through
+        env:
+          BASE_URL: https://faith-journey-funnel.faith-journey-funnel.workers.dev
+          CREATOR: ${{ inputs.creator }}
+          COUNT: ${{ inputs.count }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: node tests/test-leads.mjs
