@@ -315,7 +315,10 @@
       const f = e.currentTarget;
       const error = f.querySelector('.error');
       const sent = document.getElementById('sent');
+      const btn = f.querySelector('button[type="submit"]');
       error.style.display = sent.style.display = 'none';
+      // One email per tap: the button comes back only after the answer.
+      btn.disabled = true;
       try {
         const res = await fetch(auth.url.replace(/\/+$/, '') + '/auth/v1/otp', {
           method: 'POST',
@@ -325,11 +328,28 @@
             options: { email_redirect_to: location.origin + location.pathname + (asked ? '?next=' + asked : '') },
           }),
         });
-        if (!res.ok) throw new Error('Could not send the link — check the address.');
+        if (!res.ok) {
+          // Say why: too soon after the last one, or this hour's emails used
+          // up, is not the same as a mistyped address.
+          const body = (await res.json().catch(() => null)) || {};
+          const msg = String(body.msg || body.error_description || body.error || '');
+          const wait = /after (\d+) seconds/.exec(msg);
+          if (res.status === 429) {
+            throw new Error(wait
+              ? `A link was just sent. Wait ${wait[1]} seconds before asking for another.`
+              : 'Too many sign-in emails for now. Check your inbox for one already sent, or try again in an hour.');
+          }
+          throw new Error(res.status === 422 || res.status === 400
+            ? 'Could not send the link — check the address.'
+            : 'Could not send the link right now — try again in a minute.');
+        }
         sent.style.display = 'block';
       } catch (err) {
-        error.textContent = err.message;
+        error.textContent = err.message === 'Failed to fetch'
+          ? 'Could not reach the sign-in service — try again.' : err.message;
         error.style.display = 'block';
+      } finally {
+        btn.disabled = false;
       }
     });
 
