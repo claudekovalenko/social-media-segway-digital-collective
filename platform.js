@@ -1,3 +1,4 @@
+import { addMissingColumns } from './db.js';
 // The platform layer the proposal asks for, on D1.
 //
 // Contacts are people; responses are what they reported, each attributed to a
@@ -124,7 +125,7 @@ export function platform(DB) {
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )`),
       ]);
-      for (const [table, col, type] of [
+      await addMissingColumns(DB, [
         // Consent is tracked per channel: a phone number given so somebody can
         // be called back is not permission to send marketing texts, and the
         // two are revoked separately.
@@ -156,9 +157,7 @@ export function platform(DB) {
         ['creators', 'follow_up_cta_url', 'TEXT'],
         ['admins', 'email_verified_at', 'TEXT'],
         ['admins', 'phone', 'TEXT'],
-      ]) {
-        await DB.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`).run().catch(() => {});
-      }
+      ]);
     })();
     await ready;
   }

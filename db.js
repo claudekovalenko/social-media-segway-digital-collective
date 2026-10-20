@@ -16,7 +16,7 @@ let platformColsOnce = null;
 // table's columns once and adding only what is genuinely missing turns that
 // into a single read, and on a database that is already up to date, no writes
 // at all.
-async function addMissingColumns(DB, wanted) {
+export async function addMissingColumns(DB, wanted) {
   if (DB.postgres) return; // supabase/schema.sql owns the Postgres schema
   const byTable = new Map();
   for (const [table, col, type] of wanted) {
