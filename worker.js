@@ -722,6 +722,9 @@ async function handle(req, env, ctx) {
       // Who am I, and what may I see?
       if (p === '/api/auth/me' && req.method === 'GET') {
         const me = await whoami(req, url, env, db);
+        // A real Google / magic-link sign-in for an email nobody has given
+        // access to: say so, with the email, so the sign-in page can explain.
+        if (!me.role && me.denied) return json({ error: 'That account does not have access.', email: me.email }, 403);
         if (!me.role) return json({ error: 'unauthorized' }, 401);
         return json({
           email: me.email, name: me.name || null,
