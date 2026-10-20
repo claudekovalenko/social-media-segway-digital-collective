@@ -3404,3 +3404,31 @@ body.ig .phone-frame { cursor: pointer; }
   }
   body.journey.ig .video-placeholder { height: auto; aspect-ratio: 16 / 9; }
 }
+
+/* Sign-in provider buttons, styled to Google's and Apple's brand rules on
+   every theme: solid, clearly bordered, logo on the left of the label. */
+#providerButtons .btn-google, #providerButtons .btn-apple,
+body.ig #providerButtons .btn-google, body.ig #providerButtons .btn-apple {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; min-height: 44px; padding: 11px 18px; border-radius: 12px;
+  font: 600 0.95rem/1.2 Inter, system-ui, -apple-system, sans-serif; letter-spacing: 0;
+  cursor: pointer; box-shadow: 0 1px 2px rgba(24,24,23,0.06);
+  transition: background-color .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+#providerButtons .btn-google, body.ig #providerButtons .btn-google {
+  background: #fff; color: #1f1f1f; border: 1px solid #747775;
+}
+#providerButtons .btn-google:hover, body.ig #providerButtons .btn-google:hover {
+  background: #f8f9fa; box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px rgba(60,64,67,0.15); filter: none;
+}
+#providerButtons .btn-apple, body.ig #providerButtons .btn-apple {
+  background: #000; color: #fff; border: 1px solid #000;
+}
+#providerButtons .btn-apple:hover, body.ig #providerButtons .btn-apple:hover { background: #1c1c1e; filter: none; }
+#providerButtons .btn-google:active, #providerButtons .btn-apple:active { transform: translateY(1px); }
+#providerButtons .btn-google:focus-visible, #providerButtons .btn-apple:focus-visible {
+  outline: 2px solid #1a73e8; outline-offset: 2px;
+}
+#providerButtons .btn-google:disabled, #providerButtons .btn-apple:disabled,
+body.ig #providerButtons .btn-google:disabled, body.ig #providerButtons .btn-apple:disabled { opacity: .6; cursor: progress; }
+#providerButtons svg { flex: none; width: 20px; height: 20px; }
