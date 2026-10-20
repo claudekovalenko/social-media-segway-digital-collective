@@ -1,0 +1,154 @@
+/* New home page (body.v2). Every rule is scoped to .v2-root so the
+   shared theme in styles.css, which the phone demo still uses, is untouched. */
+body.v2{
+  color-scheme:light;
+  --ink:#181817; --ink-2:#3a3935; --ink-3:#6b6962;
+  --ivory:#F5F0E7; --ivory-2:#EDE6D9; --ivory-3:#FBF8F2; --line:#DCD3C3;
+  --terracotta:#A9533C; --gold:#B28B46; --sage:#69705E;
+  --serif:Fraunces, Georgia, serif; --sans:Inter, system-ui, -apple-system, sans-serif;
+  --r:18px;
+}
+:where(body.v2 .v2-root, body.v2 .v2-root *){box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body.v2 .v2-root section{scroll-margin-top:calc(80px + env(safe-area-inset-top,0px))}
+body.v2 .v2-root .v2-nav-links a.v2-on:not(.v2-pill){color:var(--terracotta)}
+body.v2 .v2-root .v2-hero .v2-wrap>*, body.v2 .v2-root .v2-split>*{min-width:0}
+body.v2 .v2-root :focus-visible{outline:2px solid var(--terracotta);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){
+body.v2 .v2-root *{transition:none!important}
+html{scroll-behavior:auto}
+}
+body.v2{background:var(--ivory);color:var(--ink);font:400 17px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+body.v2 .v2-root a{color:inherit;text-decoration:none}
+body.v2 .v2-root .v2-wrap{max-width:1120px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+body.v2 .v2-root .v2-serif{font-family:var(--serif);letter-spacing:-.025em}
+body.v2 .v2-root em{font-style:italic;color:var(--terracotta)}
+body.v2::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ivory)}
+body.v2 .v2-root nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--ivory) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid transparent}
+body.v2 .v2-root nav .v2-wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+body.v2 .v2-root .v2-brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+body.v2 .v2-root .v2-brand i{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--ink);color:var(--ivory)}
+body.v2 .v2-root .v2-nav-links{display:flex;align-items:center;gap:28px;font-size:.93rem;color:var(--ink-2)}
+body.v2 .v2-root .v2-nav-links a:hover{color:var(--terracotta)}
+body.v2 .v2-root .v2-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font-weight:600;font-size:.93rem;transition:transform .15s ease,background .15s ease}
+body.v2 .v2-root .v2-pill.v2-dark{background:var(--ink);color:var(--ivory)}
+body.v2 .v2-root .v2-pill.v2-dark:hover{background:var(--terracotta)}
+body.v2 .v2-root .v2-pill.v2-light{background:#fff;border:1px solid var(--line)}
+body.v2 .v2-root .v2-pill.v2-light:hover{border-color:var(--ink)}
+body.v2 .v2-root .v2-pill.v2-big{padding:15px 26px;font-size:1rem}
+body.v2 .v2-root .v2-pill:active{transform:translateY(1px)}
+body.v2 .v2-root .v2-hero{padding:64px 0 88px}
+body.v2 .v2-root .v2-hero .v2-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+body.v2 .v2-root .v2-eyebrow{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:.82rem;font-weight:600;color:var(--ink-2)}
+body.v2 .v2-root .v2-eyebrow b{padding:3px 10px;border-radius:999px;background:var(--terracotta);color:#fff;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+body.v2 .v2-root h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.6rem,6vw,4.6rem);line-height:1.02;letter-spacing:-.035em;margin:22px 0 20px}
+body.v2 .v2-root .v2-lede{font-size:1.2rem;color:var(--ink-2);max-width:30ch}
+body.v2 .v2-root .v2-cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+body.v2 .v2-root .v2-url{margin-top:28px;display:inline-flex;align-items:center;gap:10px;font-size:.9rem;color:var(--ink-3)}
+body.v2 .v2-root .v2-url code{font:500 .92rem var(--sans);padding:8px 12px;border-radius:10px;background:#fff;border:1px dashed var(--line);color:var(--ink-3)}
+body.v2 .v2-root .v2-url code b{color:var(--terracotta)}
+body.v2 .v2-root .v2-stats{display:flex;gap:36px;margin-top:40px;padding-top:28px;border-top:1px solid var(--line)}
+body.v2 .v2-root .v2-stats div b{display:block;font:600 1.9rem/1 var(--serif);letter-spacing:-.02em}
+body.v2 .v2-root .v2-stats div span{font-size:.85rem;color:var(--ink-3)}
+body.v2 .v2-root .v2-stage{position:relative;display:grid;place-items:center}
+body.v2 .v2-root .v2-stage::before{content:"";position:absolute;inset:6% 4%;border-radius:40px;background:radial-gradient(120% 90% at 30% 20%,#efd9c9 0%,var(--ivory-2) 55%,transparent 75%)}
+body.v2 .v2-root .v2-phone{position:relative;width:300px;border-radius:44px;background:var(--ink);padding:12px;box-shadow:0 40px 80px -30px rgba(24,24,23,.45),0 0 0 1px rgba(0,0,0,.05)}
+body.v2 .v2-root .v2-screen{border-radius:34px;background:var(--ivory-3);padding:26px 18px 22px;min-height:560px}
+body.v2 .v2-root .v2-screen .v2-shared{font-size:.75rem;color:var(--ink-3);text-align:center}
+body.v2 .v2-root .v2-screen h3{font:600 1.6rem/1.1 var(--serif);text-align:center;margin:6px 0 20px;letter-spacing:-.02em}
+body.v2 .v2-root .v2-step{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:#fff;border:1px solid var(--line);margin-bottom:10px}
+body.v2 .v2-root .v2-step .v2-ic{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:#fff;font:600 1rem var(--serif)}
+body.v2 .v2-root .v2-step b{display:block;font-size:.95rem}
+body.v2 .v2-root .v2-step span{font-size:.78rem;color:var(--ink-3)}
+body.v2 .v2-root .v2-step.v2-open{flex-wrap:wrap;border-color:var(--terracotta);box-shadow:0 10px 24px -14px rgba(169,83,60,.6)}
+body.v2 .v2-root .v2-vid{width:100%;aspect-ratio:16/9;border-radius:12px;margin-top:6px;background:linear-gradient(135deg,#3a3935,#181817);display:grid;place-items:center}
+body.v2 .v2-root .v2-vid i{width:0;height:0;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+body.v2 .v2-root .v2-commit{width:100%;text-align:center;padding:11px;border-radius:12px;background:var(--ink);color:var(--ivory);font-weight:600;font-size:.85rem}
+body.v2 .v2-root .v2-c-t{background:var(--terracotta)}
+body.v2 .v2-root .v2-c-g{background:var(--gold)}
+body.v2 .v2-root .v2-c-s{background:var(--sage)}
+body.v2 .v2-root .v2-float{position:absolute;right:-8px;bottom:70px;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:0 20px 40px -20px rgba(24,24,23,.35);font-size:.82rem}
+body.v2 .v2-root .v2-float .v2-dot{width:10px;height:10px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 4px #e3e6dd}
+body.v2 .v2-root .v2-float b{display:block;font-size:.88rem}
+body.v2 .v2-root section{padding:96px 0}
+body.v2 .v2-root .v2-kicker{font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--terracotta)}
+body.v2 .v2-root h2{font:600 clamp(2rem,4vw,3rem)/1.05 var(--serif);letter-spacing:-.03em;margin:12px 0 14px}
+body.v2 .v2-root .v2-sub{color:var(--ink-2);max-width:52ch;font-size:1.08rem}
+body.v2 .v2-root .v2-head{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:44px}
+body.v2 .v2-root .v2-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+body.v2 .v2-root .v2-card{position:relative;overflow:hidden;padding:30px 26px 26px;border-radius:var(--r);background:#fff;border:1px solid var(--line);transition:transform .2s ease,box-shadow .2s ease}
+body.v2 .v2-root .v2-card:hover{transform:translateY(-4px);box-shadow:0 24px 40px -24px rgba(24,24,23,.3)}
+body.v2 .v2-root .v2-card .v2-num{font:600 3.4rem/1 var(--serif);opacity:.14;position:absolute;right:20px;top:14px}
+body.v2 .v2-root .v2-card .v2-ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:#fff;margin-bottom:28px}
+body.v2 .v2-root .v2-card h3{font:600 1.5rem/1.15 var(--serif);letter-spacing:-.02em;margin-bottom:6px}
+body.v2 .v2-root .v2-card p{color:var(--ink-3);font-size:.98rem}
+body.v2 .v2-root .v2-card .v2-go{margin-top:22px;font-weight:600;font-size:.9rem;display:inline-flex;gap:6px}
+body.v2 .v2-root .v2-card:hover .v2-go{color:var(--terracotta)}
+body.v2 .v2-root .v2-split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+body.v2 .v2-root .v2-band{background:var(--ivory-3);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+body.v2 .v2-root .v2-feed{border-radius:var(--r);background:#fff;border:1px solid var(--line);padding:8px;box-shadow:0 30px 60px -40px rgba(24,24,23,.4)}
+body.v2 .v2-root .v2-feed .v2-top{display:flex;justify-content:space-between;padding:12px 14px 10px;font-size:.8rem;color:var(--ink-3)}
+body.v2 .v2-root .v2-feed .v2-top b{color:var(--ink)}
+body.v2 .v2-root .v2-row{display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px}
+body.v2 .v2-root .v2-row+.v2-row{border-top:1px solid var(--ivory-2)}
+body.v2 .v2-root .v2-av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.82rem;color:#fff}
+body.v2 .v2-root .v2-row .v2-who{flex:1}
+body.v2 .v2-root .v2-row .v2-who b{display:block;font-size:.95rem}
+body.v2 .v2-root .v2-row .v2-who span{font-size:.84rem;color:var(--ink-3)}
+body.v2 .v2-root .v2-tag{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:999px}
+body.v2 .v2-root .v2-t1{background:#f3e1da;color:var(--terracotta)}
+body.v2 .v2-root .v2-t2{background:#f1e8d6;color:#8a6a2f}
+body.v2 .v2-root .v2-t3{background:#e3e6dd;color:#4f5546}
+body.v2 .v2-root .v2-checks{list-style:none;padding:0;margin-top:24px;display:grid;gap:12px}
+body.v2 .v2-root .v2-checks li{display:flex;gap:12px;color:var(--ink-2)}
+body.v2 .v2-root .v2-checks li::before{content:"";flex:none;width:22px;height:22px;margin-top:2px;border-radius:50%;background:var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F5F0E7' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-8'/%3E%3C/svg%3E") center/13px no-repeat}
+body.v2 .v2-root .v2-steps5{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:s;position:relative}
+body.v2 .v2-root .v2-steps5::before{content:"";position:absolute;left:10%;right:10%;top:27px;height:2px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px)}
+body.v2 .v2-root .v2-steps5 li{list-style:none;text-align:center;position:relative}
+body.v2 .v2-root .v2-steps5 li i{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 14px;border-radius:50%;background:var(--ivory);border:2px solid var(--ink);font:600 1.3rem var(--serif);font-style:normal}
+body.v2 .v2-root .v2-steps5 li:first-child i{background:var(--ink);color:var(--ivory)}
+body.v2 .v2-root .v2-steps5 b{display:block}
+body.v2 .v2-root .v2-steps5 span{font-size:.85rem;color:var(--ink-3)}
+body.v2 .v2-root .v2-faq{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+body.v2 .v2-root details{padding:20px 22px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+body.v2 .v2-root summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between}
+body.v2 .v2-root summary::after{content:"+";font:500 1.3rem/1 var(--sans);color:var(--terracotta)}
+body.v2 .v2-root details[open] summary::after{content:"–"}
+body.v2 .v2-root details p{margin-top:10px;color:var(--ink-3)}
+body.v2 .v2-root .v2-final{margin:0 max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));border-radius:32px;background:var(--ink);color:var(--ivory);padding:88px 24px;text-align:center;position:relative;overflow:hidden}
+body.v2 .v2-root .v2-final::before{content:"";position:absolute;inset:auto -10% -60% -10%;height:120%;background:radial-gradient(50% 50% at 50% 50%,rgba(169,83,60,.55),transparent 70%)}
+body.v2 .v2-root .v2-final>*{position:relative}
+body.v2 .v2-root .v2-final h2{color:var(--ivory);font-size:clamp(2.2rem,5vw,3.6rem)}
+body.v2 .v2-root .v2-final h2 em{color:#e7a48e}
+body.v2 .v2-root .v2-final p{color:#cfc8bb;margin:0 auto}
+body.v2 .v2-root .v2-final .v2-cta-row{justify-content:center}
+body.v2 .v2-root .v2-final .v2-pill.v2-light{background:transparent;color:var(--ivory);border-color:rgba(245,240,231,.3)}
+body.v2 .v2-root footer{padding:28px 0 40px;font-size:.88rem;color:var(--ink-3)}
+body.v2 .v2-root footer .v2-wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+body.v2 .v2-root footer nav{position:static;background:none;backdrop-filter:none;border:0;display:flex;gap:20px;flex-wrap:wrap}
+@media (max-width:860px){
+body.v2 .v2-root .v2-hero{padding:32px 0 64px}
+body.v2 .v2-root .v2-hero .v2-wrap, body.v2 .v2-root .v2-split{grid-template-columns:1fr;gap:44px}
+body.v2 .v2-root .v2-cards, body.v2 .v2-root .v2-faq{grid-template-columns:1fr}
+body.v2 .v2-root .v2-steps5{grid-template-columns:1fr;gap:18px;text-align:left}
+body.v2 .v2-root .v2-steps5::before{display:none}
+body.v2 .v2-root .v2-steps5 li{display:flex;align-items:center;gap:16px;text-align:left}
+body.v2 .v2-root .v2-steps5 li i{margin:0;width:46px;height:46px;flex:none}
+body.v2 .v2-root nav .v2-wrap{height:auto;flex-wrap:wrap;row-gap:4px;padding-block:10px}
+body.v2 .v2-root .v2-nav-links{order:3;width:100%;margin-top:12px;gap:18px;font-size:.86rem;overflow-x:auto;scrollbar-width:none}
+body.v2 .v2-root .v2-nav-links a:not(.v2-pill){white-space:nowrap;padding-block:4px}
+body.v2 .v2-root .v2-nav-links .v2-pill{position:absolute;top:10px;right:max(24px,env(safe-area-inset-right,0px));padding:8px 14px}
+body.v2 .v2-root nav .v2-wrap{position:relative}
+body.v2 .v2-root section{scroll-margin-top:calc(104px + env(safe-area-inset-top,0px))}
+body.v2 .v2-root section{padding:64px 0}
+body.v2 .v2-root .v2-float{right:0}
+body.v2 .v2-root .v2-stats{gap:24px}
+
+}
+
+/* The animated phone from the old page keeps its own styles; this only
+   gives it a column and centres it. */
+body.v2 .v2-root .v2-demo{display:grid;justify-items:center;gap:14px;max-width:360px;width:100%;margin-inline:auto}
+body.v2 .v2-root .v2-demo .phone-frame{margin:0 auto}
+body.v2 .v2-root .v2-demo .phone-caption{text-align:center;color:var(--ink-3);font-size:.92rem}
+body.v2 .v2-root .endorse{margin:0 0 24px}
