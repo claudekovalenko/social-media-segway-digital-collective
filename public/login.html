@@ -52,15 +52,6 @@
 
       <div id="realAuth" hidden>
         <div id="providerButtons"></div>
-        <p class="or-divider" id="orRow2"><span>or</span></p>
-        <form id="emailForm">
-          <label>Your email
-            <input name="email" type="email" required placeholder="you@example.com" autocomplete="email">
-          </label>
-          <button type="submit">Email me a sign-in link</button>
-          <div class="success" id="sent">Check your email for the sign-in link.</div>
-          <div class="error"></div>
-        </form>
       </div>
 
       <!-- Shown only until the first account exists. -->
@@ -217,13 +208,58 @@
         });
         wrap.appendChild(btn);
       }
-      document.getElementById('orRow2').hidden = !(wrap.children.length);
+    }
+
+    function hasProviders() {
+      return Boolean(auth.url) && document.getElementById('providerButtons').children.length > 0;
     }
 
     let hasAccounts = true;
     let ready = false;
 
+    // Coming back from Google or Apple. Supabase puts the token (or its error)
+    // after the #; take it off the address bar first so it isn't kept in
+    // history or copied along with the link.
+    const returned = new URLSearchParams(location.hash.slice(1));
+    const returnedToken = returned.get('access_token');
+    const returnedError = returned.get('error_description') || returned.get('error');
+    if (returnedToken || returnedError) history.replaceState(null, '', location.pathname + location.search);
+
+    // Check the returned token straight away instead of drawing the sign-in
+    // form first, so a successful sign-in goes directly to the right page.
+    async function finishProviderSignIn(token) {
+      const loading = document.getElementById('loading');
+      loading.textContent = 'Signing you in…';
+      if (!/^[\w.-]+$/.test(token)) return 'That sign-in did not go through. Try again.';
+      let res;
+      try {
+        res = await fetch(API_BASE + '/api/auth/me', {
+          headers: { Authorization: 'Bearer ' + token },
+          signal: AbortSignal.timeout(15000),
+        });
+      } catch {
+        return 'Could not reach the server — try again.';
+      }
+      if (res.ok) {
+        const body = await res.json().catch(() => null);
+        if (body && body.role) { done(token, body.role); return null; }
+        return 'That sign-in did not go through. Try again.';
+      }
+      // Ask who this is, so an email nobody has given access to is told so
+      // here instead of bouncing between pages.
+      const body = await res.json().catch(() => ({}));
+      return body.email
+        ? body.email + ' does not have access to this site yet. Ask an admin to add it, or sign in another way.'
+        : 'That sign-in did not go through. Try again.';
+    }
+
     async function setup() {
+      if (returnedToken) {
+        const problem = await finishProviderSignIn(returnedToken);
+        if (!problem) return;
+        document.getElementById('loading').textContent = 'Loading sign-in options…';
+        setTimeout(() => showAuthError(problem));
+      }
       try {
         const [cfg, status] = await Promise.all([
           fetch(API_BASE + '/api/auth/config').then((r) => r.json()),
@@ -242,31 +278,7 @@
       document.getElementById('toCreate').hidden = true;
       renderProviders();
       showTab(params.get('join') ? 'join' : 'signin');
-
-      // Coming back from Google, Apple, or the emailed link. Supabase puts the
-      // token (or its error) after the #; take it off the address bar first so
-      // it isn't kept in history or copied along with the link.
-      const hash = new URLSearchParams(location.hash.slice(1));
-      const token = hash.get('access_token');
-      const hashError = hash.get('error_description') || hash.get('error');
-      if (token || hashError) history.replaceState(null, '', location.pathname + location.search);
-      if (hashError) return showAuthError(hashError);
-      if (token) {
-        // Ask who this is, so an admin lands on the database and a creator on
-        // their dashboard, and an email nobody has given access to is told so
-        // here instead of bouncing between pages.
-        let res;
-        try {
-          res = await fetch(API_BASE + '/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
-        } catch {
-          return showAuthError('Could not reach the server — try again.');
-        }
-        if (res.ok) return done(token, (await res.json()).role);
-        const body = await res.json().catch(() => ({}));
-        showAuthError(body.email
-          ? body.email + ' does not have access to this site yet. Ask an admin to add it, or sign in another way.'
-          : 'That sign-in did not go through. Try again.');
-      }
+      if (returnedError && !returnedToken) showAuthError(returnedError);
     }
 
     function showAuthError(message) {
@@ -306,49 +318,6 @@
         error.textContent = err.message === 'Failed to fetch'
           ? 'Could not reach the server — try again.' : err.message;
         error.style.display = 'block';
-        btn.disabled = false;
-      }
-    });
-
-    document.getElementById('emailForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const f = e.currentTarget;
-      const error = f.querySelector('.error');
-      const sent = document.getElementById('sent');
-      const btn = f.querySelector('button[type="submit"]');
-      error.style.display = sent.style.display = 'none';
-      // One email per tap: the button comes back only after the answer.
-      btn.disabled = true;
-      try {
-        const res = await fetch(auth.url.replace(/\/+$/, '') + '/auth/v1/otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: auth.anon_key },
-          body: JSON.stringify({
-            email: new FormData(f).get('email').trim(),
-            options: { email_redirect_to: location.origin + location.pathname + (asked ? '?next=' + asked : '') },
-          }),
-        });
-        if (!res.ok) {
-          // Say why: too soon after the last one, or this hour's emails used
-          // up, is not the same as a mistyped address.
-          const body = (await res.json().catch(() => null)) || {};
-          const msg = String(body.msg || body.error_description || body.error || '');
-          const wait = /after (\d+) seconds/.exec(msg);
-          if (res.status === 429) {
-            throw new Error(wait
-              ? `A link was just sent. Wait ${wait[1]} seconds before asking for another.`
-              : 'Too many sign-in emails for now. Check your inbox for one already sent, or try again in an hour.');
-          }
-          throw new Error(res.status === 422 || res.status === 400
-            ? 'Could not send the link — check the address.'
-            : 'Could not send the link right now — try again in a minute.');
-        }
-        sent.style.display = 'block';
-      } catch (err) {
-        error.textContent = err.message === 'Failed to fetch'
-          ? 'Could not reach the sign-in service — try again.' : err.message;
-        error.style.display = 'block';
-      } finally {
         btn.disabled = false;
       }
     });
@@ -441,8 +410,8 @@
       for (const t of document.querySelectorAll('.tab')) t.classList.toggle('on', t.dataset.tab === which);
       document.getElementById('passwordForm').hidden = join || signUp;
       document.getElementById('createForm').hidden = join || !signUp;
-      document.getElementById('realAuth').hidden = join || signUp || !auth.magic_link;
-      document.getElementById('orRow').hidden = join || signUp || !auth.magic_link;
+      document.getElementById('realAuth').hidden = join || signUp || !hasProviders();
+      document.getElementById('orRow').hidden = join || signUp || !hasProviders();
       // The very first account owns the database; later ones need an invite.
       document.getElementById('createNote').hidden = hasAccounts;
       document.getElementById('approvalNote').hidden = true;

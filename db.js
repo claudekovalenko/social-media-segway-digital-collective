@@ -585,5 +585,8 @@ export async function emailFromToken(env, token) {
   });
   if (!res.ok) return null;
   const user = await res.json();
-  return user?.email || null;
+  // Access is granted by email, so only an address Supabase has confirmed
+  // (Google/Apple, or a clicked link) may count.
+  if (!user?.email || !user.email_confirmed_at) return null;
+  return user.email;
 }
