@@ -26,6 +26,7 @@
       <span class="auth-mark" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
       <h1>Digital <em>Collective</em></h1>
       <p class="hero-sub" id="why">Sign in to your dashboard.</p>
+      <div class="error" id="authError" style="overflow-wrap:anywhere"></div>
     </header>
 
     <div class="tab-row" id="tabs">
@@ -242,10 +243,36 @@
       renderProviders();
       showTab(params.get('join') ? 'join' : 'signin');
 
-      // Coming back from Google, Apple, or the emailed link.
+      // Coming back from Google, Apple, or the emailed link. Supabase puts the
+      // token (or its error) after the #; take it off the address bar first so
+      // it isn't kept in history or copied along with the link.
       const hash = new URLSearchParams(location.hash.slice(1));
       const token = hash.get('access_token');
-      if (token) done(token, null);
+      const hashError = hash.get('error_description') || hash.get('error');
+      if (token || hashError) history.replaceState(null, '', location.pathname + location.search);
+      if (hashError) return showAuthError(hashError);
+      if (token) {
+        // Ask who this is, so an admin lands on the database and a creator on
+        // their dashboard, and an email nobody has given access to is told so
+        // here instead of bouncing between pages.
+        let res;
+        try {
+          res = await fetch(API_BASE + '/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
+        } catch {
+          return showAuthError('Could not reach the server — try again.');
+        }
+        if (res.ok) return done(token, (await res.json()).role);
+        const body = await res.json().catch(() => ({}));
+        showAuthError(body.email
+          ? body.email + ' does not have access to this site yet. Ask an admin to add it, or sign in another way.'
+          : 'That sign-in did not go through. Try again.');
+      }
+    }
+
+    function showAuthError(message) {
+      const box = document.getElementById('authError');
+      box.textContent = message;
+      box.style.display = 'block';
     }
 
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
