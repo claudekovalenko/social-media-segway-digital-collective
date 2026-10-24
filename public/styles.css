@@ -3432,3 +3432,143 @@ body.ig #providerButtons .btn-google, body.ig #providerButtons .btn-apple {
 #providerButtons .btn-google:disabled, #providerButtons .btn-apple:disabled,
 body.ig #providerButtons .btn-google:disabled, body.ig #providerButtons .btn-apple:disabled { opacity: .6; cursor: progress; }
 #providerButtons svg { flex: none; width: 20px; height: 20px; }
+
+/* ==================================================================
+   DASHBOARDS: share your link, follow up, everyone. Phone first: one
+   column of cards with thumb-sized buttons; two columns on desktop.
+   Inputs stay at 16px so iPhones don't zoom in when one is tapped.
+   ================================================================== */
+body.jpn .pp-share, body.jpn .pp-card, body.jpn .pp-tile {
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.06);
+}
+body.jpn .pp-share { padding: 16px; margin: 4px 0 12px; }
+body.jpn .pp-share-who { display: flex; gap: 12px; align-items: center; min-width: 0; }
+body.jpn .pp-share-who .profile-who { display: flex; flex-direction: column; min-width: 0; }
+body.jpn .pp-share-who .profile-who b { font-size: 1.05rem; }
+body.jpn .pp-share-who .profile-who a { color: var(--terracotta); font-size: 0.9rem; overflow-wrap: anywhere; text-decoration: none; }
+body.jpn .pp-share-actions { display: flex; gap: 8px; margin-top: 14px; }
+body.jpn .pp-btn {
+  flex: 1 1 0; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  font: 600 0.92rem Inter, system-ui, sans-serif; text-decoration: none; cursor: pointer; box-shadow: none;
+}
+body.jpn .pp-btn-main { flex: 2 1 0; background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+body.jpn .pp-btn:hover { border-color: var(--terracotta); }
+body.jpn .pp-btn-main:hover { background: var(--terracotta); border-color: var(--terracotta); color: #fff; }
+body.jpn .pp-hint { font-size: 0.84rem; color: var(--ink-3); margin: 10px 0 0; }
+
+body.jpn .pp-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 8px; }
+body.jpn .pp-tile { padding: 12px; font-size: 0.8rem; line-height: 1.3; color: var(--ink-3); text-decoration: none; }
+body.jpn .pp-tile b { display: block; font-family: Fraunces, Georgia, serif; font-size: 1.7rem; line-height: 1.1; color: var(--ink); margin-bottom: 2px; }
+body.jpn a.pp-tile:first-child b { color: var(--terracotta); }
+
+body.jpn .pp-lede { font-size: 0.9rem; color: var(--ink-3); margin: -4px 0 12px; }
+body.jpn .pp-list { display: grid; gap: 12px; }
+body.jpn .pp-caught-up { background: #fff; border: 1px dashed var(--line); border-radius: 16px; padding: 18px 16px; }
+body.jpn .pp-soon { margin-top: 14px; }
+body.jpn .pp-soon > summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; padding: 6px 0 10px; list-style: none; color: var(--ink-2); }
+body.jpn .pp-soon > summary::-webkit-details-marker { display: none; }
+body.jpn .pp-soon > summary::after { content: ' +'; color: var(--terracotta); }
+body.jpn .pp-soon[open] > summary::after { content: ' –'; }
+
+body.jpn .pp-card { padding: 14px 14px 12px; display: grid; gap: 10px; min-width: 0; }
+body.jpn .pp-card.pp-done { opacity: 0.72; }
+body.jpn .pp-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+body.jpn .pp-who { display: flex; flex-direction: column; min-width: 0; }
+body.jpn .pp-name { font-size: 1.02rem; overflow-wrap: anywhere; }
+body.jpn .pp-meta { font-size: 0.8rem; color: var(--ink-3); }
+body.jpn .pp-steps { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; flex-shrink: 0; max-width: 50%; }
+body.jpn .pp-step { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); white-space: nowrap; }
+body.jpn .pp-step.pp-know_god { background: rgba(169,83,60,0.12); color: var(--terracotta); }
+body.jpn .pp-step.pp-grow_with_god { background: rgba(105,112,94,0.15); color: var(--sage); }
+body.jpn .pp-lines p { font-size: 0.86rem; color: var(--ink-2); margin: 0; overflow-wrap: anywhere; }
+body.jpn .pp-quote { font-style: italic; }
+body.jpn .pp-reach { display: flex; gap: 8px; }
+body.jpn .pp-act {
+  flex: 1 1 0; min-height: 42px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; background: var(--ink); color: var(--ivory); font-weight: 600; font-size: 0.9rem; text-decoration: none;
+}
+body.jpn .pp-act + .pp-act { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+body.jpn .pp-act:hover { background: var(--terracotta); color: #fff; border-color: var(--terracotta); }
+body.jpn .pp-contact { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.78rem; color: var(--ink-3); margin: -2px 0 0; }
+body.jpn .pp-contact span { overflow-wrap: anywhere; }
+body.jpn .pp-due { font-size: 0.82rem; font-weight: 600; color: var(--ink-3); }
+body.jpn .pp-due:empty { display: none; }
+body.jpn .pp-due.due-now { color: var(--terracotta); }
+body.jpn .pp-due.due-soon { color: var(--gold); }
+body.jpn .pp-quick { display: flex; flex-wrap: wrap; gap: 6px; }
+body.jpn .pp-chip {
+  min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  font: 600 0.8rem Inter, system-ui, sans-serif; cursor: pointer; box-shadow: none;
+}
+body.jpn .pp-chip:hover { border-color: var(--terracotta); color: var(--terracotta); }
+body.jpn .pp-chip.pp-go { background: rgba(169,83,60,0.1); border-color: rgba(169,83,60,0.35); color: var(--terracotta); }
+body.jpn .pp-state { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+body.jpn .pp-field { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; font-weight: 600; color: var(--ink-3); letter-spacing: 0.02em; min-width: 0; }
+body.jpn .pp-field select, body.jpn .pp-field input, body.jpn .pp-notes, body.jpn .pp-bar input, body.jpn .pp-bar select {
+  width: 100%; min-width: 0; min-height: 42px; padding: 8px 10px; font: 400 16px Inter, system-ui, sans-serif; margin: 0;
+}
+body.jpn .pp-notes { resize: vertical; min-height: 64px; line-height: 1.4; }
+body.jpn .pp-mark { font-size: 0.78rem; color: var(--sage); min-height: 1em; margin-top: -4px; }
+body.jpn .pp-mark:empty { display: none; }
+body.jpn .pp-mark.pp-bad { color: var(--terracotta); }
+body.jpn .pp-bar { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 0 0 12px; }
+body.jpn .pp-bar select { width: auto; }
+body.jpn .pp-more { width: 100%; min-height: 44px; margin-top: 12px; }
+body.jpn .pp-score { font-size: 0.8rem; color: var(--ink-3); }
+
+@media (max-width: 380px) {
+  body.jpn .pp-state { grid-template-columns: 1fr; }
+  body.jpn .pp-bar { grid-template-columns: 1fr; }
+  body.jpn .pp-bar select { width: 100%; }
+}
+
+/* Desktop: room for two cards side by side. */
+@media (min-width: 900px) {
+  body.jpn.wide .wrap { max-width: 1000px; }
+  body.jpn.wide .pp-list { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  body.jpn.wide .pp-share { display: grid; grid-template-columns: 1fr auto; gap: 8px 20px; align-items: center; }
+  body.jpn.wide .pp-share-actions { margin-top: 0; }
+  body.jpn.wide .pp-share-actions .pp-btn { flex: 0 0 auto; padding: 0 20px; }
+  body.jpn.wide .pp-hint { grid-column: 1 / -1; margin-top: 0; }
+  body.jpn.wide .pp-tiles { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+body.jpn .pp-quick { align-items: center; }
+body.jpn .pp-quick-label { font-size: 0.78rem; font-weight: 600; color: var(--ink-3); margin-right: 2px; }
+body.jpn .pp-card > .pp-go { justify-self: start; }
+body.jpn .pp-rows { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.06); }
+body.jpn .pp-row + .pp-row { border-top: 1px solid var(--ivory-2); }
+body.jpn .pp-row > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; min-height: 56px; }
+body.jpn .pp-row > summary::-webkit-details-marker { display: none; }
+body.jpn .pp-row-who { display: flex; flex-direction: column; min-width: 0; }
+body.jpn .pp-row-who b { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.jpn .pp-row-status { flex-shrink: 0; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); }
+body.jpn .pp-row-status.pp-s-new { background: rgba(169,83,60,0.12); color: var(--terracotta); }
+body.jpn .pp-row-status.pp-s-connected, body.jpn .pp-row-status.pp-s-in_group { background: rgba(105,112,94,0.15); color: var(--sage); }
+body.jpn .pp-row[open] > summary { background: var(--ivory-3); }
+body.jpn .pp-row > .pp-card { border: 0; border-radius: 0; box-shadow: none; border-top: 1px solid var(--ivory-2); }
+@media (min-width: 900px) { body.jpn.wide .pp-rows { display: block; } }
+body.jpn .pp-chip { padding: 0 11px; }
+body.jpn .pp-quick { flex-wrap: nowrap; }
+@media (max-width: 340px) { body.jpn .pp-quick { flex-wrap: wrap; } }
+body.jpn .pp-signed { font-size: 0.82rem; color: var(--ink-3); margin: 0 0 10px; overflow-wrap: anywhere; }
+@media (max-width: 899px) { body.jpn .pp-tiles:has(> :nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+body.jpn .pp-meta, body.jpn .pp-name, body.jpn .pp-row-who .pp-meta { overflow-wrap: anywhere; }
+body.jpn .pp-who { flex: 1 1 auto; }
+body.jpn .pp-step { white-space: normal; }
+body.jpn .pp-earlier { font-size: 0.82rem; color: var(--ink-3); border-left: 2px solid var(--line); padding-left: 8px; margin-top: 4px; }
+body.jpn .pp-warn { color: var(--terracotta); font-weight: 600; }
+body.jpn .pp-chip { min-height: 40px; }
+body.jpn .pp-act { min-height: 44px; }
+body.jpn .pp-notes.pp-unsaved { border-color: var(--gold); }
+body.jpn .pp-unsaved-note { font-size: 0.78rem; color: var(--gold); margin: -4px 0 0; font-weight: 600; }
+body.jpn .pp-link-btn { background: none; border: 0; padding: 4px 2px; min-height: 0; box-shadow: none; color: var(--terracotta); font: 700 0.8rem Inter, system-ui, sans-serif; text-decoration: underline; cursor: pointer; }
+body.jpn .pp-link-btn:hover { background: none; color: var(--ink); }
+body.jpn .pp-noteline { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 26px; margin-top: -4px; }
+body.jpn .pp-noteline .pp-unsaved-note { margin: 0; }
+body.jpn .pp-noteline .pp-mark, body.jpn .pp-noteline .pp-mark:empty { display: block; margin: 0; text-align: right; }
+/* Narrow phones: room for the warning and a failure message on two lines,
+   held from the start so nothing moves when a reply arrives. */
+@media (max-width: 360px) { body.jpn .pp-noteline { min-height: 42px; flex-wrap: wrap; align-content: center; } }
