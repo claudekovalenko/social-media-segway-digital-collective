@@ -29,11 +29,26 @@
     <p class="dir-empty" id="loadError" hidden>Could not reach the server. Refresh to try again.</p>
 
     <div id="dash" hidden>
-      <div class="creator-bar">
-        <span id="whoami"></span>
-        <a href="#" id="signOut">Sign out</a>
+      <p class="pp-signed" id="whoami"></p>
+      <div class="pp-tiles" id="tiles"></div>
+
+      <div id="approvals" hidden>
+        <h3 class="section">Waiting for approval</h3>
+        <div id="applications"></div>
+        <p class="dir-empty" id="appsEmpty" hidden>Nobody is waiting for approval.</p>
       </div>
-      <div class="stat-row" id="stats"></div>
+
+      <h3 class="section" id="followUpTitle">Follow up</h3>
+      <p class="pp-lede">People nobody has reached yet, and anyone whose follow-up day has come, across every creator.</p>
+      <div id="queue"></div>
+      <p class="dir-empty pp-caught-up" id="queueEmpty" hidden>Everyone is caught up. New responses appear here the moment they come in.</p>
+      <details class="pp-soon" id="soonFold" hidden>
+        <summary></summary>
+        <div id="soon"></div>
+      </details>
+
+      <h3 class="section">Everyone</h3>
+      <div id="people"></div>
 
       <h3 class="section">Across the collective</h3>
       <div id="insights"></div>
@@ -232,23 +247,6 @@
 
       </details>
 
-      <h3 class="section">Waiting for approval</h3>
-      <div id="applications"></div>
-      <p class="dir-empty" id="appsEmpty" hidden>Nobody is waiting for approval.</p>
-
-      <h3 class="section">Follow-ups due</h3>
-      <div class="table-scroll"><table id="dueTable">
-        <thead><tr><th>Name</th><th>Email</th><th>Score</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>City</th><th>Creator</th><th>When</th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-      <p class="dir-empty" id="dueEmpty" hidden>Nothing due in the next few days.</p>
-
-      <h3 class="section">Leads</h3>
-      <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>Name</th><th>Email</th><th>Score</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>City</th><th>Creator</th><th>When</th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-
       <details class="fold">
       <summary class="section">Who has access</summary>
       <form class="app-card" id="addAccount">
@@ -305,7 +303,7 @@
   </div>
 
   <script type="module">
-    import { LEAD_STATUS, statusCell, followUpCell, notesCell, saverFor, dueLeads, attachVideoPreview } from './crm.js';
+    import { attachVideoPreview, groupPeople, carryDrafts, needsFollowUp, comingUp, personSaver, mountPeople, mountQueue } from './crm.js';
     import { mountInsights } from './insights.js';
 
     // The dashboard reads live data, so it always talks to the Worker.
@@ -313,24 +311,19 @@
       ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
       : '';
 
-    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Get Connected' };
-    const PATH_NAMES = {
-      join_church: 'Join a local church', start_gathering: 'Start a local gathering',
-      both: 'Both', not_sure: 'Not sure yet',
-    };
     function cell(text) { const td = document.createElement('td'); td.textContent = text ?? ''; return td; }
-    // Lead score from the enrichment pipeline; hover shows the reasons.
+    // Lead score from the enrichment pipeline, shown on each person's card.
     let SCORES = {};
-    function scoreCell(sc) {
-      const td = document.createElement('td');
-      if (!sc || sc.score == null) { td.textContent = '–'; td.title = 'Not scored yet'; return td; }
-      const b = document.createElement('span');
-      b.className = 'score-pill ' + (sc.score >= 60 ? 'hot' : sc.score >= 30 ? 'warm' : 'cold');
-      b.textContent = sc.score;
+    function scoreLine(person) {
+      const sc = SCORES[(person.email || '').toLowerCase()];
+      if (!sc || sc.score == null) return null;
+      const p = document.createElement('p');
+      p.className = 'pp-score';
       let why = []; try { why = JSON.parse(sc.score_reasons || '[]'); } catch {}
-      b.title = [sc.email_status ? 'email ' + sc.email_status : '', sc.dup_of ? 'duplicate of #' + sc.dup_of : '', ...why].filter(Boolean).join('\n');
-      td.appendChild(b);
-      return td;
+      p.textContent = 'Score ' + sc.score + (sc.score >= 60 ? ' (strong)' : sc.score >= 30 ? ' (fair)' : ' (weak)')
+        + (sc.email_status ? ' · email ' + sc.email_status : '') + (sc.dup_of ? ' · may be a duplicate' : '');
+      p.title = why.join('\n');
+      return p;
     }
 
     // ---- the gate -----------------------------------------------------------
@@ -446,32 +439,13 @@
       setTimeout(() => { mark.textContent = ''; }, 8000);
     });
 
-    for (const id of ['signOut', 'navSignOut']) {
+    for (const id of ['navSignOut']) {
       document.getElementById(id).addEventListener('click', (e) => {
         e.preventDefault();
         sessionStorage.removeItem('dc_admin_token');
         sessionStorage.removeItem('dc_admin_key');
         toLogin(false);
       });
-    }
-
-    // One row builder for both the full list and the follow-ups view.
-    function renderLeads(selector, leads) {
-      const tb = document.querySelector(selector);
-      tb.replaceChildren();
-      for (const l of leads) {
-        const tr = document.createElement('tr');
-        const save = saverFor(API_BASE, credentials() || {}, l.id);
-        [l.name, l.email].forEach(v => tr.appendChild(cell(v)));
-        tr.appendChild(scoreCell(SCORES[(l.email || '').toLowerCase()]));
-        tr.appendChild(cell(STEP_NAMES[l.step] || l.step));
-        tr.appendChild(statusCell(l, save));
-        tr.appendChild(followUpCell(l, save));
-        tr.appendChild(notesCell(l, save));
-        [l.city, l.creator_slug, (l.created_at || '').slice(0, 10)]
-          .forEach(v => tr.appendChild(cell(v)));
-        tb.appendChild(tr);
-      }
     }
 
     // Applications waiting on a decision. Approving creates the creator, their
@@ -481,6 +455,7 @@
       wrap.replaceChildren();
       const pending = all.filter(a => a.status === 'pending');
       document.getElementById('appsEmpty').hidden = pending.length > 0;
+      document.getElementById('approvals').hidden = pending.length === 0;
       for (const a of pending) {
         const card = document.createElement('div');
         card.className = 'app-card';
@@ -711,26 +686,66 @@
       }
     });
 
-    function render(data) {
-      const stats = document.getElementById('stats');
-      stats.replaceChildren();
-      const total = document.createElement('div');
-      total.className = 'stat';
-      total.innerHTML = `<b>${data.leads.length}</b>Total leads`;
-      stats.appendChild(total);
-      for (const c of data.counts) {
-        const el = document.createElement('div');
-        el.className = 'stat';
-        el.innerHTML = `<b>${c.n}</b>`;
-        el.appendChild(document.createTextNode(STEP_NAMES[c.step] || c.step));
-        stats.appendChild(el);
-      }
+    // ---- people: who to follow up with, then everyone -------------------------
+    let people = [];
+    function renderPeople(data) {
+      const before = people;
+      people = groupPeople(data.leads);
+      carryDrafts(before, people);
+      const creators = [...new Set(people.flatMap((p) => p.creators))].sort();
+      const opts = {
+        subject: 'Following up',
+        extra: (p) => {
+          const box = document.createElement('div');
+          const by = document.createElement('p');
+          by.textContent = 'Through ' + p.creators.map((c) => (c === 'default' ? 'the collective' : '/' + c)).join(' and ');
+          box.append(by);
+          const sc = scoreLine(p);
+          if (sc) box.append(sc);
+          return box;
+        },
+        rowExtra: (p) => p.creators.filter((c) => c !== 'default').map((c) => '/' + c).join(', '),
+        filters: creators.map((c) => ['creator:' + c, c === 'default' ? 'Through the collective' : 'Through /' + c]),
+        saverFor: (p) => {
+          const save = personSaver(API_BASE, credentials() || {}, p);
+          return async (fields, mark) => { const ok = await save(fields, mark); if (ok) paintCounts(); return ok; };
+        },
+      };
+      const queue = needsFollowUp(people);
+      mountQueue(document.getElementById('queue'), queue, opts);
+      document.getElementById('queueEmpty').hidden = queue.length > 0;
+      const soon = comingUp(people);
+      const fold = document.getElementById('soonFold');
+      fold.hidden = !soon.length;
+      fold.querySelector('summary').textContent = `Coming up this week (${soon.length})`;
+      mountQueue(document.getElementById('soon'), soon, opts);
+      mountPeople(document.getElementById('people'), people, opts);
+      paintCounts(creators.length);
+    }
 
+    let creatorCount = 0;
+    function paintCounts(nCreators) {
+      if (nCreators != null) creatorCount = nCreators;
+      const tile = (n, label, target) => {
+        const t = document.createElement(target ? 'a' : 'div');
+        t.className = 'pp-tile';
+        if (target) t.href = target;
+        const b = document.createElement('b'); b.textContent = n;
+        t.append(b, document.createTextNode(label));
+        return t;
+      };
+      document.getElementById('tiles').replaceChildren(
+        tile(needsFollowUp(people).length, 'to follow up', '#followUpTitle'),
+        tile(comingUp(people).length, 'coming up this week'),
+        tile(people.length, people.length === 1 ? 'person reached' : 'people reached'),
+        tile(creatorCount, creatorCount === 1 ? 'creator with responses' : 'creators with responses'),
+      );
+    }
+
+    function render(data) {
       SCORES = {};
       for (const sc of data.scores || []) if (sc.email) SCORES[sc.email.toLowerCase()] = sc;
-      renderLeads('#leadsTable tbody', data.leads);
-      renderLeads('#dueTable tbody', dueLeads(data.leads));
-      document.getElementById('dueEmpty').hidden = dueLeads(data.leads).length > 0;
+      renderPeople(data);
       const dform = document.getElementById('defaults');
       for (const [key, value] of Object.entries(data.defaults || {})) {
         if (dform.elements[key]) dform.elements[key].value = value || '';

@@ -17,10 +17,11 @@
   <div class="wrap">
     <nav class="site-nav">
       <a class="brand" href="index.html"><svg class="dc-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" fill="none"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Digital Collective</a>
+      <a class="nav-login" href="#" id="signOut">Sign out</a>
     </nav>
     <header class="hero">
-      <h1>Your <em>database</em></h1>
-      <p class="hero-sub">Your part of the Digital Collective database &mdash; the people who came through your link, and where each one is.</p>
+      <h1>Your <em>dashboard</em></h1>
+      <p class="hero-sub">Share your link, then follow up with everyone who responds.</p>
     </header>
 
     <div class="step-card open static" id="pending" hidden>
@@ -30,25 +31,43 @@
     <p class="dir-empty" id="loadError" hidden>Could not reach the server. Refresh to try again.</p>
 
     <div id="dash" hidden>
-      <div class="profile-bar">
-        <span class="cc-ring profile-ring"><img class="cc-photo" id="myPhoto" alt="" hidden><span class="cc-initial" id="myInitial" aria-hidden="true"></span></span>
-        <span class="profile-who">
-          <b id="whoami"></b>
-          <a id="mylink" href="#" target="_blank"></a>
-        </span>
-        <span class="profile-actions stacked">
-          <a class="btn-small go" id="previewLink" href="#" target="_blank">Preview my page</a>
-          <a href="#" id="signOut">Sign out</a>
-        </span>
-      </div>
-      <div class="stat-row" id="stats"></div>
+      <section class="pp-share">
+        <div class="pp-share-who">
+          <span class="cc-ring profile-ring"><img class="cc-photo" id="myPhoto" alt="" hidden><span class="cc-initial" id="myInitial" aria-hidden="true"></span></span>
+          <span class="profile-who">
+            <b id="whoami"></b>
+            <a id="mylink" href="#" target="_blank"></a>
+          </span>
+        </div>
+        <div class="pp-share-actions">
+          <button type="button" class="pp-btn pp-btn-main" id="copyLink">Copy your link</button>
+          <button type="button" class="pp-btn" id="shareLink" hidden>Share</button>
+          <a class="pp-btn" id="previewLink" href="#" target="_blank">Preview</a>
+        </div>
+        <p class="pp-hint">Put it in your bio, your stories and under your videos. Everyone who responds shows up below.</p>
+      </section>
+      <div class="pp-tiles" id="tiles"></div>
       <div class="notice" id="welcome" hidden><span>Your link is live. Put it in your bio and every response comes back here.</span></div>
       <div class="notice" id="verifyNote" hidden><span>Confirm your email so we can send responses your way.</span><button type="button" class="btn-small" id="resendVerify">Resend the email</button></div>
 
-      <h3 class="section">What happened through your link</h3>
+      <h3 class="section" id="followUpTitle">Follow up</h3>
+      <p class="pp-lede">People who haven&rsquo;t heard from you yet, and anyone whose follow-up day has come.</p>
+      <div id="queue"></div>
+      <p class="dir-empty pp-caught-up" id="queueEmpty" hidden>You&rsquo;re all caught up. New responses appear here the moment they come in.</p>
+      <details class="pp-soon" id="soonFold" hidden>
+        <summary></summary>
+        <div id="soon"></div>
+      </details>
+
+      <h3 class="section">Everyone</h3>
+      <div id="people"></div>
+      <p class="aside-link">Everyone here checked the consent box, so you may contact them about the step they took. Please honor opt-outs immediately.</p>
+
+      <h3 class="section">How your link is doing</h3>
       <div id="insights"></div>
 
-      <h3 class="section">Your links</h3>
+      <details class="fold" id="pageFold">
+      <summary class="section">Your page</summary>
       <form class="app-card" id="links">
         <p class="app-meta">What your page shows at each step. Leave anything blank to use the collective&rsquo;s default.</p>
 
@@ -130,6 +149,7 @@
           <span class="crm-saved"></span>
         </div>
       </form>
+      </details>
 
       <details class="fold" id="followupFold" hidden>
       <summary class="section">Your follow-up email</summary>
@@ -156,20 +176,6 @@
         </div>
       </form>
       </details>
-
-      <h3 class="section">Follow-ups due</h3>
-      <div class="table-scroll"><table id="dueTable">
-        <thead><tr><th>Name</th><th>Email</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-      <p class="dir-empty" id="dueEmpty" hidden>Nothing due in the next few days.</p>
-
-      <h3 class="section">Your responses</h3>
-      <div class="table-scroll"><table id="leadsTable">
-        <thead><tr><th>Name</th><th>Email</th><th>Step</th><th>Status</th><th>Follow-up</th><th>Notes</th><th>When</th><th>Phone</th><th>City</th><th>Country</th><th>Path</th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-      <p class="aside-link">Everyone here checked the consent box, so you may contact them about the step they took. Please honor opt-outs immediately.</p>
 
       <details class="fold" id="passwordFold" hidden>
       <summary class="section">Your password</summary>
@@ -198,19 +204,12 @@
   </div>
 
   <script type="module">
-    import { statusCell, followUpCell, notesCell, saverFor, dueLeads, attachVideoPreview } from './crm.js';
+    import { attachVideoPreview, groupPeople, needsFollowUp, comingUp, personSaver, mountPeople, mountQueue } from './crm.js';
     import { mountInsights } from './insights.js';
 
     const API_BASE = location.hostname.endsWith('github.io')
       ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
       : '';
-    const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Get Connected' };
-    const PATH_NAMES = {
-      join_church: 'Join a local church', start_gathering: 'Start a local gathering',
-      both: 'Both', not_sure: 'Not sure yet',
-    };
-
-    function cell(text) { const td = document.createElement('td'); td.textContent = text ?? ''; return td; }
 
     // ---- the gate -----------------------------------------------------------
     // Signing in happens on login.html; this page reads that session.
@@ -265,6 +264,7 @@
       link.href = pageUrl;
       link.textContent = pageUrl.replace(/^https?:\/\//, '');
       document.getElementById('previewLink').href = pageUrl;
+      setUpSharing(pageUrl, data.creator.name || '');
 
       // The same photo their page shows, so this reads as their profile.
       const photo = document.getElementById('myPhoto');
@@ -278,21 +278,6 @@
       } else {
         initial.textContent = ((data.creator.name || '?').trim().charAt(0) || '?').toUpperCase();
         initial.hidden = false;
-      }
-
-      const stats = document.getElementById('stats');
-      stats.replaceChildren();
-      const total = document.createElement('div');
-      total.className = 'stat';
-      const b = document.createElement('b'); b.textContent = data.leads.length;
-      total.append(b, document.createTextNode('Total leads'));
-      stats.appendChild(total);
-      for (const c of data.counts) {
-        const el = document.createElement('div');
-        el.className = 'stat';
-        const n = document.createElement('b'); n.textContent = c.n;
-        el.append(n, document.createTextNode(STEP_NAMES[c.step] || c.step));
-        stats.appendChild(el);
       }
 
       // Fill the link editor with what's set, showing the collective default
@@ -330,25 +315,78 @@
       document.getElementById('followupFold').hidden = !emailOn;
       if (emailOn && data.email_verified === false) document.getElementById('verifyNote').hidden = false;
 
-      renderLeads('#leadsTable tbody', data.leads);
-      renderLeads('#dueTable tbody', dueLeads(data.leads));
-      document.getElementById('dueEmpty').hidden = dueLeads(data.leads).length > 0;
+      renderPeople(data);
     }
 
-    function renderLeads(selector, leads) {
-      const tb = document.querySelector(selector);
-      tb.replaceChildren();
-      for (const l of leads) {
-        const tr = document.createElement('tr');
-        const save = saverFor(API_BASE, credentials() || {}, l.id);
-        [l.name, l.email, STEP_NAMES[l.step] || l.step].forEach(v => tr.appendChild(cell(v)));
-        tr.appendChild(statusCell(l, save));
-        tr.appendChild(followUpCell(l, save));
-        tr.appendChild(notesCell(l, save));
-        [(l.created_at || '').slice(0, 10), l.phone, l.city, l.country, PATH_NAMES[l.path] || l.path]
-          .forEach(v => tr.appendChild(cell(v)));
-        tb.appendChild(tr);
+    // ---- sharing: the link is how people arrive -----------------------------
+    function setUpSharing(url, name) {
+      const copy = document.getElementById('copyLink');
+      copy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          copy.textContent = 'Copied';
+        } catch {
+          // No clipboard access: show the whole address and select it, so it
+          // can be copied by hand.
+          const shown = document.getElementById('mylink');
+          shown.textContent = url;
+          const range = document.createRange();
+          range.selectNodeContents(shown);
+          getSelection().removeAllRanges();
+          getSelection().addRange(range);
+          copy.textContent = 'Press copy';
+        }
+        setTimeout(() => { copy.textContent = 'Copy your link'; }, 2000);
+      });
+      const share = document.getElementById('shareLink');
+      if (navigator.share) {
+        share.hidden = false;
+        share.addEventListener('click', () => {
+          navigator.share({ title: name, text: 'Start here: know God, grow with God.', url }).catch(() => {});
+        });
       }
+    }
+
+    // ---- people: who to follow up with, then everyone -------------------------
+    let people = [];
+    function renderPeople(data) {
+      people = groupPeople(data.leads);
+      const from = data.creator.display_name || data.creator.name || '';
+      const opts = {
+        from, subject: 'Following up' + (from ? ' from ' + from : ''),
+        saverFor: (p) => {
+          const save = personSaver(API_BASE, credentials() || {}, p);
+          return async (fields, mark) => { const ok = await save(fields, mark); if (ok) paintCounts(); return ok; };
+        },
+      };
+      const queue = needsFollowUp(people);
+      mountQueue(document.getElementById('queue'), queue, opts);
+      document.getElementById('queueEmpty').hidden = queue.length > 0;
+      const soon = comingUp(people);
+      const fold = document.getElementById('soonFold');
+      fold.hidden = !soon.length;
+      fold.querySelector('summary').textContent = `Coming up this week (${soon.length})`;
+      mountQueue(document.getElementById('soon'), soon, opts);
+      mountPeople(document.getElementById('people'), people, opts);
+      paintCounts();
+    }
+
+    // The numbers at the top follow every change made on a card.
+    function paintCounts() {
+      const tiles = document.getElementById('tiles');
+      const tile = (n, label, target) => {
+        const t = document.createElement(target ? 'a' : 'div');
+        t.className = 'pp-tile';
+        if (target) t.href = target;
+        const b = document.createElement('b'); b.textContent = n;
+        t.append(b, document.createTextNode(label));
+        return t;
+      };
+      tiles.replaceChildren(
+        tile(needsFollowUp(people).length, 'to follow up', '#followUpTitle'),
+        tile(comingUp(people).length, 'coming up this week'),
+        tile(people.length, people.length === 1 ? 'person reached' : 'people reached'),
+      );
     }
 
     document.getElementById('links').addEventListener('submit', async (e) => {
