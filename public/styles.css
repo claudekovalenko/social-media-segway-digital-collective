@@ -1,6 +1,9 @@
-/* One cohesive system: black base, single lime accent, Space Grotesk.
+/* One cohesive system: black base, single lime accent, the device's own font.
    Hierarchy from scale and space, not decoration. */
 :root {
+  /* One typeface for the whole site: the device's own, as the Instagram app
+     uses (San Francisco on iPhone, Roboto on Android). Change it here only. */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --bg: #0b0b0b;
   --surface: #141414;
   --surface-2: #191919;
@@ -21,7 +24,7 @@
 ::selection { background: var(--lime); color: var(--lime-ink); }
 html { scroll-behavior: smooth; }
 body {
-  font-family: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -1031,7 +1034,7 @@ body.ig::after { display: none; }          /* no aurora, no grain — IG is flat
 body.ig .glow { display: none; }
 
 /* Type: compact, tight, unfussy. */
-body.ig { font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif; }
+body.ig { font-family: var(--font); }
 body.ig .hero h1, body.ig header.hero h1 {
   font-size: clamp(1.9rem, 8vw, 2.5rem); font-weight: 700;
   letter-spacing: -0.045em; line-height: 1.08;
@@ -1253,10 +1256,10 @@ body.ig .ig-btn-wide:hover { background: var(--ig-line); }
    Social, but not an Instagram tribute act.
    ================================================================== */
 
-/* Display type is the serif. Everything functional stays the sans. */
+/* Display type: the same device font as everything else, set heavier. */
 body.ig h1, body.ig h2, body.ig .land-title,
 body.ig .hero h1, body.ig header.hero h1, body.ig .ig-name {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--font);
   font-weight: 600; letter-spacing: -0.015em;
   color: var(--ig-text);
 }
@@ -1275,7 +1278,7 @@ body.ig .hero-sub, body.ig .land-copy {
   font-size: 0.98rem; line-height: 1.65; color: var(--ig-dim);
 }
 body.ig .overline {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font);
   letter-spacing: 0.14em; font-weight: 600; font-size: 0.68rem;
   color: var(--ig-dim);
 }
@@ -1302,7 +1305,7 @@ body.ig .step-card.open {
   box-shadow: 0 10px 34px rgba(0,0,0,0.5);
 }
 body.ig .step-title {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--font);
   font-size: 1.12rem; font-weight: 600; letter-spacing: -0.01em;
 }
 body.ig .step-note { color: var(--ig-dim); line-height: 1.6; }
@@ -1357,7 +1360,7 @@ body.ig .ig-stats span {
   font-size: 12px; color: var(--ig-dim); line-height: 1.2;
 }
 body.ig .ig-stats b {
-  font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600;
+  font-family: var(--font); font-size: 19px; font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -1372,7 +1375,7 @@ body.ig .bs-avatar {
   flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%;
   display: grid; place-items: center; position: relative;
   background: var(--ig-surface-2); color: var(--ig-text);
-  font-family: Fraunces, Georgia, serif; font-size: 1.1rem; font-weight: 600;
+  font-family: var(--font); font-size: 1.1rem; font-weight: 600;
 }
 body.ig .bs-avatar::before {
   content: ''; position: absolute; inset: -3px; border-radius: 50%;
@@ -1410,7 +1413,7 @@ body.ig .bs-note {
    the serif stays a home-page voice. */
 body.journey.ig h1, body.journey.ig h2, body.journey.ig header.hero h1,
 body.journey.ig .hero h1, body.journey.ig .step-title, body.journey.ig .step-head h2 {
-  font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font);
   letter-spacing: -0.02em;
 }
 body.journey.ig header.hero h1, body.journey.ig .hero h1 {
@@ -1798,7 +1801,7 @@ body.ig .section::after, body.ig .prose-body > h2::after {
   background: linear-gradient(90deg, rgba(255,255,255,0.18), transparent);
 }
 body.ig .section {
-  font-family: 'Space Grotesk', system-ui, sans-serif; letter-spacing: 0.02em;
+  font-family: var(--font); letter-spacing: 0.02em;
   text-transform: none; font-size: 0.95rem; font-weight: 600; color: var(--ig-text);
   margin: 26px 0 12px;
 }
@@ -1825,7 +1828,7 @@ body.ig .stat {
   flex: 1; padding: 12px 14px; border-radius: 14px;
   background: rgba(24, 24, 24, 0.55); border: 1px solid rgba(255,255,255,0.10);
 }
-body.ig .stat b { font-family: Fraunces, Georgia, serif; font-size: 1.6rem; color: var(--ig-text); }
+body.ig .stat b { font-family: var(--font); font-size: 1.6rem; color: var(--ig-text); }
 
 /* Tabs, pills and small buttons. */
 body.ig .tab { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: var(--ig-text); border-radius: 999px; }
@@ -2315,7 +2318,7 @@ body.jpn {
     radial-gradient(ellipse 70% 30% at 20% 0%, rgba(169,83,60,0.10), transparent 70%),
     radial-gradient(ellipse 60% 26% at 85% 4%, rgba(178,139,70,0.12), transparent 70%);
   background-repeat: no-repeat; background-size: 100% 800px;
-  font-family: Inter, system-ui, -apple-system, sans-serif; line-height: 1.6;
+  font-family: var(--font); line-height: 1.6;
 }
 body.jpn::before, body.jpn::after, body.jpn .glow { display: none !important; }
 body.jpn ::selection { background: var(--terracotta); color: #fff; }
@@ -2325,7 +2328,7 @@ body.jpn .wrap::before { display: none; }
 /* Type */
 body.jpn h1, body.jpn h2, body.jpn .land-title, body.jpn .hero h1, body.jpn header.hero h1,
 body.jpn .step-head h2, body.jpn .auth-hero h1 {
-  font-family: Fraunces, Georgia, serif; font-weight: 600; letter-spacing: -0.02em; color: var(--ink);
+  font-family: var(--font); font-weight: 600; letter-spacing: -0.02em; color: var(--ink);
 }
 body.jpn header.hero h1, body.jpn .hero h1 {
   font-size: clamp(2.1rem, 8vw, 3rem); line-height: 1.06; margin-bottom: 14px;
@@ -2367,7 +2370,7 @@ body.jpn .hero-url b { color: var(--ink); }
 /* Buttons: ink primary, quiet ghost, terracotta as the accent — never all three */
 body.jpn .btn-primary, body.jpn button[type="submit"], body.jpn .partner-link, body.jpn .ig-btn-wide {
   background: var(--ink); color: var(--ivory); border: 0; border-radius: 12px; font-weight: 600;
-  box-shadow: 0 8px 22px rgba(24,24,23,0.18); font-family: Inter, sans-serif;
+  box-shadow: 0 8px 22px rgba(24,24,23,0.18); font-family: var(--font);
 }
 body.jpn .btn-primary:hover, body.jpn button[type="submit"]:hover:not(:disabled) { background: var(--terracotta); color: #fff; }
 body.jpn .btn-ghost, body.jpn .tab, body.jpn .btn-small, body.jpn .coll-row, body.jpn .ig-btn-wide {
@@ -2385,7 +2388,7 @@ body.jpn .locale-panel, body.jpn .stat, body.jpn #joinCta, body.jpn .gather-help
 }
 body.jpn .journey-list { display: grid; gap: 10px; margin: 16px 0 0; }
 body.jpn .j-row { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; text-decoration: none; }
-body.jpn .j-num { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; font-weight: 600; color: var(--terracotta); line-height: 1; min-width: 34px; }
+body.jpn .j-num { font-family: var(--font); font-size: 1.5rem; font-weight: 600; color: var(--terracotta); line-height: 1; min-width: 34px; }
 body.jpn .j-meta b { display: block; font-size: 1rem; margin-bottom: 2px; }
 body.jpn .j-meta span { font-size: 0.86rem; color: var(--ink-3); }
 
@@ -2395,7 +2398,7 @@ body.jpn .how-list li {
   border-bottom: 1px solid var(--line); align-items: baseline;
 }
 body.jpn .how-list li::before {
-  content: counter(how, decimal-leading-zero); font-family: Fraunces, Georgia, serif;
+  content: counter(how, decimal-leading-zero); font-family: var(--font);
   color: var(--gold); font-weight: 600; font-size: 1.05rem;
 }
 body.jpn .how-list li:last-child { border-bottom: 0; }
@@ -2501,7 +2504,7 @@ body.jpn .cta-row { flex-direction: row; }
    ================================================================== */
 body.ig .jpn-hero { padding: 6px 0 4px; }
 body.ig .jpn-hero h1 {
-  font-family: Fraunces, Georgia, serif; font-size: clamp(1.9rem, 7vw, 2.5rem);
+  font-family: var(--font); font-size: clamp(1.9rem, 7vw, 2.5rem);
   line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 12px;
 }
 body.ig .jpn-hero h1 em {
@@ -2518,7 +2521,7 @@ body.ig .hero-url {
 }
 body.ig .hero-url b { color: var(--ig-text); }
 body.ig .j-num {
-  font-family: Fraunces, Georgia, serif; font-size: 1.35rem; font-weight: 600; line-height: 1; min-width: 36px;
+  font-family: var(--font); font-size: 1.35rem; font-weight: 600; line-height: 1; min-width: 36px;
   background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
 }
 body.ig .j-row { align-items: center; }
@@ -2529,7 +2532,7 @@ body.ig .how-list li {
 }
 body.ig .how-list li::before {
   content: counter(how, decimal-leading-zero); grid-row: 1 / span 2;
-  font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1rem;
+  font-family: var(--font); font-weight: 600; font-size: 1rem;
   background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
 }
 body.ig .how-list li:last-child { border-bottom: 0; }
@@ -2571,10 +2574,10 @@ body.ig .hero-url {
 }
 body.ig .jpn-hero .btn-primary { box-shadow: 0 10px 28px rgba(0,149,246,0.38), inset 0 1px 0 rgba(255,255,255,0.2); }
 body.ig .j-row .j-ring { width: 46px; height: 46px; }
-body.ig .j-row .j-ring i { font-family: Fraunces, Georgia, serif; font-size: 1.05rem; }
+body.ig .j-row .j-ring i { font-family: var(--font); font-size: 1.05rem; }
 body.ig .how-list li::before {
   content: counter(how); display: grid; place-items: center; align-self: start;
-  width: 26px; height: 26px; border-radius: 50%; font-size: 0.78rem; font-family: 'Space Grotesk', sans-serif;
+  width: 26px; height: 26px; border-radius: 50%; font-size: 0.78rem; font-family: var(--font);
   -webkit-text-fill-color: #fff; color: #fff; background: var(--ig-grad);
   box-shadow: 0 0 16px rgba(220,39,67,0.45);
 }
@@ -2670,7 +2673,7 @@ body.ig .how-row::before {
 }
 body.ig .how-row li { display: grid; justify-items: center; gap: 8px; text-align: center; position: relative; z-index: 1; min-width: 0; }
 body.ig .how-row .how-ring { width: 44px; height: 44px; margin: 0; }
-body.ig .how-row .how-ring i { width: auto; height: auto; background: transparent; font-size: 0.98rem; font-family: Fraunces, Georgia, serif; }
+body.ig .how-row .how-ring i { width: auto; height: auto; background: transparent; font-size: 0.98rem; font-family: var(--font); }
 body.ig .how-row li:nth-child(1) .how-ring { box-shadow: 0 0 18px rgba(240,148,51,0.5); }
 body.ig .how-row li:nth-child(2) .how-ring { box-shadow: 0 0 18px rgba(230,104,60,0.45); }
 body.ig .how-row li:nth-child(3) .how-ring { box-shadow: 0 0 18px rgba(220,39,67,0.45); }
@@ -3165,9 +3168,9 @@ body.ig.jpn .site-nav {
 .vid-thumb span { font-size: 0.74rem; color: #9a948a; }
 .vid-thumb:hover span { color: #A9533C; }
 
-/* Arrival without a blink. The headline is the one place the typeface swap
-   shows, so it waits, briefly, for its font before fading in; a timer in the
-   head bounds the wait at under half a second on any connection. */
+/* Arrival without a blink. The headline fades in once the page marks itself
+   ready (html.fonts-in); with the device font there is nothing to download,
+   so the inline script in each page's head sets that at once. */
 html.js .hero h1 { opacity: 0; }
 html.fonts-in .hero h1 { opacity: 1; transition: opacity .32s ease-out; }
 html.js.fonts-in body.journey .hero h1 { animation: none; }
@@ -3279,7 +3282,7 @@ body.ig .phone-frame[data-at="journey"] .ps-journey,
 body.ig .phone-frame[data-at="open"] .ps-journey { opacity: 1; transform: none; }
 
 /* The journey page, in miniature. */
-body.ig .pj-h { margin: 2px 0 0; font-family: Fraunces, Georgia, serif; font-size: 17px; line-height: 1.15; color: #181817; font-weight: 600; }
+body.ig .pj-h { margin: 2px 0 0; font-family: var(--font); font-size: 17px; line-height: 1.15; color: #181817; font-weight: 600; }
 body.ig .pj-h em { font-style: italic; color: #A9533C; }
 body.ig .pj-sub { margin: 4px 0 10px; font-size: 9.5px; color: #8b857b; }
 body.ig .pj-card {
@@ -3411,7 +3414,7 @@ body.ig .phone-frame { cursor: pointer; }
 body.ig #providerButtons .btn-google, body.ig #providerButtons .btn-apple {
   position: relative; display: flex; align-items: center; justify-content: center; gap: 12px;
   width: 100%; min-height: 44px; padding: 11px 18px; border-radius: 12px;
-  font: 600 0.95rem/1.2 Inter, system-ui, -apple-system, sans-serif; letter-spacing: 0;
+  font: 600 0.95rem/1.2 var(--font); letter-spacing: 0;
   cursor: pointer; box-shadow: 0 1px 2px rgba(24,24,23,0.06);
   transition: background-color .15s ease, box-shadow .15s ease, border-color .15s ease;
 }
@@ -3451,7 +3454,7 @@ body.jpn .pp-share-actions { display: flex; gap: 8px; margin-top: 14px; }
 body.jpn .pp-btn {
   flex: 1 1 0; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
   padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink);
-  font: 600 0.92rem Inter, system-ui, sans-serif; text-decoration: none; cursor: pointer; box-shadow: none;
+  font: 600 0.92rem var(--font); text-decoration: none; cursor: pointer; box-shadow: none;
 }
 body.jpn .pp-btn-main { flex: 2 1 0; background: var(--ink); color: var(--ivory); border-color: var(--ink); }
 body.jpn .pp-btn:hover { border-color: var(--terracotta); }
@@ -3460,7 +3463,7 @@ body.jpn .pp-hint { font-size: 0.84rem; color: var(--ink-3); margin: 10px 0 0; }
 
 body.jpn .pp-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 8px; }
 body.jpn .pp-tile { padding: 12px; font-size: 0.8rem; line-height: 1.3; color: var(--ink-3); text-decoration: none; }
-body.jpn .pp-tile b { display: block; font-family: Fraunces, Georgia, serif; font-size: 1.7rem; line-height: 1.1; color: var(--ink); margin-bottom: 2px; }
+body.jpn .pp-tile b { display: block; font-family: var(--font); font-size: 1.7rem; line-height: 1.1; color: var(--ink); margin-bottom: 2px; }
 body.jpn a.pp-tile:first-child b { color: var(--terracotta); }
 
 body.jpn .pp-lede { font-size: 0.9rem; color: var(--ink-3); margin: -4px 0 12px; }
@@ -3500,14 +3503,14 @@ body.jpn .pp-due.due-soon { color: var(--gold); }
 body.jpn .pp-quick { display: flex; flex-wrap: wrap; gap: 6px; }
 body.jpn .pp-chip {
   min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink);
-  font: 600 0.8rem Inter, system-ui, sans-serif; cursor: pointer; box-shadow: none;
+  font: 600 0.8rem var(--font); cursor: pointer; box-shadow: none;
 }
 body.jpn .pp-chip:hover { border-color: var(--terracotta); color: var(--terracotta); }
 body.jpn .pp-chip.pp-go { background: rgba(169,83,60,0.1); border-color: rgba(169,83,60,0.35); color: var(--terracotta); }
 body.jpn .pp-state { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 body.jpn .pp-field { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; font-weight: 600; color: var(--ink-3); letter-spacing: 0.02em; min-width: 0; }
 body.jpn .pp-field select, body.jpn .pp-field input, body.jpn .pp-notes, body.jpn .pp-bar input, body.jpn .pp-bar select {
-  width: 100%; min-width: 0; min-height: 42px; padding: 8px 10px; font: 400 16px Inter, system-ui, sans-serif; margin: 0;
+  width: 100%; min-width: 0; min-height: 42px; padding: 8px 10px; font: 400 16px var(--font); margin: 0;
 }
 body.jpn .pp-notes { resize: vertical; min-height: 64px; line-height: 1.4; }
 body.jpn .pp-mark { font-size: 0.78rem; color: var(--sage); min-height: 1em; margin-top: -4px; }
@@ -3564,7 +3567,7 @@ body.jpn .pp-chip { min-height: 40px; }
 body.jpn .pp-act { min-height: 44px; }
 body.jpn .pp-notes.pp-unsaved { border-color: var(--gold); }
 body.jpn .pp-unsaved-note { font-size: 0.78rem; color: var(--gold); margin: -4px 0 0; font-weight: 600; }
-body.jpn .pp-link-btn { background: none; border: 0; padding: 4px 2px; min-height: 0; box-shadow: none; color: var(--terracotta); font: 700 0.8rem Inter, system-ui, sans-serif; text-decoration: underline; cursor: pointer; }
+body.jpn .pp-link-btn { background: none; border: 0; padding: 4px 2px; min-height: 0; box-shadow: none; color: var(--terracotta); font: 700 0.8rem var(--font); text-decoration: underline; cursor: pointer; }
 body.jpn .pp-link-btn:hover { background: none; color: var(--ink); }
 body.jpn .pp-noteline { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 26px; margin-top: -4px; }
 body.jpn .pp-noteline .pp-unsaved-note { margin: 0; }
@@ -3577,7 +3580,7 @@ body.jpn .pp-noteline .pp-mark, body.jpn .pp-noteline .pp-mark:empty { display: 
    every bar (terracotta, checked for contrast on white); text stays in ink. */
 body.jpn .insight-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 6px; }
 body.jpn .eng-rate { margin: 0; padding: 14px; min-width: 0; }
-body.jpn .eng-rate b { font-family: Inter, system-ui, sans-serif; font-weight: 700; font-size: 1.9rem; letter-spacing: -0.02em; line-height: 1.1; }
+body.jpn .eng-rate b { font-family: var(--font); font-weight: 700; font-size: 1.9rem; letter-spacing: -0.02em; line-height: 1.1; }
 body.jpn .eng-rate span { display: block; font-weight: 600; font-size: 0.88rem; color: var(--ink); margin-top: 4px; }
 body.jpn .eng-rate small { display: block; font-size: 0.76rem; color: var(--ink-3); margin-top: 2px; line-height: 1.35; }
 body.jpn .eng-small { grid-column: 1 / -1; margin: 2px 0 0; }
@@ -3601,7 +3604,7 @@ body.jpn.wide #insights .insight-tiles { max-width: none; }
    many carried on; the days are thin lines; sources are a plain list. */
 body.jpn .eng-path { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
 body.jpn .eng-step { display: grid; grid-template-columns: 74px 1fr auto; align-items: baseline; gap: 10px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
-body.jpn .eng-step b { font: 700 1.35rem/1 Inter, system-ui, sans-serif; letter-spacing: -0.02em; color: var(--ink); }
+body.jpn .eng-step b { font: 700 1.35rem/1 var(--font); letter-spacing: -0.02em; color: var(--ink); }
 body.jpn .eng-step span { font-size: 0.9rem; font-weight: 600; color: var(--ink); }
 body.jpn .eng-step small { font-size: 0.78rem; color: var(--ink-3); white-space: nowrap; }
 body.jpn .eng-step.eng-last { border-color: var(--terracotta); box-shadow: 0 8px 20px -14px rgba(169,83,60,0.6); }
@@ -3611,7 +3614,7 @@ body.jpn .eng-on::before { content: '↓'; position: absolute; left: 10px; color
 body.jpn .eng-days { display: grid; gap: 12px; margin-top: 18px; }
 body.jpn .eng-chart { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 10px; }
 body.jpn .eng-chart-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.86rem; color: var(--ink-2); margin-bottom: 6px; }
-body.jpn .eng-chart-head b { font: 700 1.15rem Inter, system-ui, sans-serif; color: var(--ink); }
+body.jpn .eng-chart-head b { font: 700 1.15rem var(--font); color: var(--ink); }
 body.jpn .eng-plot { position: relative; height: 90px; outline: none; border-radius: 6px; cursor: crosshair; }
 body.jpn .eng-plot:focus-visible { box-shadow: 0 0 0 2px var(--line); }
 body.jpn .eng-svg { display: block; width: 100%; height: 100%; overflow: visible; }
@@ -3651,7 +3654,7 @@ body.jpn .cr-main { display: flex; align-items: center; gap: 14px; padding: 16px
 body.jpn .cr-av { width: 56px; height: 56px; flex: none; font-size: 1.1rem; }
 body.jpn .cr-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 body.jpn .cr-text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 160px; }
-body.jpn .cr-text b { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1.15rem; letter-spacing: -0.01em; line-height: 1.2; overflow-wrap: anywhere; }
+body.jpn .cr-text b { font-family: var(--font); font-weight: 600; font-size: 1.15rem; letter-spacing: -0.01em; line-height: 1.2; overflow-wrap: anywhere; }
 body.jpn .cr-text span { font-size: 0.86rem; color: var(--ink-3); overflow-wrap: anywhere; }
 body.jpn .cr-topic { overflow-wrap: anywhere; max-width: 100%; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); }
 body.jpn .cr-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: auto; padding: 10px 16px 12px; border-top: 1px solid var(--ivory-2); }
@@ -3665,3 +3668,7 @@ body.jpn .cr-example { opacity: 0.7; }
   body.jpn .wrap:has(#creatorList) { max-width: 880px; }
   #creatorList { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 }
+
+/* With the device font, emphasis in a heading is colour alone, as in the
+   Instagram app: no italic. */
+body.jpn :is(h1, h2, h3) em, body.jpn .hero h1 em { font-style: normal; }
