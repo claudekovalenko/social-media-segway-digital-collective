@@ -11,8 +11,9 @@
   <meta property="og:image" content="icons/icon-512.png">
   <meta name="theme-color" content="#F5F0E7">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <script>(function(){var d=document.documentElement;d.classList.add("js");window.__fontsIn=function(){d.classList.add("fonts-in")};window.__fontsIn()})();</script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="home.css">
@@ -160,10 +161,10 @@
 <section id="faq" style="padding-top:0"><div class="v2-wrap">
   <div class="v2-head"><div><p class="v2-kicker">Questions</p><h2>Good to know</h2></div></div>
   <div class="v2-faq">
-    <details open><summary>What does it cost?</summary><p>Nothing. Free for creators.</p></details>
-    <details><summary>Who owns the responses?</summary><p>You see everyone who came through your link. The collective follows up and reports the totals.</p></details>
-    <details><summary>Can I use my own videos?</summary><p>Yes. The three steps are fixed; what's inside them is yours.</p></details>
-    <details><summary>Do I stay independent?</summary><p>Yes. Your platform, your voice. Creators sign our Statement of Faith.</p></details>
+    <details open><summary>What does it cost?</summary><div class="v2-answer"><p>Nothing. There&rsquo;s no fee to join, no charge for each person who responds, and no ads on your page. You keep posting the way you already do; the only change is one link in your bio.</p></div></details>
+    <details><summary>Who owns the responses?</summary><div class="v2-answer"><p>Everyone who responds through your link appears on your dashboard: their name, the step they took and how they asked to be reached, so you can follow up yourself. The Digital Collective team can see responses too, so we can help make sure nobody is missed.</p><p>People only appear if they ticked the box agreeing to be contacted, and anyone who unsubscribes stops getting emails from us.</p></div></details>
+    <details><summary>Can I use my own videos?</summary><div class="v2-answer"><p>Yes. Each of the three steps can show your own YouTube video, and you can point its button at your own course, church finder or website. Anything you leave empty uses the collective&rsquo;s videos, so your page works from day one and you can make it yours over time.</p></div></details>
+    <details><summary>Do I stay independent?</summary><div class="v2-answer"><p>Yes. Your accounts, your audience and your voice stay yours. We never post on your accounts or change what you make.</p><p>What we ask is that every creator agrees with our <a href="beliefs.html">Statement of Faith</a>, so the people who take a step hear the same gospel whichever creator they came through.</p></div></details>
   </div>
 </div></section>
 
@@ -191,6 +192,38 @@
         .catch(() => {});
     }</script>
   <script src="reveal.js" defer></script>
+  <script>
+    // Questions open and close smoothly: the answer's height eases between
+    // closed and open instead of jumping. With reduced motion, they just toggle.
+    (function () {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || !Element.prototype.animate) return;
+      document.querySelectorAll('.v2-faq details').forEach(function (d) {
+        d.addEventListener('toggle', function () { if (!d.getAnimations().length) wantOpen = d.open; });
+        var summary = d.querySelector('summary');
+        var anim = null;
+        var wantOpen = d.open;
+        summary.addEventListener('click', function (e) {
+          e.preventDefault();
+          var start = d.offsetHeight;
+          // The state the reader asked for, not d.open, which stays true
+          // while a closing animation runs: a click mid-close reopens.
+          var opening = !wantOpen;
+          wantOpen = opening;
+          if (anim) anim.cancel();
+          if (opening) d.open = true;
+          var end = opening ? d.scrollHeight + (d.offsetHeight - d.clientHeight) : summary.offsetHeight + (d.offsetHeight - d.clientHeight) +
+            parseFloat(getComputedStyle(d).paddingTop) + parseFloat(getComputedStyle(d).paddingBottom);
+          d.style.overflow = 'hidden';
+          anim = d.animate({ height: [start + 'px', end + 'px'] }, { duration: 280, easing: 'cubic-bezier(.2,.7,.2,1)' });
+          var answer = d.querySelector('.v2-answer');
+          if (answer) answer.animate({ opacity: opening ? [0, 1] : [1, 0], transform: opening ? ['translateY(-4px)', 'none'] : ['none', 'translateY(-4px)'] }, { duration: 240, easing: 'ease-out' });
+          anim.onfinish = function () { if (!wantOpen) d.open = false; d.style.overflow = ''; anim = null; };
+          anim.oncancel = function () { d.style.overflow = ''; };
+        });
+      });
+    })();
+  </script>
+
   <script>
     // The phone walks through what a visitor actually does: sees the bio,
     // taps the link, lands on the journey page, opens a step. It runs only
