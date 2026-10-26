@@ -218,9 +218,9 @@ async function run(base) {
   await check('creators directory lists creators with a page link', async (page) => {
     await go(page, '/creators.html');
     await page.waitForTimeout(1000);
-    const rows = page.locator('.dir-row');
+    const rows = page.locator('.cr-card');
     expect(await rows.count() >= 1, 'no creators listed');
-    const href = await rows.first().getAttribute('href') || await rows.first().locator('a').first().getAttribute('href');
+    const href = await rows.first().locator('a.cr-main, a.cr-go').first().getAttribute('href');
     expect(href, 'creator row has no link');
   });
 

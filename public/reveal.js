@@ -9,7 +9,7 @@
 // the fonts land, and a timer reveals anything still hidden no matter what.
 (() => {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const candidates = document.querySelectorAll('.land-section, .prose-body > h2, .prose-body > p, .dir-row, .app-card');
+  const candidates = document.querySelectorAll('.land-section, .prose-body > h2, .prose-body > p, .dir-row, .cr-card, .app-card');
   const below = [...candidates].filter((el) => el.getBoundingClientRect().top > innerHeight * 0.92);
   if (!below.length) return;
   for (const el of below) el.classList.add('reveal');
