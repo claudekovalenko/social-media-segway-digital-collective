@@ -8,8 +8,9 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#F5F0E7">
-  <link rel="icon" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
 <body class="landing ig jpn">
   <div class="glow" aria-hidden="true"></div>
@@ -376,39 +377,18 @@
     // sense, so it starts there.
     let creating = false;
 
-    // Glide the card between the two tabs' heights so the page below moves
-    // smoothly instead of jumping.
-    function glideHeight(card, change) {
-      const h0 = Math.round(card.getBoundingClientRect().height);
-      change();
-      const h1 = Math.round(card.getBoundingClientRect().height);
-      if (h0 === h1) return;
-      card.style.overflow = 'hidden';
-      card.style.height = h0 + 'px';
-      void card.offsetHeight;
-      card.style.transition = 'height .42s cubic-bezier(.22,.8,.18,1)';
-      card.style.height = h1 + 'px';
-      // Always release the height, even where transitions never run (reduced
-      // motion, or a browser that skips the animation) — otherwise the card
-      // stays frozen at the old height with its content cut off.
-      let released = false;
-      const release = () => {
-        if (released) return;
-        released = true;
-        card.style.height = ''; card.style.transition = ''; card.style.overflow = '';
-      };
-      card.addEventListener('transitionend', release, { once: true });
-      setTimeout(release, 600);
+    function fadeIn(el) {
+      if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches || !el.animate) return;
+      el.animate({ opacity: [0, 1], transform: ['translateY(4px)', 'none'] }, { duration: 200, easing: 'ease-out' });
     }
 
     function showTab(which) {
       if (!ready) return;
-      const card = document.querySelector('.step-card.static');
-      if (card && !card.dataset.gliding) {
-        glideHeight(card, () => { card.dataset.gliding = '1'; showTab(which); delete card.dataset.gliding; });
-        return;
-      }
       const join = which === 'join';
+      // The new form takes its own height at once and fades in; animating the
+      // card's height instead showed an empty card collapsing after the swap.
+      const shown = join ? document.getElementById('joinForm') : null;
+      fadeIn(shown || document.querySelector('.step-card.static'));
       const signUp = !hasAccounts || creating;
       document.getElementById('joinForm').hidden = !join;
       document.getElementById('tabs').classList.toggle('join', join);

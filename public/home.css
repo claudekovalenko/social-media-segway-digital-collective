@@ -346,3 +346,13 @@ body.v2 .v2-root h1, body.v2 .v2-root h2, body.v2 .v2-root .v2-card h3, body.v2 
 body.v2 .v2-root em{font-style:normal}
 body.v2 .v2-root h1 em, body.v2 .v2-root h2 em{font-weight:700}
 
+
+/* Questions: answers read as a short paragraph or two, with room to breathe. */
+body.v2 .v2-root .v2-answer{padding-top:2px}
+body.v2 .v2-root .v2-answer p{margin-top:10px;color:var(--ink-3);line-height:1.6}
+body.v2 .v2-root .v2-answer p + p{margin-top:8px}
+body.v2 .v2-root .v2-answer a{color:var(--terracotta);text-decoration:underline;text-underline-offset:2px}
+body.v2 .v2-root .v2-faq{align-items:start}
+body.v2 .v2-root summary{transition:color .2s ease}
+body.v2 .v2-root summary:hover{color:var(--terracotta)}
+@media (max-width:640px){ body.v2 .v2-root .v2-answer{padding:0 18px 16px} body.v2 .v2-root .v2-answer p{margin-top:0;padding:0} body.v2 .v2-root .v2-answer p + p{margin-top:8px} }
