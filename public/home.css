@@ -5,7 +5,7 @@ body.v2{
   --ink:#181817; --ink-2:#3a3935; --ink-3:#6b6962;
   --ivory:#F5F0E7; --ivory-2:#EDE6D9; --ivory-3:#FBF8F2; --line:#DCD3C3;
   --terracotta:#A9533C; --gold:#B28B46; --sage:#69705E;
-  --serif:Fraunces, Georgia, serif; --sans:Inter, system-ui, -apple-system, sans-serif;
+  --serif:var(--font); --sans:var(--font);
   --r:18px;
 }
 :where(body.v2 .v2-root, body.v2 .v2-root *){box-sizing:border-box;margin:0}
@@ -339,3 +339,10 @@ body.v2 .v2-root .v2-demo .bs-grid, body.v2 .v2-root .v2-demo .pj-back{display:n
   body.v2 .v2-root details p{margin:0;padding:0 18px 16px}
   body.v2 .v2-root footer nav a{display:inline-block;padding:8px 0}
 }
+
+/* The device font, set once in styles.css (--font): headings a step bolder
+   than the old serif needed, and emphasis by colour, not italic. */
+body.v2 .v2-root h1, body.v2 .v2-root h2, body.v2 .v2-root .v2-card h3, body.v2 .v2-root .v2-screen h3{font-weight:700}
+body.v2 .v2-root em{font-style:normal}
+body.v2 .v2-root h1 em, body.v2 .v2-root h2 em{font-weight:700}
+
