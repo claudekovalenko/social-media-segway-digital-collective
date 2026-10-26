@@ -90,50 +90,60 @@
         return;
       }
       for (const c of shown) {
-        // The whole row opens their page; a small pill on the right opens
-        // their Instagram (or wherever their back link points).
-        const row = document.createElement(c.example ? 'div' : 'a');
-        row.className = 'dir-row' + (c.example ? ' dir-example' : '');
-        if (!c.example) row.href = '/' + encodeURIComponent(c.slug);
+        // One card per creator: the top opens their page; the foot holds a
+        // plain link to their page and, when they have one, their Instagram.
+        const card = document.createElement('div');
+        card.className = 'cr-card' + (c.example ? ' cr-example' : '');
+        const main = document.createElement(c.example ? 'div' : 'a');
+        main.className = 'cr-main';
+        if (!c.example) main.href = '/' + encodeURIComponent(c.slug);
 
-        // An initial in a ring, like a profile row.
         const av = document.createElement('span');
-        av.className = 'dir-av';
+        av.className = 'dir-av cr-av';
         if (c.avatar_url) {
           const img = document.createElement('img');
-          img.src = c.avatar_url; img.alt = c.name || c.handle || '';
+          img.src = c.avatar_url; img.alt = '';
           img.addEventListener('error', () => { img.remove(); av.textContent = initialOf(c); }, { once: true });
           av.appendChild(img);
         } else {
           av.textContent = initialOf(c);
         }
-        const left = document.createElement('span');
-        left.className = 'dir-person';
+        const text = document.createElement('span');
+        text.className = 'cr-text';
+        const name = document.createElement('b');
+        name.textContent = c.name || c.handle || '';
         const handle = document.createElement('span');
-        handle.className = 'dir-handle';
-        handle.textContent = (c.handle || '').startsWith('@') ? c.handle : '@' + (c.handle || '');
-        const name = document.createElement('span');
-        name.className = 'dir-name';
-        name.textContent = c.name || '';
-        left.append(handle, name);
-
-        const tag = document.createElement('span');
-        tag.className = 'dir-tag';
-        tag.textContent = c.topic || 'creator';
-
-        row.append(av, left, tag);
-        if (!c.example && c.back_url) {
-          const wrap = document.createElement('div');
-          wrap.className = 'dir-wrap';
-          const ig = document.createElement('a');
-          ig.className = 'dir-ig';
-          ig.href = c.back_url; ig.target = '_blank'; ig.rel = 'noopener';
-          ig.textContent = /instagram\.com/i.test(c.back_url) ? 'Instagram' : 'Their page';
-          wrap.append(row, ig);
-          list.appendChild(wrap);
-        } else {
-          list.appendChild(row);
+        handle.textContent = c.handle ? ((c.handle.startsWith('@') ? '' : '@') + c.handle) : '';
+        text.append(name, handle);
+        main.append(av, text);
+        // A topic only when the creator gave one; no filler label.
+        if (c.topic) {
+          const tag = document.createElement('span');
+          tag.className = 'cr-topic';
+          tag.textContent = c.topic;
+          main.append(tag);
         }
+        card.append(main);
+
+        if (!c.example) {
+          const foot = document.createElement('div');
+          foot.className = 'cr-foot';
+          const go = document.createElement('a');
+          go.className = 'cr-go';
+          go.href = '/' + encodeURIComponent(c.slug);
+          go.textContent = 'Walk their journey';
+          foot.append(go);
+          if (/^https?:\/\//i.test(c.back_url || '')) {
+            const ig = document.createElement('a');
+            ig.className = 'cr-ig';
+            ig.href = c.back_url; ig.target = '_blank'; ig.rel = 'noopener';
+            ig.textContent = /instagram\.com/i.test(c.back_url) ? 'Instagram' : 'Their page';
+            ig.setAttribute('aria-label', ig.textContent + ' (opens in a new tab)');
+            foot.append(ig);
+          }
+          card.append(foot);
+        }
+        list.appendChild(card);
       }
     }
 
