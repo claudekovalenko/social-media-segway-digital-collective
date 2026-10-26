@@ -454,7 +454,7 @@ export function platform(DB) {
       if (from) { w.push('created_at >= ?'); a.push(from); }
       if (to) { w.push('created_at < ?'); a.push(to); }
       const where = w.length ? 'WHERE ' + w.join(' AND ') : '';
-      const [ev, sessions, resp, bySource, byCreator, byDay, comms] = await Promise.all([
+      const [ev, sessions, resp, bySource, byCreator, byDay, comms, uniq] = await Promise.all([
         DB.prepare(`SELECT event, section, COUNT(*) AS n FROM events ${where} GROUP BY event, section`).bind(...a).all(),
         DB.prepare(`SELECT COUNT(DISTINCT session_id) AS n FROM events ${where}`).bind(...a).first(),
         DB.prepare(`SELECT response_type, COUNT(*) AS n FROM responses ${where} GROUP BY response_type`).bind(...a).all(),
@@ -465,8 +465,10 @@ export function platform(DB) {
         DB.prepare(`SELECT substr(created_at, 1, 10) AS day,
             SUM(CASE WHEN event = 'page_view' THEN 1 ELSE 0 END) AS views,
             SUM(CASE WHEN event = 'form_submit' THEN 1 ELSE 0 END) AS submits
-            FROM events ${where} GROUP BY day ORDER BY day DESC LIMIT 60`).bind(...a).all(),
+            FROM events ${where} GROUP BY day ORDER BY day DESC LIMIT 366`).bind(...a).all(),
         DB.prepare(`SELECT status, COUNT(*) AS n FROM communications ${where} GROUP BY status`).bind(...a).all(),
+        // How many different visitors did each thing (a second play is not a second person).
+        DB.prepare(`SELECT event, section, COUNT(DISTINCT session_id) AS n FROM events ${where} GROUP BY event, section`).bind(...a).all(),
       ]);
       const count = (event, section) => (ev.results || [])
         .filter((r) => r.event === event && (section ? r.section === section : true))
@@ -483,6 +485,7 @@ export function platform(DB) {
         grow_click: count('media_click', 'grow') + count('outbound_click', 'grow'),
         connect_open: count('section_open', 'connect'),
         connect_click: count('outbound_click', 'connect'),
+        form_submits: count('form_submit'),
         reported_commitments: responses.reported_commitment || 0,
         discipleship_starts: responses.discipleship_start || 0,
         church_connections: responses.church_connection || 0,
@@ -492,6 +495,26 @@ export function platform(DB) {
         view_to_know: pct(funnel.know_open, sess),
         know_to_submit: pct(funnel.know_submit, funnel.know_open),
         view_to_commitment: pct(funnel.reported_commitments, sess),
+      };
+      // Visitors, not clicks: each step counts a visitor once.
+      const people = (event, section) => Number((uniq.results || [])
+        .find((r) => r.event === event && (r.section || null) === section)?.n || 0);
+      funnel.visitors = {
+        visited: sess,
+        opened_know: people('section_open', 'know'),
+        watched_know: people('media_click', 'know'),
+        opened_form: people('form_open', 'know'),
+        sent_form: people('form_submit', 'know'),
+        opened_grow: people('section_open', 'grow'),
+      };
+      // No denominator, no rate (null, shown as a dash); and no cap, so odd
+      // data shows as it is instead of a tidy but wrong 100%.
+      const rate = (x, y) => (y ? Math.round((x / y) * 1000) / 10 : null);
+      funnel.rates = {
+        opened: rate(funnel.visitors.opened_know, sess),
+        watched: rate(funnel.visitors.watched_know, sess),
+        responded: rate(funnel.visitors.sent_form, sess),
+        kept_going: rate(funnel.discipleship_starts, funnel.reported_commitments),
       };
       return {
         funnel, responses, by_source: bySource.results || [],

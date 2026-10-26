@@ -3572,3 +3572,96 @@ body.jpn .pp-noteline .pp-mark, body.jpn .pp-noteline .pp-mark:empty { display: 
 /* Narrow phones: room for the warning and a failure message on two lines,
    held from the start so nothing moves when a reply arrives. */
 @media (max-width: 360px) { body.jpn .pp-noteline { min-height: 42px; flex-wrap: wrap; align-content: center; } }
+
+/* Engagement: rates, the step-by-step funnel, two daily charts. One hue for
+   every bar (terracotta, checked for contrast on white); text stays in ink. */
+body.jpn .insight-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 6px; }
+body.jpn .eng-rate { margin: 0; padding: 14px; min-width: 0; }
+body.jpn .eng-rate b { font-family: Inter, system-ui, sans-serif; font-weight: 700; font-size: 1.9rem; letter-spacing: -0.02em; line-height: 1.1; }
+body.jpn .eng-rate span { display: block; font-weight: 600; font-size: 0.88rem; color: var(--ink); margin-top: 4px; }
+body.jpn .eng-rate small { display: block; font-size: 0.76rem; color: var(--ink-3); margin-top: 2px; line-height: 1.35; }
+body.jpn .eng-small { grid-column: 1 / -1; margin: 2px 0 0; }
+body.jpn .eng-tip { position: absolute; bottom: calc(100% + 6px); transform: translateX(-50%); background: var(--ink); color: var(--ivory); border-radius: 8px; padding: 5px 9px; font-size: 0.75rem; white-space: nowrap; pointer-events: none; z-index: 2; }
+body.jpn .eng-tip b { font-size: 0.9rem; margin-right: 6px; }
+body.jpn .eng-table { margin-top: 12px; font-size: 0.86rem; }
+body.jpn .eng-table summary { cursor: pointer; color: var(--terracotta); font-weight: 600; }
+body.jpn .eng-table table { width: 100%; margin-top: 8px; border-collapse: collapse; }
+body.jpn .eng-table td { padding: 6px 4px; border-bottom: 1px solid var(--ivory-2); }
+body.jpn .eng-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+@media (min-width: 900px) {
+  body.jpn.wide .insight-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  body.jpn.wide #insights { display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px 32px; }
+  body.jpn.wide #insights > .insight-bar, body.jpn.wide #insights > .insight-tiles { grid-column: 1 / -1; }
+}
+body.jpn #insights .insight-tiles { width: 100%; }
+body.jpn #insights .eng-rate { max-width: none; flex: none; width: auto; }
+body.jpn.wide #insights .insight-tiles { max-width: none; }
+
+/* Engagement, second pass: no bars. The path is five numbers joined by how
+   many carried on; the days are thin lines; sources are a plain list. */
+body.jpn .eng-path { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
+body.jpn .eng-step { display: grid; grid-template-columns: 74px 1fr auto; align-items: baseline; gap: 10px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+body.jpn .eng-step b { font: 700 1.35rem/1 Inter, system-ui, sans-serif; letter-spacing: -0.02em; color: var(--ink); }
+body.jpn .eng-step span { font-size: 0.9rem; font-weight: 600; color: var(--ink); }
+body.jpn .eng-step small { font-size: 0.78rem; color: var(--ink-3); white-space: nowrap; }
+body.jpn .eng-step.eng-last { border-color: var(--terracotta); box-shadow: 0 8px 20px -14px rgba(169,83,60,0.6); }
+body.jpn .eng-step.eng-last b { color: var(--terracotta); }
+body.jpn .eng-on { font-size: 0.74rem; color: var(--ink-3); padding-left: 24px; position: relative; line-height: 1.2; }
+body.jpn .eng-on::before { content: '↓'; position: absolute; left: 10px; color: var(--terracotta); }
+body.jpn .eng-days { display: grid; gap: 12px; margin-top: 18px; }
+body.jpn .eng-chart { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 10px; }
+body.jpn .eng-chart-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.86rem; color: var(--ink-2); margin-bottom: 6px; }
+body.jpn .eng-chart-head b { font: 700 1.15rem Inter, system-ui, sans-serif; color: var(--ink); }
+body.jpn .eng-plot { position: relative; height: 90px; outline: none; border-radius: 6px; cursor: crosshair; }
+body.jpn .eng-plot:focus-visible { box-shadow: 0 0 0 2px var(--line); }
+body.jpn .eng-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+body.jpn .eng-line { fill: none; stroke: #A9533C; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+body.jpn .eng-area { fill: #A9533C; opacity: 0.1; }
+body.jpn .eng-base { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+body.jpn .eng-cross { position: absolute; top: 0; bottom: 6px; width: 1px; background: var(--ink-3); opacity: 0.5; pointer-events: none; }
+body.jpn .eng-dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #A9533C; box-shadow: 0 0 0 2px #fff; pointer-events: none; }
+body.jpn .eng-axis { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-3); margin-top: 6px; }
+body.jpn .eng-sources { list-style: none; padding: 0; margin: 6px 0 0; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+body.jpn .eng-sources li { display: grid; grid-template-columns: minmax(0, 1fr) auto 52px; gap: 12px; align-items: baseline; padding: 11px 14px; font-size: 0.9rem; }
+body.jpn .eng-sources li + li { border-top: 1px solid var(--ivory-2); }
+body.jpn .eng-sources span { overflow-wrap: anywhere; }
+body.jpn .eng-sources small { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+body.jpn .eng-sources b { text-align: right; font-variant-numeric: tabular-nums; }
+@media (min-width: 900px) {
+  body.jpn.wide #insights { display: block; }
+  body.jpn.wide .eng-path { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; align-items: stretch; }
+  body.jpn.wide .eng-on { display: none; }
+  body.jpn.wide .eng-step { grid-template-columns: 1fr; gap: 4px; border-radius: 0; border-left-width: 0; padding: 16px; position: relative; }
+  body.jpn.wide .eng-step:first-child { border-left-width: 1px; border-radius: 14px 0 0 14px; }
+  body.jpn.wide .eng-step.eng-last { border-radius: 0 14px 14px 0; border-left-width: 1px; }
+  body.jpn.wide .eng-step b { font-size: 1.7rem; }
+  body.jpn.wide .eng-days { grid-template-columns: 1fr 1fr; }
+  body.jpn.wide .eng-sources { max-width: 560px; }
+}
+body.jpn .eng-step-on { display: none; font-style: normal; font-size: 0.74rem; color: var(--ink-3); }
+@media (min-width: 900px) { body.jpn.wide .eng-step-on { display: block; } }
+
+/* Creators: one card each. Photo, name and handle open their page; the foot
+   holds the page link and their Instagram. Two across on wider screens. */
+#creatorList { display: grid; gap: 12px; }
+body.jpn .cr-card { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.06); transition: border-color .18s ease, box-shadow .18s ease; overflow: hidden; }
+body.jpn .cr-card:hover { border-color: #C9A98C; box-shadow: 0 10px 28px rgba(24,24,23,0.10); }
+body.jpn .cr-main { display: flex; align-items: center; gap: 14px; padding: 16px 16px 14px; text-decoration: none; color: var(--ink); flex-wrap: wrap; }
+body.jpn .cr-av { width: 56px; height: 56px; flex: none; font-size: 1.1rem; }
+body.jpn .cr-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+body.jpn .cr-text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 160px; }
+body.jpn .cr-text b { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1.15rem; letter-spacing: -0.01em; line-height: 1.2; overflow-wrap: anywhere; }
+body.jpn .cr-text span { font-size: 0.86rem; color: var(--ink-3); overflow-wrap: anywhere; }
+body.jpn .cr-topic { overflow-wrap: anywhere; max-width: 100%; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); }
+body.jpn .cr-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: auto; padding: 10px 16px 12px; border-top: 1px solid var(--ivory-2); }
+body.jpn .cr-go { font-size: 0.86rem; font-weight: 600; color: var(--ink); text-decoration: none; padding: 6px 0; }
+body.jpn .cr-go::after { content: ' →'; color: var(--terracotta); }
+body.jpn .cr-go:hover { color: var(--terracotta); }
+body.jpn .cr-ig { font-size: 0.8rem; font-weight: 600; color: var(--terracotta); text-decoration: none; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(169,83,60,0.3); }
+body.jpn .cr-ig:hover { background: rgba(169,83,60,0.08); }
+body.jpn .cr-example { opacity: 0.7; }
+@media (min-width: 720px) {
+  body.jpn .wrap:has(#creatorList) { max-width: 880px; }
+  #creatorList { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+}

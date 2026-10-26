@@ -386,6 +386,7 @@
         tile(needsFollowUp(people).length, 'to follow up', '#followUpTitle'),
         tile(comingUp(people).length, 'coming up this week'),
         tile(people.length, people.length === 1 ? 'person reached' : 'people reached'),
+        tile(people.length ? Math.round((people.filter((p) => p.status !== 'new').length / people.length) * 100) + '%' : '–', 'followed up by you'),
       );
     }
 
