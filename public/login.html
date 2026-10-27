@@ -387,9 +387,9 @@
       const join = which === 'join';
       // The new form takes its own height at once and fades in; animating the
       // card's height instead showed an empty card collapsing after the swap.
-      const shown = join ? document.getElementById('joinForm') : null;
-      fadeIn(shown || document.querySelector('.step-card.static'));
       const signUp = !hasAccounts || creating;
+      const shown = document.getElementById(join ? 'joinForm' : (signUp ? 'createForm' : 'passwordForm'));
+      if (shown.hidden) fadeIn(shown);
       document.getElementById('joinForm').hidden = !join;
       document.getElementById('tabs').classList.toggle('join', join);
       for (const t of document.querySelectorAll('.tab')) t.classList.toggle('on', t.dataset.tab === which);
