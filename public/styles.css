@@ -23,6 +23,9 @@
 [hidden] { display: none !important; }
 ::selection { background: var(--lime); color: var(--lime-ink); }
 html { scroll-behavior: smooth; }
+/* Keep the scrollbar's space reserved, so a page that grows past the viewport
+   (the Join form on the sign-in page) doesn't shift sideways when it appears. */
+html { scrollbar-gutter: stable; }
 body {
   font-family: var(--font);
   background: var(--bg);
