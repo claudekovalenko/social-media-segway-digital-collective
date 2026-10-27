@@ -379,17 +379,17 @@
 
     function fadeIn(el) {
       if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches || !el.animate) return;
-      el.animate({ opacity: [0, 1], transform: ['translateY(4px)', 'none'] }, { duration: 200, easing: 'ease-out' });
+      el.animate({ opacity: [0, 1] }, { duration: 180, easing: 'ease-out' });
     }
 
     function showTab(which) {
       if (!ready) return;
       const join = which === 'join';
-      // The new form takes its own height at once and fades in; animating the
-      // card's height instead showed an empty card collapsing after the swap.
+      // The new form takes its own height at once; animating the card's
+      // height instead showed an empty card collapsing after the swap.
       const signUp = !hasAccounts || creating;
       const shown = document.getElementById(join ? 'joinForm' : (signUp ? 'createForm' : 'passwordForm'));
-      if (shown.hidden) fadeIn(shown);
+      const wasHidden = shown.hidden;
       document.getElementById('joinForm').hidden = !join;
       document.getElementById('tabs').classList.toggle('join', join);
       for (const t of document.querySelectorAll('.tab')) t.classList.toggle('on', t.dataset.tab === which);
@@ -397,12 +397,15 @@
       document.getElementById('createForm').hidden = join || !signUp;
       document.getElementById('realAuth').hidden = join || signUp || !hasProviders();
       document.getElementById('orRow').hidden = join || signUp || !hasProviders();
+      // Fade only once the form is showing, and only when it was hidden: a
+      // fade that also moves would make the fields visibly shift.
+      if (wasHidden) fadeIn(shown);
       // The very first account owns the database; later ones need an invite.
       document.getElementById('createNote').hidden = hasAccounts;
       document.getElementById('approvalNote').hidden = true;
       document.getElementById('toSignIn').hidden = !hasAccounts;
       document.getElementById('why').textContent = join
-        ? 'Tell us about your work and we\u2019ll be in touch.'
+        ? 'Tell us about your work.'
         : (signUp
           ? 'No account exists yet — create the owner account for the database.'
           : 'Sign in to your dashboard.');
