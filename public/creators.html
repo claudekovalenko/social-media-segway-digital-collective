@@ -6,21 +6,28 @@
   <title>Creators &mdash; Digital Collective</title>
   <script>(function(){var d=document.documentElement;d.classList.add("js");window.__fontsIn=function(){d.classList.add("fonts-in")};window.__fontsIn()})();</script>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="home.css">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#F5F0E7">
   <link rel="icon" href="favicon.ico" sizes="32x32">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
-<body class="landing ig jpn">
+<body class="landing ig jpn v2 v2-inner">
   <div class="glow" aria-hidden="true"></div>
-  <div class="wrap">
-    <nav class="site-nav">
-      <a class="brand" href="index.html"><svg class="dc-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" fill="none"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Digital Collective</a>
-      <a class="nav-login" href="login.html?join=1">Join</a>
-    </nav>
+  <div class="v2-root">
+<nav><div class="v2-wrap">
+  <a class="v2-brand" href="index.html"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></i>Digital Collective</a>
+  <div class="v2-nav-links">
+    <a href="index.html#steps">How it works</a><a href="creators.html" class="v2-on">Creators</a><a href="index.html#faq">Questions</a>
+    <a class="v2-pill v2-light" href="login.html?join=1">Join</a>
+  </div>
+</div></nav>
+<main class="v2-page">
+<div class="wrap">
 
     <header class="hero">
+      <p class="v2-kicker">The collective</p>
       <h1>The <em>creators</em></h1>
       <p class="hero-sub">Everyone building discipleship on their platform. Tap a creator to walk their journey.</p>
     </header>
@@ -46,13 +53,13 @@
         <a class="btn-ghost" href="beliefs.html">What we believe</a>
       </div>
     </section>
-
-    <footer>
-      <a href="index.html">Digital Collective</a> &middot;
-      <a href="beliefs.html">Statement of Faith</a> &middot;
-      <a href="privacy.html">Privacy &amp; Consent</a>
-    </footer>
   </div>
+</main>
+<footer><div class="v2-wrap">
+  <span>&copy; Digital Collective</span>
+  <nav><a href="creators.html">Creators</a><a href="beliefs.html">Statement of Faith</a><a href="privacy.html">Privacy &amp; Consent</a><a href="terms.html">Terms</a><a href="mailto:hello@digitalcollective.com">Contact</a></nav>
+</div></footer>
+</div>
 
   <script>
     const API_BASE = location.hostname.endsWith('github.io')

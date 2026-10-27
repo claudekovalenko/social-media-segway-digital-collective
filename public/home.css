@@ -356,3 +356,26 @@ body.v2 .v2-root .v2-faq{align-items:start}
 body.v2 .v2-root summary{transition:color .2s ease}
 body.v2 .v2-root summary:hover{color:var(--terracotta)}
 @media (max-width:640px){ body.v2 .v2-root .v2-answer{padding:0 18px 16px} body.v2 .v2-root .v2-answer p{margin-top:0;padding:0} body.v2 .v2-root .v2-answer p + p{margin-top:8px} }
+
+/* Every other page wears the home page's header and footer (body.v2-inner):
+   the content between them keeps its own styles from styles.css. */
+body.v2.v2-inner .v2-page{padding:36px 0 80px}
+body.v2.v2-inner .wrap::before{display:none}
+body.v2.v2-inner .hero{padding:0;margin:0 0 32px;text-align:left}
+body.v2.v2-inner .hero h1{font:700 clamp(2.2rem,4.5vw,3.3rem)/1.05 var(--sans);letter-spacing:-.03em;margin:10px 0 12px;text-wrap:balance}
+body.v2.v2-inner .hero h1 em{color:var(--terracotta);font-style:normal;font-weight:700}
+body.v2.v2-inner .hero-sub{font-size:1.06rem;line-height:1.5;color:var(--ink-2);max-width:52ch}
+body.v2.v2-inner .auth-hero{text-align:center}
+body.v2.v2-inner .auth-hero .hero-sub{margin-inline:auto}
+body.v2.v2-inner .auth-mark{display:none}
+body.v2.v2-inner .prose-body a, body.v2.v2-inner .land-copy a, body.v2.v2-inner .aside-link a{color:var(--terracotta);text-decoration:underline;text-underline-offset:2px}
+body.v2.v2-inner .prose-body{font-size:1rem;line-height:1.65;color:var(--ink-2)}
+body.v2.v2-inner .prose-body h2{font-size:1.25rem;font-weight:700;letter-spacing:-.01em;color:var(--ink);margin-top:22px}
+body.v2.v2-inner .prose-body strong{color:var(--ink)}
+body.v2.v2-inner .draft-note{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--ink-3);font-size:.9rem}
+body.v2.v2-inner footer nav{position:static}
+@media (max-width:640px){
+  body.v2.v2-inner .v2-page{padding:20px 0 56px}
+  body.v2.v2-inner .hero{margin-bottom:24px}
+  body.v2.v2-inner .hero h1{font-size:2.1rem}
+}
