@@ -44,6 +44,8 @@
         </div>
         <p class="pp-hint">Put it in your bio, your stories and under your videos. Everyone who responds shows up below.</p>
       </section>
+      <h3 class="section pp-clicks-title">What people clicked</h3>
+      <div id="clicks"></div>
       <div class="pp-tiles" id="tiles"></div>
       <div class="notice" id="welcome" hidden><span>Your link is live. Put it in your bio and every response comes back here.</span></div>
       <div class="notice" id="verifyNote" hidden><span>Confirm your email so we can send responses your way.</span><button type="button" class="btn-small" id="resendVerify">Resend the email</button></div>
@@ -297,6 +299,7 @@
       // Analytics, scoped to this creator by the server.
       const headersNow = credentials() || {};
       mountInsights(document.getElementById('insights'), {
+        top: document.getElementById('clicks'),
         apiBase: API_BASE, headers: headersNow,
         fetchJson: async (path) => { const r = await fetch(API_BASE + path, { headers: headersNow }); if (!r.ok) throw new Error('x'); return r.json(); },
       });
