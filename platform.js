@@ -454,7 +454,7 @@ export function platform(DB) {
       if (from) { w.push('created_at >= ?'); a.push(from); }
       if (to) { w.push('created_at < ?'); a.push(to); }
       const where = w.length ? 'WHERE ' + w.join(' AND ') : '';
-      const [ev, sessions, resp, bySource, byCreator, byDay, comms, uniq] = await Promise.all([
+      const [ev, sessions, resp, bySource, byCreator, byDay, comms, uniq, clicked] = await Promise.all([
         DB.prepare(`SELECT event, section, COUNT(*) AS n FROM events ${where} GROUP BY event, section`).bind(...a).all(),
         DB.prepare(`SELECT COUNT(DISTINCT session_id) AS n FROM events ${where}`).bind(...a).first(),
         DB.prepare(`SELECT response_type, COUNT(*) AS n FROM responses ${where} GROUP BY response_type`).bind(...a).all(),
@@ -469,6 +469,9 @@ export function platform(DB) {
         DB.prepare(`SELECT status, COUNT(*) AS n FROM communications ${where} GROUP BY status`).bind(...a).all(),
         // How many different visitors did each thing (a second play is not a second person).
         DB.prepare(`SELECT event, section, COUNT(DISTINCT session_id) AS n FROM events ${where} GROUP BY event, section`).bind(...a).all(),
+        // Visitors who followed the link a step offers (the course, the church
+        // finder); video plays are media_click and counted separately.
+        DB.prepare(`SELECT section, COUNT(DISTINCT session_id) AS n FROM events ${where ? where + " AND" : "WHERE"} event = 'outbound_click' GROUP BY section`).bind(...a).all(),
       ]);
       const count = (event, section) => (ev.results || [])
         .filter((r) => r.event === event && (section ? r.section === section : true))
@@ -499,6 +502,7 @@ export function platform(DB) {
       // Visitors, not clicks: each step counts a visitor once.
       const people = (event, section) => Number((uniq.results || [])
         .find((r) => r.event === event && (r.section || null) === section)?.n || 0);
+      const clickedIn = (section) => Number((clicked.results || []).find((r) => r.section === section)?.n || 0);
       funnel.visitors = {
         visited: sess,
         opened_know: people('section_open', 'know'),
@@ -506,6 +510,9 @@ export function platform(DB) {
         opened_form: people('form_open', 'know'),
         sent_form: people('form_submit', 'know'),
         opened_grow: people('section_open', 'grow'),
+        opened_connect: people('section_open', 'connect'),
+        clicked_grow: clickedIn('grow'),
+        clicked_connect: clickedIn('connect'),
       };
       // No denominator, no rate (null, shown as a dash); and no cap, so odd
       // data shows as it is instead of a tidy but wrong 100%.
