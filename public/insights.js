@@ -181,8 +181,11 @@ function ranges() {
 
 // Mounts the analytics block into `root`. `fetchJson(path)` is provided by the
 // page so the right credentials go on the request.
-export function mountInsights(root, { fetchJson, apiBase, creator = null, canExport = true, headers = {} }) {
+// With `top`, the range picker and a strip of per-step counts go there (the
+// head of the creator dashboard) and the detail stays in `root`.
+export function mountInsights(root, { fetchJson, apiBase, creator = null, canExport = true, headers = {}, top = null }) {
   root.replaceChildren();
+  if (top) top.replaceChildren();
   const bar = el('div', 'insight-bar');
   const sel = el('select', 'insight-range');
   for (const [key, , label] of ranges()) { const o = el('option', null, label); o.value = key; sel.appendChild(o); }
@@ -209,7 +212,18 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
   const tiles = el('div', 'stat-row insight-tiles');
   const funnel = el('div', 'funnel');
   const sources = el('div', 'sources');
-  root.append(bar, tiles, funnel, sources);
+  const clicks = el('div', 'pp-tiles pp-clicks');
+  if (top) { top.append(bar, clicks); root.append(tiles, funnel, sources); }
+  else root.append(bar, tiles, funnel, sources);
+
+  // One tile per step: how many people opened it, and how many went on to
+  // click what it offers.
+  function clickTile(n, label, sub) {
+    const t = el('div', 'pp-tile');
+    t.append(el('b', null, typeof n === 'number' ? n.toLocaleString() : String(n)), document.createTextNode(label));
+    if (sub) t.append(el('small', null, sub));
+    return t;
+  }
 
   function query(range, creator) {
     const from = ranges().find((r) => r[0] === range)?.[1];
@@ -220,16 +234,37 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
     return s ? '?' + s : '';
   }
 
+  // Each refresh gets a number; a reply from an earlier, slower request is
+  // dropped, so a quick change of range never shows the wrong numbers.
+  let latest = 0;
   async function refresh() {
+    const mine = ++latest;
     tiles.replaceChildren(tile('…', 'Loading'));
+    if (top) clicks.replaceChildren(clickTile('…', 'Loading'));
     funnel.replaceChildren(); sources.replaceChildren();
     let d;
     try { d = await fetchJson('/api/analytics' + query(sel.value, creator)); }
-    catch (err) { tiles.replaceChildren(el('p', 'dir-empty', 'Could not load analytics.')); return; }
+    catch (err) {
+      if (mine !== latest) return;
+      tiles.replaceChildren(el('p', 'dir-empty', 'Could not load analytics.'));
+      if (top) clicks.replaceChildren(el('p', 'dir-empty', 'Could not load the counts.'));
+      return;
+    }
+    if (mine !== latest) return;
     const f = d.funnel;
     // Older servers send only click counts; read anything missing as 0.
     const raw = f.visitors || { visited: f.sessions, opened_know: f.know_open, watched_know: 0, opened_form: f.know_form_open, sent_form: f.know_submit };
-    const v = Object.fromEntries(['visited', 'opened_know', 'watched_know', 'opened_form', 'sent_form', 'opened_grow'].map((k) => [k, Number(raw[k] || 0)]));
+    const v = Object.fromEntries(['visited', 'opened_know', 'watched_know', 'opened_form', 'sent_form', 'opened_grow', 'opened_connect', 'clicked_grow', 'clicked_connect'].map((k) => [k, Number(raw[k] || 0)]));
+    if (top) {
+      const people = (n) => n.toLocaleString() + (n === 1 ? ' person' : ' people');
+      clicks.replaceChildren(
+        clickTile(v.visited, 'opened your page'),
+        clickTile(v.opened_know, 'opened Know God', people(v.watched_know) + ' played the video'),
+        clickTile(v.opened_grow, 'opened Grow with God', people(v.clicked_grow) + ' went to the course'),
+        clickTile(v.opened_connect, 'opened Get Connected', people(v.clicked_connect) + ' followed the link'),
+        clickTile(v.sent_form, 'responded', 'sent the form'),
+      );
+    }
     f.discipleship_starts = Number(f.discipleship_starts || 0);
     f.reported_commitments = Number(f.reported_commitments || 0);
     const r = f.rates || {};

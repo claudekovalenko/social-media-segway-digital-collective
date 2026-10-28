@@ -3675,3 +3675,10 @@ body.jpn .cr-example { opacity: 0.7; }
 /* With the device font, emphasis in a heading is colour alone, as in the
    Instagram app: no italic. */
 body.jpn :is(h1, h2, h3) em, body.jpn .hero h1 em { font-style: normal; }
+
+/* The clicks strip at the head of the creator dashboard: one tile per step,
+   the range picker above it, and the follow-up tiles under it. */
+body.jpn .pp-clicks-title { margin-top: 18px; }
+body.jpn #clicks .insight-bar { margin: 0 0 10px; }
+body.jpn .pp-clicks { margin-bottom: 18px; }
+body.jpn .pp-tile small { display: block; margin-top: 4px; font-size: 0.72rem; color: var(--ink-3); }
