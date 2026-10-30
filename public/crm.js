@@ -197,6 +197,8 @@ export function groupPeople(leads) {
       key, rows, id: latest.id,
       name: latest.name, email: latest.email,
       phone: pick('phone'), city: pick('city'), country: pick('country'), path: pick('path'),
+      // When they ticked the box agreeing to be contacted (the earliest response).
+      consent_at: rows.map((r) => r.consent_at).filter(Boolean).sort()[0] || null,
       message: pick('message'), creator_slug: latest.creator_slug,
       creators: latest.creator_slug ? [latest.creator_slug] : [],
       steps: [...new Set(rows.map((r) => r.step))],
@@ -590,7 +592,7 @@ export function mountPeople(root, people, opts) {
 
 // A one-line entry that opens into the full card when tapped, so a long list
 // stays short on a phone. The card is built on first open.
-function personRow(person, opts) {
+export function personRow(person, opts) {
   const row = el('details', 'pp-row');
   const sum = el('summary');
   const left = el('span', 'pp-row-who');
