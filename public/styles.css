@@ -3682,3 +3682,33 @@ body.jpn .pp-clicks-title { margin-top: 18px; }
 body.jpn #clicks .insight-bar { margin: 0 0 10px; }
 body.jpn .pp-clicks { margin-bottom: 18px; }
 body.jpn .pp-tile small { display: block; margin-top: 4px; font-size: 0.72rem; color: var(--ink-3); }
+
+/* The three steps at the head of the creator dashboard: one card each, with
+   the people who left their details one tap away. */
+body.jpn .pp-overview { font-size: 0.86rem; color: var(--ink-3); margin: 0 0 10px; }
+body.jpn .pp-steps3 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0 0 18px; }
+body.jpn .pp-step-people { min-width: 0; }
+body.jpn .pp-step-card { gap: 8px; }
+body.jpn .pp-step-card h4 { margin: 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+body.jpn .pp-step-card .pp-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-3); flex: none; }
+body.jpn .pp-sc-know .pp-dot { background: var(--terracotta); }
+body.jpn .pp-sc-grow .pp-dot { background: var(--sage); }
+body.jpn .pp-sc-connect .pp-dot { background: var(--gold); }
+body.jpn .pp-big { display: flex; align-items: baseline; gap: 8px; }
+body.jpn .pp-big b { font-size: 1.9rem; line-height: 1.1; color: var(--ink); }
+body.jpn .pp-big span { font-size: 0.82rem; color: var(--ink-3); }
+body.jpn .pp-step-stats { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+body.jpn .pp-step-stats li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.86rem; color: var(--ink-2); padding: 5px 0; border-top: 1px solid var(--ivory-2); }
+body.jpn .pp-step-stats b { font-variant-numeric: tabular-nums; color: var(--ink); }
+body.jpn .pp-step-people > summary { list-style: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--ink-2); padding: 6px 0 2px; }
+body.jpn .pp-step-people > summary::-webkit-details-marker { display: none; }
+body.jpn .pp-step-people > summary::after { content: ' +'; color: var(--terracotta); }
+body.jpn .pp-step-people[open] > summary::after { content: ' –'; }
+body.jpn .pp-step-people.pp-empty > summary { cursor: default; color: var(--ink-3); font-weight: 500; pointer-events: none; }
+body.jpn .pp-step-people.pp-empty > summary::after { content: ''; }
+body.jpn .pp-step-people .pp-rows { margin-top: 8px; }
+body.jpn .pp-legal { font-size: 0.76rem; color: var(--ink-3); margin: 8px 0 0; }
+body.jpn .pp-legal a { color: var(--terracotta); }
+@media (min-width: 900px) {
+  body.jpn.wide .pp-steps3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+}

@@ -181,9 +181,21 @@ function ranges() {
 
 // Mounts the analytics block into `root`. `fetchJson(path)` is provided by the
 // page so the right credentials go on the request.
-// With `top`, the range picker and a strip of per-step counts go there (the
-// head of the creator dashboard) and the detail stays in `root`.
-export function mountInsights(root, { fetchJson, apiBase, creator = null, canExport = true, headers = {}, top = null }) {
+// The three steps on a creator's page, and which analytics fields describe
+// each: who opened it, who played its video, who clicked through, and the
+// lead step that counts as leaving details there.
+const STEPS = [
+  { key: 'know', lead: 'know_god', name: 'Know God', opened: 'opened_know', watched: 'watched_know', through: 'opened_form', throughLabel: 'Opened the form' },
+  { key: 'grow', lead: 'grow_with_god', name: 'Grow with God', opened: 'opened_grow', watched: 'watched_grow', through: 'clicked_grow', throughLabel: 'Went to the course' },
+  { key: 'connect', lead: 'find_church', name: 'Get Connected', opened: 'opened_connect', watched: 'watched_connect', through: 'clicked_connect', throughLabel: 'Followed the link' },
+];
+const shortDate = (iso) => { const t = Date.parse(iso || ''); return Number.isNaN(t) ? '' : new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); };
+
+// With `top`, the range picker and one card per step go there (the head of
+// the creator dashboard) and the detail stays in `root`. `steps` supplies the
+// people (leads) to list under each step: { people(), row(person, opts), opts }.
+// Returns { refresh, repaint }; repaint redraws the cards once people load.
+export function mountInsights(root, { fetchJson, apiBase, creator = null, canExport = true, headers = {}, top = null, steps = null }) {
   root.replaceChildren();
   if (top) top.replaceChildren();
   const bar = el('div', 'insight-bar');
@@ -212,17 +224,53 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
   const tiles = el('div', 'stat-row insight-tiles');
   const funnel = el('div', 'funnel');
   const sources = el('div', 'sources');
-  const clicks = el('div', 'pp-tiles pp-clicks');
-  if (top) { top.append(bar, clicks); root.append(tiles, funnel, sources); }
+  const overview = el('p', 'pp-overview');
+  const cards = el('div', 'pp-steps3');
+  if (top) { top.append(bar, overview, cards); root.append(tiles, funnel, sources); }
   else root.append(bar, tiles, funnel, sources);
 
-  // One tile per step: how many people opened it, and how many went on to
-  // click what it offers.
-  function clickTile(n, label, sub) {
-    const t = el('div', 'pp-tile');
-    t.append(el('b', null, typeof n === 'number' ? n.toLocaleString() : String(n)), document.createTextNode(label));
-    if (sub) t.append(el('small', null, sub));
-    return t;
+  const people = (n) => n.toLocaleString() + (n === 1 ? ' person' : ' people');
+  const row = (label, n) => { const li = el('li'); li.append(el('span', null, label), el('b', null, n.toLocaleString())); return li; };
+
+  // One card per step: who opened it, played its video, clicked through, and
+  // left their details, with those people one tap away. The list is the
+  // leads in the chosen range; everyone on it ticked the consent box.
+  let lastV = null;
+  function paintCards() {
+    if (!top || !lastV) return;
+    const v = lastV;
+    const from = ranges().find((r) => r[0] === sel.value)?.[1] || '';
+    const all = steps ? steps.people() : [];
+    overview.textContent = `${people(v.visited)} opened your page in this range · ${people(v.sent_form)} responded`;
+    cards.replaceChildren(...STEPS.map((st) => {
+      const card = el('section', 'pp-card pp-step-card pp-sc-' + st.key);
+      const h = el('h4'); h.append(el('i', 'pp-dot'), document.createTextNode(st.name));
+      const big = el('div', 'pp-big'); big.append(el('b', null, v[st.opened].toLocaleString()), el('span', null, 'opened it'));
+      // A person belongs to the step whose response falls in the range, so
+      // an old Know God response doesn't list them there because they came
+      // back for Grow with God this week.
+      const mine = all.filter((p) => p.rows.some((r) => r.step === st.lead && (!from || String(r.created_at || '') >= from)));
+      const stats = el('ul', 'pp-step-stats');
+      stats.append(row('Watched the video', v[st.watched]), row(st.throughLabel, v[st.through]), row('Left their details', mine.length));
+      card.append(h, big, stats);
+      const fold = el('details', 'pp-step-people');
+      fold.append(el('summary', null, mine.length ? `People (${mine.length})` : 'No one yet'));
+      if (mine.length) {
+        fold.addEventListener('toggle', () => {
+          if (!fold.open || fold.dataset.built) return;
+          fold.dataset.built = '1';
+          const list = el('div', 'pp-rows');
+          list.append(...mine.map((p) => steps.row(p, { ...steps.opts, rowExtra: (q) => (shortDate(q.consent_at) ? 'agreed to contact ' + shortDate(q.consent_at) : '') })));
+          const legal = el('p', 'pp-legal');
+          legal.append(document.createTextNode('Everyone here ticked the box agreeing to be contacted about this step. Honor opt-outs at once. '));
+          const a = el('a', null, 'Privacy & Consent'); a.href = 'privacy.html'; a.target = '_blank';
+          legal.append(a);
+          fold.append(list, legal);
+        });
+      } else fold.classList.add('pp-empty');
+      card.append(fold);
+      return card;
+    }));
   }
 
   function query(range, creator) {
@@ -240,31 +288,23 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
   async function refresh() {
     const mine = ++latest;
     tiles.replaceChildren(tile('…', 'Loading'));
-    if (top) clicks.replaceChildren(clickTile('…', 'Loading'));
+    if (top) { overview.textContent = 'Loading…'; cards.replaceChildren(); }
     funnel.replaceChildren(); sources.replaceChildren();
     let d;
     try { d = await fetchJson('/api/analytics' + query(sel.value, creator)); }
     catch (err) {
       if (mine !== latest) return;
       tiles.replaceChildren(el('p', 'dir-empty', 'Could not load analytics.'));
-      if (top) clicks.replaceChildren(el('p', 'dir-empty', 'Could not load the counts.'));
+      if (top) overview.textContent = 'Could not load the counts.';
       return;
     }
     if (mine !== latest) return;
     const f = d.funnel;
     // Older servers send only click counts; read anything missing as 0.
     const raw = f.visitors || { visited: f.sessions, opened_know: f.know_open, watched_know: 0, opened_form: f.know_form_open, sent_form: f.know_submit };
-    const v = Object.fromEntries(['visited', 'opened_know', 'watched_know', 'opened_form', 'sent_form', 'opened_grow', 'opened_connect', 'clicked_grow', 'clicked_connect'].map((k) => [k, Number(raw[k] || 0)]));
-    if (top) {
-      const people = (n) => n.toLocaleString() + (n === 1 ? ' person' : ' people');
-      clicks.replaceChildren(
-        clickTile(v.visited, 'opened your page'),
-        clickTile(v.opened_know, 'opened Know God', people(v.watched_know) + ' played the video'),
-        clickTile(v.opened_grow, 'opened Grow with God', people(v.clicked_grow) + ' went to the course'),
-        clickTile(v.opened_connect, 'opened Get Connected', people(v.clicked_connect) + ' followed the link'),
-        clickTile(v.sent_form, 'responded', 'sent the form'),
-      );
-    }
+    const v = Object.fromEntries(['visited', 'opened_know', 'watched_know', 'opened_form', 'sent_form', 'opened_grow', 'watched_grow', 'clicked_grow', 'opened_connect', 'watched_connect', 'clicked_connect'].map((k) => [k, Number(raw[k] || 0)]));
+    lastV = v;
+    paintCards();
     f.discipleship_starts = Number(f.discipleship_starts || 0);
     f.reported_commitments = Number(f.reported_commitments || 0);
     const r = f.rates || {};
@@ -373,7 +413,7 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
   }
   sel.addEventListener('change', refresh);
   refresh();
-  return { refresh };
+  return { refresh, repaint: paintCards };
 }
 
 // A saver for the responses API (the new record behind each lead row).

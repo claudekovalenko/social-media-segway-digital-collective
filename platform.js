@@ -510,7 +510,9 @@ export function platform(DB) {
         opened_form: people('form_open', 'know'),
         sent_form: people('form_submit', 'know'),
         opened_grow: people('section_open', 'grow'),
+        watched_grow: people('media_click', 'grow'),
         opened_connect: people('section_open', 'connect'),
+        watched_connect: people('media_click', 'connect'),
         clicked_grow: clickedIn('grow'),
         clicked_connect: clickedIn('connect'),
       };
