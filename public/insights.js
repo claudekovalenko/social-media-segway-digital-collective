@@ -230,7 +230,6 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
   else root.append(bar, tiles, funnel, sources);
 
   const people = (n) => n.toLocaleString() + (n === 1 ? ' person' : ' people');
-  const row = (label, n) => { const li = el('li'); li.append(el('span', null, label), el('b', null, n.toLocaleString())); return li; };
 
   // One card per step: who opened it, played its video, clicked through, and
   // left their details, with those people one tap away. The list is the
@@ -250,11 +249,11 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
       // an old Know God response doesn't list them there because they came
       // back for Grow with God this week.
       const mine = all.filter((p) => p.rows.some((r) => r.step === st.lead && (!from || String(r.created_at || '') >= from)));
-      const stats = el('ul', 'pp-step-stats');
-      stats.append(row('Watched the video', v[st.watched]), row(st.throughLabel, v[st.through]), row('Left their details', mine.length));
-      card.append(h, big, stats);
+      // One quiet line for the rest: the video, and the click-through.
+      const sub = el('p', 'pp-step-sub', `${v[st.watched].toLocaleString()} watched the video · ${v[st.through].toLocaleString()} ${st.throughLabel.toLowerCase()}`);
+      card.append(h, big, sub);
       const fold = el('details', 'pp-step-people');
-      fold.append(el('summary', null, mine.length ? `People (${mine.length})` : 'No one yet'));
+      fold.append(el('summary', null, mine.length ? `${people(mine.length)} responded` : 'No responses yet'));
       if (mine.length) {
         fold.addEventListener('toggle', () => {
           if (!fold.open || fold.dataset.built) return;

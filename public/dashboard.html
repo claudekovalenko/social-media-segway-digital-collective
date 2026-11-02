@@ -47,11 +47,17 @@
       <h3 class="section pp-clicks-title">Your three steps</h3>
       <p class="pp-lede">Who opened each step, watched, clicked through and left their details. Open a step to see the people.</p>
       <div id="clicks"></div>
-      <div class="pp-tiles" id="tiles"></div>
       <div class="notice" id="welcome" hidden><span>Your link is live. Put it in your bio and every response comes back here.</span></div>
       <div class="notice" id="verifyNote" hidden><span>Confirm your email so we can send responses your way.</span><button type="button" class="btn-small" id="resendVerify">Resend the email</button></div>
 
-      <h3 class="section" id="followUpTitle">Follow up</h3>
+      <nav class="pp-tabs" id="tabs" role="tablist" aria-label="Sections">
+        <button type="button" role="tab" data-pane="followup" aria-selected="true">Follow up<span class="pp-tab-n" id="tabFollowN" hidden></span></button>
+        <button type="button" role="tab" data-pane="people" aria-selected="false">People</button>
+        <button type="button" role="tab" data-pane="insights" aria-selected="false">Insights</button>
+        <button type="button" role="tab" data-pane="settings" aria-selected="false">Settings</button>
+      </nav>
+      <section class="pp-pane" id="pane-followup" role="tabpanel">
+      <div class="pp-tiles" id="tiles"></div>
       <p class="pp-lede">People who haven&rsquo;t heard from you yet, and anyone whose follow-up day has come.</p>
       <div id="queue"></div>
       <p class="dir-empty pp-caught-up" id="queueEmpty" hidden>You&rsquo;re all caught up. New responses appear here the moment they come in.</p>
@@ -60,13 +66,17 @@
         <div id="soon"></div>
       </details>
 
-      <h3 class="section">Everyone</h3>
+      </section>
+      <section class="pp-pane" id="pane-people" role="tabpanel" hidden>
       <div id="people"></div>
       <p class="aside-link">Everyone here checked the consent box, so you may contact them about the step they took. Please honor opt-outs immediately.</p>
 
-      <h3 class="section">How your link is doing</h3>
+      </section>
+      <section class="pp-pane" id="pane-insights" role="tabpanel" hidden>
       <div id="insights"></div>
 
+      </section>
+      <section class="pp-pane" id="pane-settings" role="tabpanel" hidden>
       <details class="fold" id="pageFold">
       <summary class="section">Your page</summary>
       <form class="app-card" id="links">
@@ -197,6 +207,7 @@
         </div>
       </form>
       </details>
+      </section>
     </div>
 
     <footer>
@@ -207,6 +218,8 @@
   <script type="module">
     import { attachVideoPreview, groupPeople, needsFollowUp, comingUp, personSaver, mountPeople, mountQueue, personRow } from './crm.js';
     import { mountInsights } from './insights.js';
+    import { mountTabs } from './tabs.js';
+    mountTabs(document.getElementById('tabs'), 'dashboard');
 
     const API_BASE = location.hostname.endsWith('github.io')
       ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
@@ -388,8 +401,11 @@
         t.append(b, document.createTextNode(label));
         return t;
       };
+      const due = needsFollowUp(people).length;
+      const badge = document.getElementById('tabFollowN');
+      if (badge) { badge.textContent = due; badge.hidden = !due; }
       tiles.replaceChildren(
-        tile(needsFollowUp(people).length, 'to follow up', '#followUpTitle'),
+        tile(due, 'to follow up'),
         tile(comingUp(people).length, 'coming up this week'),
         tile(people.length, people.length === 1 ? 'person reached' : 'people reached'),
         tile(people.length ? Math.round((people.filter((p) => p.status !== 'new').length / people.length) * 100) + '%' : '–', 'followed up by you'),

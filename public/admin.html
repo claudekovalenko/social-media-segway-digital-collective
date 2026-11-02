@@ -30,6 +30,14 @@
       <h3 class="section pp-clicks-title">The three steps</h3>
       <p class="pp-lede">Across every creator: who opened each step, watched, clicked through and left their details. Open a step to see the people.</p>
       <div id="clicks"></div>
+
+      <nav class="pp-tabs" id="tabs" role="tablist" aria-label="Sections">
+        <button type="button" role="tab" data-pane="followup" aria-selected="true">Follow up<span class="pp-tab-n" id="tabFollowN" hidden></span></button>
+        <button type="button" role="tab" data-pane="people" aria-selected="false">People</button>
+        <button type="button" role="tab" data-pane="insights" aria-selected="false">Insights</button>
+        <button type="button" role="tab" data-pane="settings" aria-selected="false">Settings</button>
+      </nav>
+      <section class="pp-pane" id="pane-followup" role="tabpanel">
       <div class="pp-tiles" id="tiles"></div>
 
       <div id="approvals" hidden>
@@ -38,7 +46,6 @@
         <p class="dir-empty" id="appsEmpty" hidden>Nobody is waiting for approval.</p>
       </div>
 
-      <h3 class="section" id="followUpTitle">Follow up</h3>
       <p class="pp-lede">People nobody has reached yet, and anyone whose follow-up day has come, across every creator.</p>
       <div id="queue"></div>
       <p class="dir-empty pp-caught-up" id="queueEmpty" hidden>Everyone is caught up. New responses appear here the moment they come in.</p>
@@ -47,12 +54,16 @@
         <div id="soon"></div>
       </details>
 
-      <h3 class="section">Everyone</h3>
+      </section>
+      <section class="pp-pane" id="pane-people" role="tabpanel" hidden>
       <div id="people"></div>
 
-      <h3 class="section">Across the collective</h3>
+      </section>
+      <section class="pp-pane" id="pane-insights" role="tabpanel" hidden>
       <div id="insights"></div>
 
+      </section>
+      <section class="pp-pane" id="pane-settings" role="tabpanel" hidden>
       <details class="fold">
       <summary class="section">Registration &amp; follow-up</summary>
       <div class="app-card" id="platformCard">
@@ -293,7 +304,7 @@
         </div>
       </form>
       </details>
-
+      </section>
     </div>
 
     <footer>
@@ -305,6 +316,8 @@
   <script type="module">
     import { attachVideoPreview, groupPeople, carryDrafts, needsFollowUp, comingUp, personSaver, mountPeople, mountQueue, personRow } from './crm.js';
     import { mountInsights } from './insights.js';
+    import { mountTabs } from './tabs.js';
+    mountTabs(document.getElementById('tabs'), 'admin');
 
     // The dashboard reads live data, so it always talks to the Worker.
     const API_BASE = location.hostname.endsWith('github.io')
@@ -739,8 +752,11 @@
         t.append(b, document.createTextNode(label));
         return t;
       };
+      const due = needsFollowUp(people).length;
+      const badge = document.getElementById('tabFollowN');
+      if (badge) { badge.textContent = due; badge.hidden = !due; }
       document.getElementById('tiles').replaceChildren(
-        tile(needsFollowUp(people).length, 'to follow up', '#followUpTitle'),
+        tile(due, 'to follow up'),
         tile(comingUp(people).length, 'coming up this week'),
         tile(people.length, people.length === 1 ? 'person reached' : 'people reached'),
         tile(people.length ? Math.round((people.filter((p) => p.status !== 'new').length / people.length) * 100) + '%' : '–', 'followed up'),

@@ -270,6 +270,8 @@ async function run(base) {
     await page.addInitScript(() => sessionStorage.setItem('dc_admin_token', 'dcs.old.token'));
     await go(page, '/dashboard.html');
     await page.waitForTimeout(1200);
+    // The password form lives under the Settings tab.
+    await page.click('#tabs [data-pane=settings]');
     const fold = page.locator('#passwordFold');
     expect(await visible(fold), 'the "Your password" section did not appear');
     await fold.locator('summary').click();
