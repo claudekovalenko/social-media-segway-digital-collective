@@ -104,7 +104,8 @@ function d1Adapter(DB) {
       await this.ensureAdmins();
       await ensurePlatformColumns(DB);
       const r = await DB.prepare(
-        `SELECT slug, name, handle, topic, back_url, avatar_url, avatar_cached, avatar_checked_at FROM creators
+        `SELECT slug, name, handle, topic, back_url, avatar_url, avatar_cached, avatar_checked_at,
+                know_god_video_url, grow_video_url, find_church_video_url FROM creators
          WHERE handle IS NOT NULL AND handle != '' AND slug != 'default'
            AND (status IS NULL OR status != 'suspended') ORDER BY created_at ASC`).all();
       return r.results;
@@ -395,8 +396,8 @@ function supabaseAdapter(url, serviceKey) {
     },
 
     directory() {
-      return rest('creators?handle=not.is.null&slug=neq.default&select=slug,name,handle,topic,back_url,avatar_url,avatar_cached' +
-                  '&select=slug,name,handle,topic&order=created_at.asc');
+      return rest('creators?handle=not.is.null&slug=neq.default' +
+                  '&select=slug,name,handle,topic,back_url,avatar_url,avatar_cached,know_god_video_url,grow_video_url,find_church_video_url&order=created_at.asc');
     },
 
     async insertLead(l) {

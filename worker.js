@@ -553,7 +553,10 @@ async function handle(req, env, ctx) {
         const creators = await db.directory();
         for (const c of creators) avatarFor(c, db, after);
         // The photo bookkeeping stays server-side; the page needs avatar_url only.
-        return json({ creators: creators.map(({ avatar_cached, avatar_checked_at, ...c }) => c) });
+        // The collective's own step videos go along, for the videos page.
+        const d = await defaultLinks(db);
+        const defaults = { know_god_video_url: d.know_god_video_url, grow_video_url: d.grow_video_url, find_church_video_url: d.find_church_video_url };
+        return json({ creators: creators.map(({ avatar_cached, avatar_checked_at, ...c }) => c), defaults });
       }
 
       // What the dashboard needs to start a magic-link sign-in, if configured.

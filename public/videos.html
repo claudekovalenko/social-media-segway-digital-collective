@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Videos &mdash; Digital Collective</title>
+  <script>(function(){var d=document.documentElement;d.classList.add("js");window.__fontsIn=function(){d.classList.add("fonts-in")};window.__fontsIn()})();</script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="home.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#F5F0E7">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+</head>
+<body class="landing ig jpn v2 v2-inner">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="v2-root">
+<nav><div class="v2-wrap">
+  <a class="v2-brand" href="index.html"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></i>Digital Collective</a>
+  <div class="v2-nav-links">
+    <a href="index.html#steps">How it works</a><a href="creators.html">Creators</a><a href="videos.html" class="v2-on">Videos</a><a href="index.html#faq">Questions</a>
+    <a class="v2-pill v2-light" href="login.html?join=1">Join</a>
+  </div>
+</div></nav>
+<main class="v2-page">
+<div class="wrap">
+
+    <header class="hero">
+      <p class="v2-kicker">The library</p>
+      <h1>Every <em>video</em></h1>
+      <p class="hero-sub">What each creator shares at the three steps. Watch to see how others present the gospel, the course and the next step.</p>
+    </header>
+
+    <div id="videoList" class="vl-list">
+      <p class="dir-empty">Loading videos&hellip;</p>
+    </div>
+
+    <section class="land-section note-block">
+      <p class="sec-kicker plain"><span aria-hidden="true"></span></p>
+      <h2 class="land-title">Recording your own?</h2>
+      <p class="land-copy">Every creator signs our <a href="beliefs.html">statement of faith</a>. The videos here are each creator&rsquo;s own, shared so the collective can learn from one another; they aren&rsquo;t vetted or endorsed by us.</p>
+    </section>
+
+  </div>
+<script type="module">
+    import { youtubeId, videoThumbUrl } from './crm.js';
+    const API_BASE = location.hostname.endsWith('github.io')
+      ? 'https://faith-journey-funnel.faith-journey-funnel.workers.dev'
+      : '';
+    const STEPS = [
+      ['know_god_video_url', 'Know God', 'know'],
+      ['grow_video_url', 'Grow with God', 'grow'],
+      ['find_church_video_url', 'Get Connected', 'connect'],
+    ];
+    const initialOf = (c) => ((c.name || c.handle || '?').replace('@', '').trim().charAt(0) || '?').toUpperCase();
+    const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+    // A video card: the thumbnail until it's tapped, then the player itself.
+    function videoCard(url, label, key) {
+      const id = youtubeId(url);
+      const card = el('div', 'vl-card vl-' + key);
+      const frame = el('button', 'vl-thumb');
+      frame.type = 'button';
+      frame.setAttribute('aria-label', 'Play: ' + label);
+      if (id) {
+        const img = document.createElement('img');
+        img.src = videoThumbUrl(url); img.alt = ''; img.loading = 'lazy';
+        frame.append(img);
+      }
+      frame.append(el('i', 'vl-play'));
+      frame.addEventListener('click', () => {
+        if (!id) { window.open(url, '_blank', 'noopener'); return; }
+        const ifr = document.createElement('iframe');
+        ifr.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+        ifr.allow = 'autoplay; encrypted-media; picture-in-picture'; ifr.allowFullscreen = true;
+        ifr.title = label;
+        frame.replaceWith(ifr);
+      }, { once: true });
+      const cap = el('div', 'vl-cap');
+      cap.append(el('b', null, label));
+      const open = el('a', 'vl-open', 'Open on YouTube');
+      open.href = url; open.target = '_blank'; open.rel = 'noopener';
+      cap.append(open);
+      card.append(frame, cap);
+      return card;
+    }
+
+    function creatorSection(c, { isCollective = false } = {}) {
+      const sec = el('div', 'vl-creator');
+      const head = el(isCollective ? 'div' : 'a', 'vl-head');
+      if (!isCollective) head.href = '/' + encodeURIComponent(c.slug);
+      const av = el('span', 'dir-av cr-av vl-av');
+      if (c.avatar_url) {
+        const img = document.createElement('img'); img.src = c.avatar_url; img.alt = '';
+        img.addEventListener('error', () => { img.remove(); av.textContent = initialOf(c); }, { once: true });
+        av.append(img);
+      } else av.textContent = initialOf(c);
+      const who = el('span', 'vl-who');
+      who.append(el('b', null, c.name || c.handle || ''));
+      who.append(el('span', null, isCollective ? 'The collective’s own videos, used wherever a creator hasn’t added theirs' : (c.handle ? ((c.handle.startsWith('@') ? '' : '@') + c.handle) : '')));
+      head.append(av, who);
+      sec.append(head);
+      const grid = el('div', 'vl-grid');
+      let n = 0;
+      for (const [field, label, key] of STEPS) {
+        const url = c[field];
+        if (!/^https?:\/\//i.test(url || '')) continue;
+        grid.append(videoCard(url, label, key)); n++;
+      }
+      if (n) sec.append(grid);
+      else sec.append(el('p', 'vl-none', 'Uses the collective’s videos for now.'));
+      return sec;
+    }
+
+    (async () => {
+      const list = document.getElementById('videoList');
+      try {
+        const res = await fetch(API_BASE + '/api/directory');
+        if (!res.ok) throw new Error('x');
+        const data = await res.json();
+        list.replaceChildren();
+        const d = data.defaults || {};
+        if (STEPS.some(([f]) => /^https?:\/\//i.test(d[f] || ''))) {
+          list.append(creatorSection({ name: 'Digital Collective', ...d }, { isCollective: true }));
+        }
+        for (const c of data.creators || []) list.append(creatorSection(c));
+        if (!list.children.length) list.append(el('p', 'dir-empty', 'No videos yet.'));
+      } catch {
+        list.replaceChildren(el('p', 'dir-empty', 'Could not load the videos. Refresh to try again.'));
+      }
+    })();
+  </script>
+</body>
+</html>

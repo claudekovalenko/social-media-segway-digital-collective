@@ -3726,3 +3726,32 @@ body.jpn .pp-pane > .fold:first-child { margin-top: 6px; }
 body.jpn .pp-pane .fold { margin-top: 22px; }
 body.jpn .pp-step-sub { font-size: 0.82rem; color: var(--ink-3); margin: 0; }
 body.jpn .pp-step-card .pp-big b { font-size: 2.1rem; }
+
+/* The videos page: one section per creator, their step videos as cards. */
+body.jpn .vl-list { display: grid; gap: 22px; }
+body.jpn .vl-creator { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+body.jpn .vl-head { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); margin-bottom: 14px; }
+body.jpn .vl-av { width: 44px; height: 44px; font-size: 1rem; }
+body.jpn .vl-who { display: flex; flex-direction: column; min-width: 0; }
+body.jpn .vl-who b { font-size: 1.02rem; }
+body.jpn .vl-who span { font-size: 0.82rem; color: var(--ink-3); }
+body.jpn a.vl-head:hover b { color: var(--terracotta); }
+body.jpn .vl-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+body.jpn .vl-card { display: grid; gap: 8px; min-width: 0; }
+body.jpn .vl-thumb { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; padding: 0; border-radius: 12px; overflow: hidden; background: var(--ink); cursor: pointer; }
+body.jpn .vl-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+body.jpn .vl-play { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: rgba(24,24,23,0.78); }
+body.jpn .vl-play::after { content: ''; position: absolute; left: 20px; top: 15px; border-left: 16px solid #fff; border-top: 11px solid transparent; border-bottom: 11px solid transparent; }
+body.jpn .vl-thumb:hover .vl-play { background: var(--terracotta); }
+body.jpn .vl-card iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; display: block; }
+body.jpn .vl-cap { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 0.86rem; }
+body.jpn .vl-cap b { color: var(--ink); }
+body.jpn .vl-know .vl-cap b { color: var(--terracotta); }
+body.jpn .vl-grow .vl-cap b { color: var(--sage); }
+body.jpn .vl-connect .vl-cap b { color: var(--gold); }
+body.jpn .vl-open { font-size: 0.78rem; color: var(--ink-3); white-space: nowrap; }
+body.jpn .vl-none { font-size: 0.86rem; color: var(--ink-3); margin: 0; }
+@media (min-width: 700px) {
+  body.jpn .vl-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.jpn .wrap:has(.vl-list) { max-width: 880px; }
+}
