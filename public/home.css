@@ -379,3 +379,27 @@ body.v2.v2-inner footer nav{position:static}
   body.v2.v2-inner .hero{margin-bottom:24px}
   body.v2.v2-inner .hero h1{font-size:2.1rem}
 }
+
+/* Phones, second pass: a tighter rhythm so the page reads as one piece. */
+@media (max-width:640px){
+  body.v2 .v2-root section{padding:44px 0}
+  body.v2 .v2-root .v2-hero{padding:14px 0 44px}
+  body.v2 .v2-root .v2-hero .v2-wrap{gap:34px}
+  body.v2 .v2-root h1{font-size:2.3rem;margin:16px 0 14px}
+  body.v2 .v2-root .v2-lede{font-size:1.04rem}
+  body.v2 .v2-root .v2-stats{margin-top:24px;padding-top:18px}
+  body.v2 .v2-root .v2-float{bottom:-18px}
+  body.v2 .v2-root .v2-head{margin-bottom:20px;gap:14px}
+  body.v2 .v2-root h2{font-size:1.9rem;margin:8px 0 10px}
+  body.v2 .v2-root .v2-sub{font-size:.98rem}
+  body.v2 .v2-root .v2-cards{gap:10px}
+  body.v2 .v2-root .v2-card{padding:20px 18px 18px}
+  body.v2 .v2-root .v2-card .v2-ic{margin-bottom:14px}
+  body.v2 .v2-root .v2-split{gap:26px}
+  body.v2 .v2-root .v2-demo .phone-caption{margin-top:2px}
+  body.v2 .v2-root .v2-steps5 li{padding:8px 0}
+  body.v2 .v2-root .v2-faq{gap:8px}
+  body.v2 .v2-root .v2-final{margin:0 12px 14px;padding:48px 20px}
+  body.v2 .v2-root .v2-final h2{font-size:2rem}
+  body.v2 .v2-root footer{padding:18px 0 28px}
+}

@@ -3755,3 +3755,45 @@ body.jpn .vl-none { font-size: 0.86rem; color: var(--ink-3); margin: 0; }
   body.jpn .vl-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   body.jpn .wrap:has(.vl-list) { max-width: 880px; }
 }
+
+/* Phones: the dashboards as one tidy column. Less air at the top, the
+   three steps as a row you swipe, the counts as a line of chips, the tabs
+   fitting the width, and shorter person cards. */
+@media (max-width: 640px) {
+  body.jpn.wide .hero { margin: 0 0 4px; }
+  body.jpn.wide .hero h1 { font-size: 1.85rem; margin-bottom: 4px; }
+  body.jpn.wide .hero-sub { font-size: 0.95rem; line-height: 1.45; }
+  body.jpn .pp-signed { margin-bottom: 2px; }
+  body.jpn .pp-clicks-title { margin-top: 12px; }
+  body.jpn .pp-lede { font-size: 0.86rem; margin: -2px 0 10px; }
+  body.jpn #clicks .insight-bar { margin-bottom: 8px; }
+  body.jpn .pp-overview { font-size: 0.8rem; margin-bottom: 8px; }
+  body.jpn .pp-steps3 {
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 20px;
+    gap: 10px; margin: 0 -20px 12px; padding: 2px 20px 6px; scrollbar-width: none;
+  }
+  body.jpn .pp-steps3::-webkit-scrollbar { display: none; }
+  body.jpn .pp-step-card { scroll-snap-align: start; padding: 14px; }
+  body.jpn .pp-step-card .pp-big b { font-size: 1.9rem; }
+  body.jpn .pp-tabs { margin: 8px 0 12px; gap: 2px; }
+  body.jpn .pp-tabs button { flex: 1 1 0; padding: 8px 4px; font-size: 0.8rem; gap: 4px; }
+  body.jpn .pp-tab-n { padding: 0 6px; font-size: 0.66rem; }
+  body.jpn .pp-tiles, body.jpn .pp-tiles:has(> :nth-child(4)) {
+    display: flex; grid-template-columns: none; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    margin: 0 -20px 10px; padding: 0 20px 4px;
+  }
+  body.jpn .pp-tiles::-webkit-scrollbar { display: none; }
+  body.jpn .pp-tile { flex: 0 0 auto; display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 12px; border-radius: 999px; font-size: 0.78rem; white-space: nowrap; }
+  body.jpn .pp-tile b { display: inline; font-size: 1rem; margin: 0; }
+  body.jpn .pp-list { gap: 10px; }
+  body.jpn .pp-card { padding: 12px 12px 10px; gap: 8px; }
+  body.jpn .pp-name { font-size: 0.98rem; }
+  body.jpn .pp-lines p { font-size: 0.82rem; }
+  body.jpn .pp-act, body.jpn .pp-act { min-height: 40px; font-size: 0.86rem; border-radius: 10px; }
+  body.jpn .pp-chip { min-height: 36px; font-size: 0.78rem; }
+  body.jpn .pp-field select, body.jpn .pp-field input { min-height: 40px; }
+  body.jpn .pp-notes { min-height: 44px; }
+  body.jpn .pp-bar { margin-bottom: 10px; }
+  body.jpn .pp-pane .fold { margin-top: 14px; }
+}
