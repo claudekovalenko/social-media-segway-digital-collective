@@ -241,7 +241,7 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
     const v = lastV;
     const from = ranges().find((r) => r[0] === sel.value)?.[1] || '';
     const all = steps ? steps.people() : [];
-    overview.textContent = `${people(v.visited)} opened your page in this range · ${people(v.sent_form)} responded`;
+    overview.textContent = `${people(v.visited)} visited in this range · ${people(v.sent_form)} responded`;
     cards.replaceChildren(...STEPS.map((st) => {
       const card = el('section', 'pp-card pp-step-card pp-sc-' + st.key);
       const h = el('h4'); h.append(el('i', 'pp-dot'), document.createTextNode(st.name));
@@ -260,7 +260,9 @@ export function mountInsights(root, { fetchJson, apiBase, creator = null, canExp
           if (!fold.open || fold.dataset.built) return;
           fold.dataset.built = '1';
           const list = el('div', 'pp-rows');
-          list.append(...mine.map((p) => steps.row(p, { ...steps.opts, rowExtra: (q) => (shortDate(q.consent_at) ? 'agreed to contact ' + shortDate(q.consent_at) : '') })));
+          // The page's own row note (the admin's "through /creator") first, then consent.
+          const rowExtra = (q) => [steps.opts.rowExtra ? steps.opts.rowExtra(q) : '', shortDate(q.consent_at) ? 'agreed to contact ' + shortDate(q.consent_at) : ''].filter(Boolean).join(' · ');
+          list.append(...mine.map((p) => steps.row(p, { ...steps.opts, rowExtra })));
           const legal = el('p', 'pp-legal');
           legal.append(document.createTextNode('Everyone here ticked the box agreeing to be contacted about this step. Honor opt-outs at once. '));
           const a = el('a', null, 'Privacy & Consent'); a.href = 'privacy.html'; a.target = '_blank';
