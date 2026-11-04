@@ -3797,3 +3797,27 @@ body.jpn .vl-none { font-size: 0.86rem; color: var(--ink-3); margin: 0; }
   body.jpn .pp-bar { margin-bottom: 10px; }
   body.jpn .pp-pane .fold { margin-top: 14px; }
 }
+
+/* The Why page: a few numbers, each with a two-point line, then the argument. */
+body.jpn .why-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 0 0 56px; }
+body.jpn .why-stat { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 16px; display: grid; gap: 6px; }
+body.jpn .why-label { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+body.jpn .why-big { margin: 0; display: flex; align-items: baseline; gap: 10px; font-size: 2.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); line-height: 1.05; }
+body.jpn .why-big i { font-style: normal; color: var(--ink-3); font-size: 1.4rem; font-weight: 400; }
+body.jpn .why-big em { font-style: normal; font-size: 0.95rem; font-weight: 500; color: var(--ink-3); }
+body.jpn .why-spark { width: 160px; height: 52px; display: block; margin: 2px 0; }
+body.jpn .why-note { margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--ink-2); }
+body.jpn .why-note small { display: block; margin-top: 4px; font-size: 0.76rem; color: var(--ink-3); }
+body.jpn .why-prose h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin: 28px 0 10px; }
+body.jpn .why-prose p { font-size: 1.02rem; line-height: 1.6; color: var(--ink-2); margin: 0 0 12px; max-width: 60ch; }
+body.jpn .why-prose p em { color: var(--terracotta); font-style: normal; font-weight: 600; }
+body.jpn .why-path { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 10px; counter-reset: w; }
+body.jpn .why-path li { position: relative; padding: 12px 14px 12px 52px; background: #fff; border: 1px solid var(--line); border-radius: 14px; font-size: 0.98rem; line-height: 1.5; color: var(--ink-2); }
+body.jpn .why-path li::before { counter-increment: w; content: counter(w); position: absolute; left: 14px; top: 11px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--ivory); font-weight: 700; font-size: 0.85rem; display: grid; place-items: center; }
+body.jpn .why-path li b { color: var(--ink); }
+body.jpn .why-sources { margin: 6px 0 10px; padding-left: 18px; font-size: 0.88rem; line-height: 1.5; }
+body.jpn .why-sources a { color: var(--terracotta); }
+@media (min-width: 700px) {
+  body.jpn .why-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.jpn .wrap:has(.why-grid) { max-width: 880px; }
+}
