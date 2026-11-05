@@ -3879,7 +3879,7 @@ body.jpn .ob-mail { background: #fff; border: 1px solid var(--line); border-radi
 body.jpn .ob-mail p { margin: 0 0 10px; }
 body.jpn .ob-mail-meta { font-size: 0.78rem; color: var(--ink-3); }
 body.jpn .ob-mail-sub { font-weight: 700; font-size: 1rem; color: var(--ink); border-bottom: 1px solid var(--line); padding-bottom: 10px; }
-body.jpn .ob-mail-btn { display: inline-block; text-decoration: none; background: var(--ink); color: var(--ivory); padding: 8px 14px; border-radius: 9px; font-weight: 600; font-size: 0.88rem; }
+body.jpn .ob-mail-btn, body.jpn a.ob-mail-btn { display: inline-block; text-decoration: none; background: var(--ink); color: var(--ivory); padding: 8px 14px; border-radius: 9px; font-weight: 600; font-size: 0.88rem; }
 body.jpn .ob-mail-opt { background: var(--ivory-3); border-radius: 8px; padding: 8px 10px; }
 body.jpn .ob-mail-foot { font-size: 0.76rem; color: var(--ink-3); margin-top: 14px !important; }
 body.jpn .ob-contact { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 0 0 10px; }
