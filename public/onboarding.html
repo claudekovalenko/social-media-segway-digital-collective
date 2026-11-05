@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up your page &mdash; Digital Collective</title>
+  <meta name="robots" content="noindex">
+  <script>(function(){var d=document.documentElement;d.classList.add("js");window.__fontsIn=function(){d.classList.add("fonts-in")};window.__fontsIn()})();</script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="home.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#F5F0E7">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+</head>
+<body class="landing ig jpn v2 v2-inner">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="v2-root">
+<nav><div class="v2-wrap">
+  <a class="v2-brand" href="index.html"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></i>Digital Collective</a>
+  <div class="v2-nav-links">
+    <span class="ob-preview-tag">Preview with sample data</span>
+  </div>
+</div></nav>
+<main class="v2-page">
+<div class="wrap ob-wrap">
+
+  <ol class="ob-dots" id="dots" aria-label="Steps">
+    <li data-i="0"><span>1</span>Welcome</li>
+    <li data-i="1"><span>2</span>Know God</li>
+    <li data-i="2"><span>3</span>Grow</li>
+    <li data-i="3"><span>4</span>Get Connected</li>
+    <li data-i="4"><span>5</span>Done</li>
+  </ol>
+
+  <div class="ob-frame">
+    <div class="ob-track" id="track">
+
+      <!-- 1 Welcome -->
+      <section class="ob-step" data-step="0">
+        <p class="v2-kicker">You&rsquo;re approved</p>
+        <h1 class="ob-h">Welcome, <em>Craig</em></h1>
+        <p class="ob-lead">Your page is reserved. Three short steps and it goes live. We filled in what you gave us when you applied.</p>
+        <dl class="ob-facts">
+          <div><dt>Name</dt><dd>Craig Brown</dd></div>
+          <div><dt>Email</dt><dd>craig@example.com</dd></div>
+          <div><dt>Handle</dt><dd>@craigbrown</dd></div>
+          <div><dt>Your link</dt><dd>digitalcollective.org/c/<b>craigbrown</b></dd></div>
+        </dl>
+        <p class="ob-fine">Something wrong? You can change any of it later from your dashboard.</p>
+      </section>
+
+      <!-- 2 Know God -->
+      <section class="ob-step" data-step="1">
+        <p class="v2-kicker">Step 1 of 3</p>
+        <h1 class="ob-h">Your gospel <em>presentation</em></h1>
+        <p class="ob-lead">This is the first thing someone sees after your link. Pick one of ours, or use your own.</p>
+
+        <div class="ob-choice" role="radiogroup" aria-label="How do you want to present the gospel?">
+          <label class="ob-opt"><input type="radio" name="how" value="pick" checked><span><b>Pick a video from the library</b><small>Made by creators in the collective. Ready now.</small></span></label>
+          <label class="ob-opt"><input type="radio" name="how" value="own"><span><b>Use my own video</b><small>Paste a YouTube or Vimeo link.</small></span></label>
+          <label class="ob-opt"><input type="radio" name="how" value="later"><span><b>I&rsquo;ll make one</b><small>Go live with a library video now and swap yours in later.</small></span></label>
+        </div>
+
+        <div class="ob-pane" data-how="pick">
+          <div class="ob-lib" id="lib"></div>
+        </div>
+
+        <div class="ob-pane" data-how="own" hidden>
+          <label class="ob-field">Video link<input type="url" placeholder="https://youtube.com/watch?v=…" id="ownUrl"></label>
+          <p class="ob-fine">Your video should cover the five elements below. You will tick them off before it goes live.</p>
+          <div class="ob-elements" id="elOwn"></div>
+        </div>
+
+        <div class="ob-pane" data-how="later" hidden>
+          <p class="ob-lead small">While you make yours, your page uses the library video you choose in the next box. When you are ready, paste your link in the dashboard and tick off the five elements.</p>
+          <div class="ob-elements" id="elLater"></div>
+          <div class="ob-lib" id="libLater"></div>
+        </div>
+      </section>
+
+      <!-- 3 Grow -->
+      <section class="ob-step" data-step="2">
+        <p class="v2-kicker">Step 2 of 3</p>
+        <h1 class="ob-h">Grow <em>with God</em></h1>
+        <p class="ob-lead">After the gospel, where do they go next? Most creators send people to the collective&rsquo;s first course.</p>
+        <div class="ob-choice" role="radiogroup">
+          <label class="ob-opt"><input type="radio" name="grow" value="default" checked><span><b>The collective&rsquo;s first course</b><small>A short, free introduction to following Jesus.</small></span></label>
+          <label class="ob-opt"><input type="radio" name="grow" value="own"><span><b>My own link</b><small>A course, a reading plan, a playlist.</small></span></label>
+        </div>
+        <div class="ob-pane" data-grow="own" hidden>
+          <label class="ob-field">Link<input type="url" placeholder="https://…"></label>
+        </div>
+      </section>
+
+      <!-- 4 Get Connected -->
+      <section class="ob-step" data-step="3">
+        <p class="v2-kicker">Step 3 of 3</p>
+        <h1 class="ob-h">Get <em>Connected</em></h1>
+        <p class="ob-lead">The finish line is a healthy local church. Who do you want to point people to?</p>
+        <div class="ob-choice" role="radiogroup">
+          <label class="ob-opt"><input type="radio" name="conn" value="finder" checked><span><b>The church finders</b><small>The Gospel Coalition, Acts 29, 9Marks and more. Good anywhere.</small></span></label>
+          <label class="ob-opt"><input type="radio" name="conn" value="church"><span><b>My church first</b><small>Your church&rsquo;s page, then the finders for people far away.</small></span></label>
+        </div>
+        <div class="ob-pane" data-conn="church" hidden>
+          <label class="ob-field">Church name<input type="text" placeholder="Grace Church, Dallas"></label>
+          <label class="ob-field">Church website<input type="url" placeholder="https://…"></label>
+        </div>
+      </section>
+
+      <!-- 5 Done -->
+      <section class="ob-step" data-step="4">
+        <p class="v2-kicker">All set</p>
+        <h1 class="ob-h">Your page is <em>live</em></h1>
+        <p class="ob-lead">Share this link anywhere. Everyone who responds shows up on your dashboard, with a note to follow up.</p>
+        <div class="ob-link"><span>digitalcollective.org/c/<b>craigbrown</b></span><button type="button" class="btn-ghost">Copy</button></div>
+        <ul class="ob-next">
+          <li>Put the link in your bio.</li>
+          <li>Pin one post that points to it.</li>
+          <li>Check your dashboard once a week.</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="ob-nav">
+    <button type="button" class="btn-ghost" id="back">Back</button>
+    <button type="button" class="btn-primary" id="next">Get started</button>
+  </div>
+
+</div>
+</main>
+<footer class="v2-foot"><div class="v2-wrap"><span>Digital Collective</span><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div></footer>
+  </div>
+
+<script>
+// Sample data only. The real page reads the creator from the sign-in link,
+// the library from the database, and saves each step as it goes.
+const LIBRARY = [
+  { t: 'The gospel in four minutes', by: 'Jessica Brown', len: '4:10', tone: 'Plain and warm' },
+  { t: 'What Jesus actually did', by: 'The collective', len: '6:02', tone: 'Teaching' },
+  { t: 'From the party scene to the pew', by: 'A creator', len: '5:30', tone: 'Testimony' },
+  { t: 'Why a resurrection changes everything', by: 'Craig Brown', len: '3:48', tone: 'Direct' },
+];
+const ELEMENTS = [
+  'God made us and is holy; we were made to know him.',
+  'We have all sinned, and sin separates us from God.',
+  'Jesus, God the Son, died for our sins, was buried, and rose again on the third day.',
+  'We are saved by grace through faith in Jesus: turning from sin and trusting him.',
+  'He calls us into his church now and will come again.',
+];
+function lib(el, name) {
+  el.innerHTML = LIBRARY.map((v, i) => `
+    <label class="ob-vid">
+      <input type="radio" name="${name}" value="${i}" ${i === 0 ? 'checked' : ''}>
+      <span class="ob-thumb" aria-hidden="true"><i></i></span>
+      <span class="ob-vt"><b>${v.t}</b><small>${v.by} &middot; ${v.len} &middot; ${v.tone}</small></span>
+    </label>`).join('');
+}
+function elements(el) {
+  el.innerHTML = `<p class="ob-el-h">The five gospel elements <small>sample checklist</small></p>` +
+    ELEMENTS.map((e, i) => `<label class="ob-el"><input type="checkbox"><span>${e}</span></label>`).join('');
+}
+lib(document.getElementById('lib'), 'vid');
+lib(document.getElementById('libLater'), 'vidLater');
+elements(document.getElementById('elOwn'));
+elements(document.getElementById('elLater'));
+
+// Show the pane for the chosen radio in each step.
+for (const key of ['how', 'grow', 'conn']) {
+  document.querySelectorAll(`input[name="${key}"]`).forEach(r => r.addEventListener('change', () => {
+    document.querySelectorAll(`[data-${key}]`).forEach(p => { p.hidden = p.dataset[key] !== r.value; });
+  }));
+}
+
+// The slide.
+const steps = [...document.querySelectorAll('.ob-step')];
+const track = document.getElementById('track');
+const dots = [...document.querySelectorAll('#dots li')];
+const back = document.getElementById('back');
+const next = document.getElementById('next');
+let i = 0;
+const labels = ['Get started', 'Continue', 'Continue', 'Finish', 'Go to my dashboard'];
+function go(n) {
+  i = Math.max(0, Math.min(steps.length - 1, n));
+  track.style.transform = `translateX(${-i * 100}%)`;
+  steps.forEach((s, k) => { s.classList.toggle('on', k === i); s.setAttribute('aria-hidden', k !== i); });
+  dots.forEach((d, k) => { d.classList.toggle('on', k === i); d.classList.toggle('done', k < i); });
+  back.hidden = i === 0 || i === steps.length - 1;
+  next.textContent = labels[i];
+  document.querySelector('.ob-frame').style.height = steps[i].offsetHeight + 'px';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+next.addEventListener('click', () => { if (i === steps.length - 1) { location.href = 'dashboard.html'; return; } go(i + 1); });
+back.addEventListener('click', () => go(i - 1));
+dots.forEach(d => d.addEventListener('click', () => { if (d.classList.contains('done')) go(Number(d.dataset.i)); }));
+document.querySelectorAll('.ob-step input').forEach(el => el.addEventListener('change', () => go(i)));
+window.addEventListener('resize', () => go(i));
+go(0);
+</script>
+</body>
+</html>
