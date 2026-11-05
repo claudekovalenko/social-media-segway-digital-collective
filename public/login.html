@@ -79,51 +79,18 @@
       <p class="aside-link" id="loading">Loading sign-in options&hellip;</p>
       <form id="joinForm" hidden>
         <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
-        <p class="aside-link">Tell us about your work. We read every one and reply by email.</p>
+        <p class="aside-link">We read every one and reply by email.</p>
         <label>Your name
           <input name="name" type="text" required placeholder="Sam Rivera" autocomplete="name">
         </label>
         <label>Email
           <input name="email" type="email" required placeholder="you@example.com" autocomplete="email">
         </label>
-        <label>Your main handle or profile link
-          <input name="handle" type="text" placeholder="@yourhandle or https://…">
+        <label>Your main profile link
+          <input name="handle" type="text" required placeholder="instagram.com/yourhandle, youtube.com/@you, tiktok.com/@you…" autocomplete="url">
         </label>
-        <fieldset class="pick-set">
-          <legend>Where you create <span class="pick-hint">pick all that apply</span></legend>
-          <div class="pick-row">
-            <label class="pick"><input type="checkbox" name="platform" value="Instagram"><span>Instagram</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="TikTok"><span>TikTok</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="YouTube"><span>YouTube</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Facebook"><span>Facebook</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="X"><span>X</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Threads"><span>Threads</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Snapchat"><span>Snapchat</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Pinterest"><span>Pinterest</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="LinkedIn"><span>LinkedIn</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Twitch"><span>Twitch</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Rumble"><span>Rumble</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Podcast"><span>Podcast</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Blog or newsletter"><span>Blog / newsletter</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Website"><span>Website</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="In person"><span>In person</span></label>
-            <label class="pick"><input type="checkbox" name="platform" value="Other"><span>Other</span></label>
-          </div>
-        </fieldset>
-        <label>What you create about <span class="pick-hint">optional</span>
-          <input name="topic" type="text" placeholder="Testimonies, apologetics, worship…">
-        </label>
-        <label>Roughly how many people follow you <span class="pick-hint">optional</span>
-          <select name="audience">
-            <option value="">Prefer not to say</option>
-            <option value="Under 1,000">Under 1,000</option>
-            <option value="1,000 to 10,000">1,000 to 10,000</option>
-            <option value="10,000 to 100,000">10,000 to 100,000</option>
-            <option value="Over 100,000">Over 100,000</option>
-          </select>
-        </label>
-        <label>Why do you want a link? <span class="pick-hint">this is the part we read most closely</span>
-          <textarea name="why" rows="4" required maxlength="1000" placeholder="What you are hoping this does for the people who follow you."></textarea>
+        <label>Why do you want a link? <span class="pick-hint">a sentence or two is plenty</span>
+          <textarea name="why" rows="3" required maxlength="1000" placeholder="What you hope this does for the people who follow you."></textarea>
         </label>
         <label class="check">
           <input type="checkbox" name="agree_faith" required>
@@ -443,7 +410,11 @@
       const f = e.currentTarget;
       const form = new FormData(f);
       const data = Object.fromEntries(form.entries());
-      data.platform = form.getAll('platform');
+      // The platform comes from the link, so nobody has to tick it.
+      const h = String(data.handle || '').toLowerCase();
+      const KNOWN = [['instagram.', 'Instagram'], ['tiktok.', 'TikTok'], ['youtube.', 'YouTube'], ['youtu.be', 'YouTube'], ['facebook.', 'Facebook'], ['fb.com', 'Facebook'], ['x.com', 'X'], ['twitter.', 'X'], ['threads.', 'Threads'], ['snapchat.', 'Snapchat'], ['pinterest.', 'Pinterest'], ['linkedin.', 'LinkedIn'], ['twitch.', 'Twitch'], ['rumble.', 'Rumble'], ['spotify.', 'Podcast'], ['podcasts.apple', 'Podcast'], ['substack.', 'Blog or newsletter']];
+      const found = KNOWN.find(([k]) => h.includes(k));
+      data.platform = found ? [found[1]] : (h.startsWith('@') ? [] : (h.includes('.') ? ['Website'] : []));
       // Each commitment is its own box, and every one of them has to be
       // ticked before this counts as agreed.
       const AGREEMENTS = ['agree_faith', 'agree_terms'];
