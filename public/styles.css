@@ -3902,3 +3902,40 @@ body.jpn .ob-nav .btn-primary { margin-left: auto; }
   body.jpn .ob-flow { flex-direction: column; align-items: stretch; }
   body.jpn .ob-flow li + li::before { content: '\2193'; }
 }
+
+/* After a commitment: a page that looks like a moment, not a form */
+body.jpn.wc { background: var(--ivory); }
+body.jpn.wc .wc-wrap { max-width: 680px; padding-bottom: 0; }
+body.jpn.wc .wc-hero { background: var(--ink); color: var(--ivory); padding: 56px 0 44px; }
+body.jpn.wc .wc-kicker { margin: 0 0 14px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+body.jpn.wc .wc-h { margin: 0 0 14px; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.08; letter-spacing: -0.03em; font-weight: 700; color: var(--ivory); text-wrap: balance; }
+body.jpn.wc .wc-h em { font-style: italic; color: var(--gold); }
+body.jpn.wc .wc-lead { margin: 0 0 26px; font-size: 1.05rem; line-height: 1.55; color: rgba(245,240,231,0.82); max-width: 54ch; }
+body.jpn.wc .wc-video { border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.06); border: 1px solid rgba(245,240,231,0.18); }
+body.jpn.wc .wc-play { display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 18px; background: none; border: 0; color: var(--ivory); text-align: left; cursor: pointer; font-family: var(--font); }
+body.jpn.wc .wc-play:hover { background: rgba(255,255,255,0.08); }
+body.jpn.wc .wc-play-i { flex: none; width: 48px; height: 48px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; }
+body.jpn.wc .wc-play-i::after { content: ''; width: 0; height: 0; border-left: 14px solid var(--ink); border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 4px; }
+body.jpn.wc .wc-play-t { font-weight: 600; font-size: 1rem; line-height: 1.3; }
+body.jpn.wc .wc-play-t small { display: block; font-weight: 400; font-size: 0.82rem; color: rgba(245,240,231,0.7); margin-top: 3px; }
+body.jpn.wc .wc-frame { aspect-ratio: 16 / 9; display: grid; place-items: center; text-align: center; color: rgba(245,240,231,0.8); font-size: 0.95rem; line-height: 1.6; }
+body.jpn.wc .wc-main { padding: 36px 0 60px; }
+body.jpn.wc .wc-steps { list-style: none; margin: 0 0 28px; padding: 0; display: grid; gap: 12px; }
+body.jpn.wc .wc-step { display: grid; grid-template-columns: 36px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 18px 16px; }
+body.jpn.wc .wc-n { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--ivory); font-weight: 700; display: grid; place-items: center; font-size: 0.9rem; margin-top: 2px; }
+body.jpn.wc .wc-step h2 { margin: 0 0 6px; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+body.jpn.wc .wc-step p { margin: 0 0 12px; font-size: 0.96rem; line-height: 1.55; }
+body.jpn.wc .wc-step p:last-child { margin-bottom: 0; }
+body.jpn.wc .wc-btn { display: inline-block; padding: 11px 18px; font-size: 0.95rem; text-decoration: none; }
+body.jpn.wc .wc-fine { font-size: 0.86rem; color: var(--ink-3); margin: 12px 0 0 !important; }
+body.jpn.wc .wc-fine a { color: var(--terracotta); }
+body.jpn.wc .wc-word { margin: 0 0 24px; padding: 18px 20px; border-left: 3px solid var(--gold); background: var(--ivory-3); border-radius: 0 14px 14px 0; }
+body.jpn.wc .wc-word p { margin: 0 0 6px; font-size: 1.05rem; line-height: 1.5; font-style: italic; color: var(--ink); }
+body.jpn.wc .wc-word cite { font-style: normal; font-size: 0.82rem; color: var(--ink-3); }
+body.jpn.wc .wc-back { margin: 0; font-size: 0.9rem; } body.jpn.wc .wc-back a { color: var(--ink-3); }
+@media (max-width: 640px) {
+  body.jpn.wc .wc-hero { padding: 34px 0 28px; }
+  body.jpn.wc .wc-step { grid-template-columns: 30px 1fr; gap: 10px; padding: 14px; }
+  body.jpn.wc .wc-n { width: 28px; height: 28px; font-size: 0.82rem; }
+  body.jpn.wc .wc-btn { display: block; text-align: center; }
+}
