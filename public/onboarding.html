@@ -20,7 +20,7 @@
 <nav><div class="v2-wrap">
   <a class="v2-brand" href="index.html"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.6 4.8 5.4v6.1c0 4.4 3 8.1 7.2 9.9 4.2-1.8 7.2-5.5 7.2-9.9V5.4L12 2.6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7.6v8.2M9 10.6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></i>Digital Collective</a>
   <div class="v2-nav-links">
-    <span class="ob-preview-tag">Preview with sample data</span>
+    <span class="ob-preview-tag"><b>Preview</b> with sample data</span>
   </div>
 </div></nav>
 <main class="v2-page">
@@ -166,7 +166,7 @@
           <li>Drop it in your bio</li>
           <li>Emails start arriving</li>
         </ol>
-        <ul class="ob-next">
+        <ul class="ob-todo">
           <li>Pin one post that points to the link.</li>
           <li>Check your dashboard once a week. Everyone who responds is there.</li>
         </ul>
@@ -255,7 +255,7 @@ function go(n) {
   const was = i;
   i = Math.max(0, Math.min(steps.length - 1, n));
   track.style.transform = `translateX(${-i * 100}%)`;
-  steps.forEach((s, k) => { s.classList.toggle('on', k === i); s.setAttribute('aria-hidden', k !== i); });
+  steps.forEach((s, k) => { s.classList.toggle('on', k === i); s.setAttribute('aria-hidden', k !== i); s.inert = k !== i; });
   dots.forEach((d, k) => { d.classList.toggle('on', k === i); d.classList.toggle('done', k < i); });
   back.style.visibility = (i === 0 || i === steps.length - 1) ? 'hidden' : 'visible';
   next.firstChild.textContent = labels[i];
@@ -276,7 +276,7 @@ document.querySelectorAll('.ob-step input').forEach(el => el.addEventListener('c
 document.querySelectorAll('.ob-fold').forEach(d => d.addEventListener('toggle', () => go(i)));
 window.addEventListener('resize', () => go(i));
 document.addEventListener('keydown', (e) => {
-  if (e.target.matches('input, textarea')) return;
+  if (e.target.matches('input, textarea, button, summary, a')) return;
   if (e.key === 'ArrowRight' || e.key === 'Enter') next.click();
   if (e.key === 'ArrowLeft') back.click();
 });
