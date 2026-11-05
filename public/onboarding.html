@@ -94,10 +94,14 @@
       <section class="ob-step" data-step="2">
         <p class="v2-kicker">Step 2 of 4</p>
         <h1 class="ob-h">Grow <em>with God</em></h1>
-        <p class="ob-lead">After the gospel, where do they go next? Most creators send people to the collective&rsquo;s first course.</p>
-        <div class="ob-choice" role="radiogroup">
-          <label class="ob-opt"><input type="radio" name="grow" value="default" checked><span><b>The collective&rsquo;s first course</b><small>A short, free introduction to following Jesus.</small></span></label>
-          <label class="ob-opt"><input type="radio" name="grow" value="own"><span><b>My own link</b><small>A course, a reading plan, a playlist.</small></span></label>
+        <p class="ob-lead">Someone who just said yes needs the basics first. Someone already following Jesus may need one area. Choose what your page offers.</p>
+        <div class="ob-choice" role="radiogroup" aria-label="Which course?">
+          <label class="ob-opt"><input type="radio" name="grow" value="default" checked><span><b>Foundations <i class="ob-rec">Recommended</i></b><small>The collective&rsquo;s first course: who God is, what Jesus did, prayer, the Bible, church. Six short sessions for someone new.</small></span></label>
+          <label class="ob-opt"><input type="radio" name="grow" value="focus"><span><b>Foundations, plus one focus</b><small>Keep the basics for new believers and add one area from the library for those further along.</small></span></label>
+          <label class="ob-opt"><input type="radio" name="grow" value="own"><span><b>My own link</b><small>A course, a reading plan, a playlist. We ask that it stays within sound doctrine.</small></span></label>
+        </div>
+        <div class="ob-pane" data-grow="focus" hidden>
+          <div class="ob-lib ob-focus" id="focus"></div>
         </div>
         <div class="ob-pane" data-grow="own" hidden>
           <label class="ob-field">Link<input type="url" placeholder="https://…"></label>
@@ -172,8 +176,9 @@
   </div>
 
   <div class="ob-nav">
-    <button type="button" class="btn-ghost" id="back">Back</button>
-    <button type="button" class="btn-primary" id="next">Get started</button>
+    <button type="button" class="ob-back" id="back"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+    <span class="ob-count" id="count" aria-live="polite"></span>
+    <button type="button" class="btn-primary ob-next" id="next">Get started<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 
 </div>
@@ -209,6 +214,18 @@ function elements(el) {
   el.innerHTML = `<p class="ob-el-h">The five gospel elements <small>sample checklist</small></p>` +
     ELEMENTS.map((e, i) => `<label class="ob-el"><input type="checkbox"><span>${e}</span></label>`).join('');
 }
+const FOCUS = [
+  { t: 'Reading the Bible well', d: 'How to read, what to read first, and a 30-day plan.' },
+  { t: 'Sound doctrine', d: 'The creed, line by line. What Christians have always believed and why.' },
+  { t: 'Prayer', d: 'Talking with God daily. Simple, honest, unhurried.' },
+  { t: 'Church and community', d: 'Why a local church, how to join one, how to stay.' },
+  { t: 'Sharing your faith', d: 'Telling your story and the gospel without fear or hype.' },
+];
+document.getElementById('focus').innerHTML = FOCUS.map((f, i) => `
+  <label class="ob-vid ob-fc">
+    <input type="radio" name="focus" value="${i}" ${i === 0 ? 'checked' : ''}>
+    <span class="ob-vt"><b>${f.t}</b><small>${f.d}</small></span>
+  </label>`).join('');
 lib(document.getElementById('lib'), 'vid');
 lib(document.getElementById('libLater'), 'vidLater');
 elements(document.getElementById('elOwn'));
@@ -230,12 +247,15 @@ const next = document.getElementById('next');
 let i = 0;
 const labels = ['Get started', 'Continue', 'Continue', 'Continue', 'Finish', 'Go to my dashboard'];
 function go(n) {
+  const was = i;
   i = Math.max(0, Math.min(steps.length - 1, n));
   track.style.transform = `translateX(${-i * 100}%)`;
   steps.forEach((s, k) => { s.classList.toggle('on', k === i); s.setAttribute('aria-hidden', k !== i); });
   dots.forEach((d, k) => { d.classList.toggle('on', k === i); d.classList.toggle('done', k < i); });
-  back.hidden = i === 0 || i === steps.length - 1;
-  next.textContent = labels[i];
+  back.style.visibility = (i === 0 || i === steps.length - 1) ? 'hidden' : 'visible';
+  next.firstChild.textContent = labels[i];
+  document.getElementById('count').textContent = (i === 0 || i === steps.length - 1) ? '' : `${i} of ${steps.length - 2}`;
+  if (was !== i || !steps[i].classList.contains('in')) { steps.forEach(s => s.classList.remove('in')); void steps[i].offsetWidth; steps[i].classList.add('in'); }
   document.querySelector('.ob-frame').style.height = steps[i].offsetHeight + 'px';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -249,6 +269,19 @@ document.getElementById('addContact').addEventListener('change', (e) => {
 document.querySelectorAll('.ob-step input').forEach(el => el.addEventListener('change', () => go(i)));
 document.querySelectorAll('.ob-fold').forEach(d => d.addEventListener('toggle', () => go(i)));
 window.addEventListener('resize', () => go(i));
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea')) return;
+  if (e.key === 'ArrowRight' || e.key === 'Enter') next.click();
+  if (e.key === 'ArrowLeft') back.click();
+});
+// Swipe between steps on a phone.
+let sx = null;
+track.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+track.addEventListener('touchend', (e) => {
+  if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
+  if (Math.abs(dx) < 60) return;
+  if (dx < 0 && i < steps.length - 1) next.click(); else if (dx > 0 && i > 0 && i < steps.length - 1) back.click();
+});
 go(0);
 </script>
 </body>
