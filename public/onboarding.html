@@ -30,8 +30,9 @@
     <li data-i="0"><span>1</span>Welcome</li>
     <li data-i="1"><span>2</span>Know God</li>
     <li data-i="2"><span>3</span>Grow</li>
-    <li data-i="3"><span>4</span>Get Connected</li>
-    <li data-i="4"><span>5</span>Done</li>
+    <li data-i="3"><span>4</span>Connect</li>
+    <li data-i="4"><span>5</span>Emails</li>
+    <li data-i="5"><span>6</span>Done</li>
   </ol>
 
   <div class="ob-frame">
@@ -41,7 +42,7 @@
       <section class="ob-step" data-step="0">
         <p class="v2-kicker">You&rsquo;re approved</p>
         <h1 class="ob-h">Welcome, <em>Craig</em></h1>
-        <p class="ob-lead">Your page is reserved. Three short steps and it goes live. We filled in what you gave us when you applied.</p>
+        <p class="ob-lead">Your page is reserved. Four short steps and it goes live. We filled in what you gave us when you applied.</p>
         <dl class="ob-facts">
           <div><dt>Name</dt><dd>Craig Brown</dd></div>
           <div><dt>Email</dt><dd>craig@example.com</dd></div>
@@ -53,7 +54,7 @@
 
       <!-- 2 Know God -->
       <section class="ob-step" data-step="1">
-        <p class="v2-kicker">Step 1 of 3</p>
+        <p class="v2-kicker">Step 1 of 4</p>
         <h1 class="ob-h">Your gospel <em>presentation</em></h1>
         <p class="ob-lead">This is the first thing someone sees after your link. Pick one of ours, or use your own.</p>
 
@@ -71,6 +72,15 @@
           <label class="ob-field">Video link<input type="url" placeholder="https://youtube.com/watch?v=…" id="ownUrl"></label>
           <p class="ob-fine">Your video should cover the five elements below. You will tick them off before it goes live.</p>
           <div class="ob-elements" id="elOwn"></div>
+          <div class="ob-guard">
+            <p class="ob-el-h">What we hold to</p>
+            <ul>
+              <li>Jesus is God, and he died on the cross for our sins and rose again.</li>
+              <li>Salvation is by grace through faith, not by works, wealth or health. No prosperity gospel.</li>
+              <li>Sound doctrine: what the church has confessed in the Nicene Creed.</li>
+              <li>Plain speech. No pressure tactics, no fear, no hype.</li>
+            </ul>
+          </div>
         </div>
 
         <div class="ob-pane" data-how="later" hidden>
@@ -82,7 +92,7 @@
 
       <!-- 3 Grow -->
       <section class="ob-step" data-step="2">
-        <p class="v2-kicker">Step 2 of 3</p>
+        <p class="v2-kicker">Step 2 of 4</p>
         <h1 class="ob-h">Grow <em>with God</em></h1>
         <p class="ob-lead">After the gospel, where do they go next? Most creators send people to the collective&rsquo;s first course.</p>
         <div class="ob-choice" role="radiogroup">
@@ -96,7 +106,7 @@
 
       <!-- 4 Get Connected -->
       <section class="ob-step" data-step="3">
-        <p class="v2-kicker">Step 3 of 3</p>
+        <p class="v2-kicker">Step 3 of 4</p>
         <h1 class="ob-h">Get <em>Connected</em></h1>
         <p class="ob-lead">The finish line is a healthy local church. Who do you want to point people to?</p>
         <div class="ob-choice" role="radiogroup">
@@ -107,18 +117,54 @@
           <label class="ob-field">Church name<input type="text" placeholder="Grace Church, Dallas"></label>
           <label class="ob-field">Church website<input type="url" placeholder="https://…"></label>
         </div>
+        <details class="ob-fold">
+          <summary>What people will read alongside your link</summary>
+          <p>So the whole weight does not rest on one link, every Get Connected page carries the same short guide to choosing a church well.</p>
+          <ul>
+            <li><b>Be a Berean.</b> Check what any church teaches against Scripture (Acts 17:11). A healthy church welcomes that.</li>
+            <li><b>Look for</b> the Bible preached, Jesus at the centre, the gospel clear, leaders who are accountable, and people who know each other.</li>
+            <li><b>Warning signs:</b> one leader nobody may question, money pressure, secrets, cutting you off from family and friends, or a teaching that only they have the truth.</li>
+            <li><b>Not a cult.</b> You can visit, ask questions and leave. The door is open both ways.</li>
+          </ul>
+        </details>
       </section>
 
-      <!-- 5 Done -->
+      <!-- 5 Emails -->
       <section class="ob-step" data-step="4">
+        <p class="v2-kicker">Step 4 of 4</p>
+        <h1 class="ob-h">Follow-up <em>emails</em></h1>
+        <p class="ob-lead">When someone leaves their details on your page, the platform emails them for you. One email, from a no-reply address, with your course link and your church link in it.</p>
+        <div class="ob-mail" aria-label="Sample email">
+          <p class="ob-mail-meta">From: Digital Collective &lt;noreply@…&gt; &middot; To: them</p>
+          <p class="ob-mail-sub">Your next step with Craig Brown</p>
+          <p>Hi Sam,</p>
+          <p>Thank you for taking a real step toward Jesus. Craig put this page in their bio for exactly this moment, and you are not alone in it.</p>
+          <p><span class="ob-mail-btn">Start the course</span></p>
+          <p>The best next step is a church near you where people will know your name. <u>Find one here.</u></p>
+          <p class="ob-mail-opt" id="mailOpt" hidden>Want to talk to Craig directly? <u>Email Craig</u>.</p>
+          <p class="ob-mail-foot">You asked to hear from us when you responded on a creator&rsquo;s page. Unsubscribe.</p>
+        </div>
+        <label class="ob-el ob-contact"><input type="checkbox" id="addContact"><span><b>Add my email at the bottom</b><small>So they can write to you directly. Most creators leave this off and let the platform handle it.</small></span></label>
+        <div class="ob-pane" id="contactPane" hidden>
+          <label class="ob-field">Email to show<input type="email" value="craig@example.com"></label>
+        </div>
+      </section>
+
+      <!-- 6 Done -->
+      <section class="ob-step" data-step="5">
         <p class="v2-kicker">All set</p>
         <h1 class="ob-h">Your page is <em>live</em></h1>
         <p class="ob-lead">Share this link anywhere. Everyone who responds shows up on your dashboard, with a note to follow up.</p>
         <div class="ob-link"><span>digitalcollective.org/c/<b>craigbrown</b></span><button type="button" class="btn-ghost">Copy</button></div>
+        <ol class="ob-flow">
+          <li class="done">Link created</li>
+          <li>Copy it</li>
+          <li>Drop it in your bio</li>
+          <li>Emails start arriving</li>
+        </ol>
         <ul class="ob-next">
-          <li>Put the link in your bio.</li>
-          <li>Pin one post that points to it.</li>
-          <li>Check your dashboard once a week.</li>
+          <li>Pin one post that points to the link.</li>
+          <li>Check your dashboard once a week. Everyone who responds is there.</li>
         </ul>
       </section>
 
@@ -182,7 +228,7 @@ const dots = [...document.querySelectorAll('#dots li')];
 const back = document.getElementById('back');
 const next = document.getElementById('next');
 let i = 0;
-const labels = ['Get started', 'Continue', 'Continue', 'Finish', 'Go to my dashboard'];
+const labels = ['Get started', 'Continue', 'Continue', 'Continue', 'Finish', 'Go to my dashboard'];
 function go(n) {
   i = Math.max(0, Math.min(steps.length - 1, n));
   track.style.transform = `translateX(${-i * 100}%)`;
@@ -196,7 +242,12 @@ function go(n) {
 next.addEventListener('click', () => { if (i === steps.length - 1) { location.href = 'dashboard.html'; return; } go(i + 1); });
 back.addEventListener('click', () => go(i - 1));
 dots.forEach(d => d.addEventListener('click', () => { if (d.classList.contains('done')) go(Number(d.dataset.i)); }));
+document.getElementById('addContact').addEventListener('change', (e) => {
+  document.getElementById('contactPane').hidden = !e.target.checked;
+  document.getElementById('mailOpt').hidden = !e.target.checked;
+});
 document.querySelectorAll('.ob-step input').forEach(el => el.addEventListener('change', () => go(i)));
+document.querySelectorAll('.ob-fold').forEach(d => d.addEventListener('toggle', () => go(i)));
 window.addEventListener('resize', () => go(i));
 go(0);
 </script>

@@ -3868,6 +3868,26 @@ body.jpn .ob-link { display: flex; align-items: center; justify-content: space-b
 body.jpn .ob-link > span { flex: 1; min-width: 0; word-break: break-all; }
 body.jpn .ob-link b { color: var(--terracotta); } body.jpn .ob-link .btn-ghost { padding: 8px 14px; flex: none; width: auto; cursor: pointer; }
 body.jpn .ob-next { margin: 0; padding-left: 20px; color: var(--ink-2); line-height: 1.7; }
+body.jpn .ob-guard { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; }
+body.jpn .ob-guard ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.92rem; line-height: 1.5; color: var(--ink-2); }
+body.jpn .ob-fold { background: var(--ivory-3); border: 1px solid var(--line); border-radius: 14px; padding: 0 14px; margin: 4px 0 0; }
+body.jpn .ob-fold summary { cursor: pointer; padding: 12px 0; font-weight: 600; font-size: 0.92rem; color: var(--ink); }
+body.jpn .ob-fold p { font-size: 0.92rem; margin: 0 0 8px; }
+body.jpn .ob-fold ul { margin: 0 0 12px; padding-left: 18px; font-size: 0.92rem; line-height: 1.5; color: var(--ink-2); display: grid; gap: 6px; }
+body.jpn .ob-fold li b { color: var(--ink); }
+body.jpn .ob-mail { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 0 0 14px; font-size: 0.93rem; line-height: 1.55; }
+body.jpn .ob-mail p { margin: 0 0 10px; }
+body.jpn .ob-mail-meta { font-size: 0.78rem; color: var(--ink-3); }
+body.jpn .ob-mail-sub { font-weight: 700; font-size: 1rem; color: var(--ink); border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+body.jpn .ob-mail-btn { display: inline-block; background: var(--ink); color: var(--ivory); padding: 8px 14px; border-radius: 9px; font-weight: 600; font-size: 0.88rem; }
+body.jpn .ob-mail-opt { background: var(--ivory-3); border-radius: 8px; padding: 8px 10px; }
+body.jpn .ob-mail-foot { font-size: 0.76rem; color: var(--ink-3); margin-top: 14px !important; }
+body.jpn .ob-contact { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 0 0 10px; }
+body.jpn .ob-contact b { display: block; color: var(--ink); } body.jpn .ob-contact small { display: block; font-size: 0.84rem; color: var(--ink-3); margin-top: 2px; }
+body.jpn .ob-flow { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+body.jpn .ob-flow li { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; font-size: 0.88rem; font-weight: 600; color: var(--ink-2); }
+body.jpn .ob-flow li.done { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+body.jpn .ob-flow li + li::before { content: '\2192'; margin-right: 8px; color: var(--ink-3); }
 body.jpn .ob-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 22px; }
 body.jpn .ob-nav .btn-primary, body.jpn .ob-nav .btn-ghost { padding: 12px 22px; font-size: 0.95rem; cursor: pointer; }
 body.jpn .ob-nav .btn-primary { margin-left: auto; }
@@ -3879,4 +3899,6 @@ body.jpn .ob-nav .btn-primary { margin-left: auto; }
   body.jpn .ob-facts div { grid-template-columns: 1fr; gap: 2px; }
   body.jpn .ob-vid { grid-template-columns: auto 72px 1fr; } body.jpn .ob-thumb { height: 44px; }
   body.jpn .ob-nav .btn-primary { flex: 1; }
+  body.jpn .ob-flow { flex-direction: column; align-items: stretch; }
+  body.jpn .ob-flow li + li::before { content: '\2193'; }
 }
