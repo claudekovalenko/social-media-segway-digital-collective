@@ -39,7 +39,7 @@
     <div class="ob-track" id="track">
 
       <!-- 1 Welcome -->
-      <section class="ob-step" data-step="0">
+      <div class="ob-step" data-step="0">
         <p class="v2-kicker">You&rsquo;re approved</p>
         <h1 class="ob-h">Welcome, <em>Craig</em></h1>
         <p class="ob-lead">Your page is reserved. Four short steps and it goes live. We filled in what you gave us when you applied.</p>
@@ -50,10 +50,10 @@
           <div><dt>Your link</dt><dd>digitalcollective.org/c/<b>craigbrown</b></dd></div>
         </dl>
         <p class="ob-fine">Something wrong? You can change any of it later from your dashboard.</p>
-      </section>
+      </div>
 
       <!-- 2 Know God -->
-      <section class="ob-step" data-step="1">
+      <div class="ob-step" data-step="1">
         <p class="v2-kicker">Step 1 of 4</p>
         <h1 class="ob-h">Your gospel <em>presentation</em></h1>
         <p class="ob-lead">This is the first thing someone sees after your link. Pick one of ours, or use your own.</p>
@@ -88,10 +88,10 @@
           <div class="ob-elements" id="elLater"></div>
           <div class="ob-lib" id="libLater"></div>
         </div>
-      </section>
+      </div>
 
       <!-- 3 Grow -->
-      <section class="ob-step" data-step="2">
+      <div class="ob-step" data-step="2">
         <p class="v2-kicker">Step 2 of 4</p>
         <h1 class="ob-h">Grow <em>with God</em></h1>
         <p class="ob-lead">Someone who just said yes needs the basics first. Someone already following Jesus may need one area. Choose what your page offers.</p>
@@ -106,10 +106,10 @@
         <div class="ob-pane" data-grow="own" hidden>
           <label class="ob-field">Link<input type="url" placeholder="https://…"></label>
         </div>
-      </section>
+      </div>
 
       <!-- 4 Get Connected -->
-      <section class="ob-step" data-step="3">
+      <div class="ob-step" data-step="3">
         <p class="v2-kicker">Step 3 of 4</p>
         <h1 class="ob-h">Get <em>Connected</em></h1>
         <p class="ob-lead">The finish line is a healthy local church. Who do you want to point people to?</p>
@@ -131,10 +131,10 @@
             <li><b>Not a cult.</b> You can visit, ask questions and leave. The door is open both ways.</li>
           </ul>
         </details>
-      </section>
+      </div>
 
       <!-- 5 Emails -->
-      <section class="ob-step" data-step="4">
+      <div class="ob-step" data-step="4">
         <p class="v2-kicker">Step 4 of 4</p>
         <h1 class="ob-h">Follow-up <em>emails</em></h1>
         <p class="ob-lead">When someone leaves their details on your page, the platform emails them for you. One email, from a no-reply address, with your course link and your church link in it.</p>
@@ -152,10 +152,10 @@
         <div class="ob-pane" id="contactPane" hidden>
           <label class="ob-field">Email to show<input type="email" value="craig@example.com"></label>
         </div>
-      </section>
+      </div>
 
       <!-- 6 Done -->
-      <section class="ob-step" data-step="5">
+      <div class="ob-step" data-step="5">
         <p class="v2-kicker">All set</p>
         <h1 class="ob-h">Your page is <em>live</em></h1>
         <p class="ob-lead">Share this link anywhere. Everyone who responds shows up on your dashboard, with a note to follow up.</p>
@@ -170,7 +170,7 @@
           <li>Pin one post that points to the link.</li>
           <li>Check your dashboard once a week. Everyone who responds is there.</li>
         </ul>
-      </section>
+      </div>
 
     </div>
   </div>
@@ -241,6 +241,11 @@ for (const key of ['how', 'grow', 'conn']) {
 // The slide.
 const steps = [...document.querySelectorAll('.ob-step')];
 const track = document.getElementById('track');
+const frame = document.querySelector('.ob-frame');
+// A focused control inside the slider makes some browsers scroll the frame
+// sideways to show it; the clip above stops most, this catches the rest.
+frame.addEventListener('scroll', () => { if (frame.scrollLeft) frame.scrollLeft = 0; });
+document.addEventListener('focusin', () => { frame.scrollLeft = 0; });
 const dots = [...document.querySelectorAll('#dots li')];
 const back = document.getElementById('back');
 const next = document.getElementById('next');
@@ -256,7 +261,8 @@ function go(n) {
   next.firstChild.textContent = labels[i];
   document.getElementById('count').textContent = (i === 0 || i === steps.length - 1) ? '' : `${i} of ${steps.length - 2}`;
   if (was !== i || !steps[i].classList.contains('in')) { steps.forEach(s => s.classList.remove('in')); void steps[i].offsetWidth; steps[i].classList.add('in'); }
-  document.querySelector('.ob-frame').style.height = steps[i].offsetHeight + 'px';
+  frame.style.height = steps[i].offsetHeight + 'px';
+  frame.scrollLeft = 0;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 next.addEventListener('click', () => { if (i === steps.length - 1) { location.href = 'dashboard.html'; return; } go(i + 1); });

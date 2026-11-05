@@ -3823,7 +3823,7 @@ body.jpn .why-sources a { color: var(--terracotta); }
 }
 
 /* Onboarding: one step at a time, sliding */
-body.jpn .ob-wrap { max-width: 720px; }
+body.jpn .ob-wrap { max-width: 720px; padding-bottom: 0; }
 body.jpn .ob-preview-tag { font-size: 0.78rem; color: var(--ink-3); border: 1px dashed var(--line); border-radius: 999px; padding: 5px 10px; }
 body.jpn .ob-dots { list-style: none; margin: 0 0 22px; padding: 0; display: flex; gap: 6px; }
 body.jpn .ob-dots li { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; color: var(--ink-3); padding-bottom: 10px; border-bottom: 2px solid var(--line); white-space: nowrap; }
@@ -3832,7 +3832,7 @@ body.jpn .ob-dots li.on { color: var(--ink); border-bottom-color: var(--ink); }
 body.jpn .ob-dots li.on span { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
 body.jpn .ob-dots li.done { color: var(--ink-2); border-bottom-color: var(--terracotta); cursor: pointer; }
 body.jpn .ob-dots li.done span { background: var(--terracotta); color: #fff; border-color: var(--terracotta); }
-body.jpn .ob-frame { overflow: hidden; transition: height 0.3s ease; margin: 0 -6px; }
+body.jpn .ob-frame { overflow: hidden; overflow-x: clip; transition: height 0.3s ease; margin: 0 -6px; }
 body.jpn .ob-track { display: flex; transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1); }
 body.jpn .ob-step { flex: 0 0 100%; min-width: 0; box-sizing: border-box; opacity: 0; transition: opacity 0.3s; align-self: flex-start; padding: 2px 6px; }
 body.jpn .ob-step.on { opacity: 1; }
