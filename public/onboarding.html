@@ -244,8 +244,9 @@ const track = document.getElementById('track');
 const frame = document.querySelector('.ob-frame');
 // A focused control inside the slider makes some browsers scroll the frame
 // sideways to show it; the clip above stops most, this catches the rest.
-frame.addEventListener('scroll', () => { if (frame.scrollLeft) frame.scrollLeft = 0; });
-document.addEventListener('focusin', () => { frame.scrollLeft = 0; });
+const unscroll = () => { if (frame.scrollLeft) frame.scrollLeft = 0; if (frame.scrollTop) frame.scrollTop = 0; };
+frame.addEventListener('scroll', unscroll);
+document.addEventListener('focusin', unscroll);
 const dots = [...document.querySelectorAll('#dots li')];
 const back = document.getElementById('back');
 const next = document.getElementById('next');
@@ -262,7 +263,7 @@ function go(n) {
   document.getElementById('count').textContent = (i === 0 || i === steps.length - 1) ? '' : `${i} of ${steps.length - 2}`;
   if (was !== i || !steps[i].classList.contains('in')) { steps.forEach(s => s.classList.remove('in')); void steps[i].offsetWidth; steps[i].classList.add('in'); }
   frame.style.height = steps[i].offsetHeight + 'px';
-  frame.scrollLeft = 0;
+  unscroll();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 next.addEventListener('click', () => { if (i === steps.length - 1) { location.href = 'dashboard.html'; return; } go(i + 1); });
