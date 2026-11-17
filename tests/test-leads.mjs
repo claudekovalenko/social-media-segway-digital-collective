@@ -18,7 +18,7 @@ if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(creator)) { console.error(`"${creator}" is
 if (!Number.isInteger(count) || count < 1 || count > 9) { console.error(`COUNT must be a whole number from 1 to 9, not "${process.env.COUNT}"`); process.exit(1); }
 
 // The creator must really exist: a misspelt name would quietly file the test
-// rows under the collective instead.
+// rows under the network instead.
 {
   const r = await fetch(`${base}/api/creators/${creator}`).catch((e) => {
     console.error(`Could not reach ${base} (${e.cause?.code || e.message}). Nothing was sent.`); process.exit(1);
