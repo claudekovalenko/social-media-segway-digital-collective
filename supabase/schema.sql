@@ -1,4 +1,4 @@
--- Digital Collective — Postgres schema for Supabase.
+-- Jesus People Network — Postgres schema for Supabase.
 -- Run this once in the Supabase SQL editor (Dashboard → SQL Editor → New query).
 --
 -- Design notes:
@@ -122,7 +122,7 @@ alter table admins add column if not exists role text not null default 'admin';
 alter table admins add column if not exists creator_slug text;
 alter table admins add column if not exists name text;
 
--- Requests to join the collective, reviewed by an admin.
+-- Requests to join the network, reviewed by an admin.
 create table if not exists applications (
   id bigint generated always as identity primary key,
   email text not null,
@@ -152,7 +152,7 @@ create index if not exists leads_status_idx on leads (status);
 
 alter table creators add column if not exists gather_url text;
 
--- Collective-wide defaults an admin can edit from the database page.
+-- Network-wide defaults an admin can edit from the database page.
 create table if not exists settings (
   key text primary key,
   value text,
@@ -483,5 +483,5 @@ create trigger consents_no_truncate before truncate on consents
 -- Leads with no creator link are attributed to 'default' (worker.js), and
 -- leads.creator_slug references creators, so that row has to exist. No handle,
 -- so it never shows in the directory.
-insert into creators (slug, name, mode) values ('default', 'Digital Collective', 'default')
+insert into creators (slug, name, mode) values ('default', 'Jesus People Network', 'default')
   on conflict (slug) do nothing;

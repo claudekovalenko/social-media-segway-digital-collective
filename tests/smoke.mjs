@@ -55,7 +55,7 @@ const CREATOR_ROW = {
 const MOCKS = {
   '/api/auth/config': { magic_link: false, password_login: true, providers: [] },
   '/api/admin/status': { has_accounts: true },
-  '/api/endorsements': { endorsements: [{ org: 'The Jesus People Network', person: 'Ryan Miller', url: 'https://example.com' }] },
+  '/api/endorsements': { endorsements: [{ org: 'Jesus People Network', person: 'Ryan Miller', url: 'https://example.com' }] },
   '/api/directory': { creators: [{ slug: CREATOR, name: 'Craig Brown', handle: 'acraigbrown', topic: 'Discipleship', back_url: 'https://instagram.com/acraigbrown' }] },
   '/api/defaults': {},
   '/api/events': { ok: true },
@@ -190,7 +190,7 @@ async function run(base) {
     expect(await page.locator('form[data-step="grow_with_god"] input[name="email"]').inputValue() === 'test@example.org', 'second form not filled in');
   });
 
-  await check('creator page: unknown creator still shows the collective defaults', async (page, { bad }) => {
+  await check('creator page: unknown creator still shows the network defaults', async (page, { bad }) => {
     await go(page, '/journey.html?creator=nobody-here-xyz');
     await page.waitForTimeout(1200);
     // The 404 for that creator is the expected answer, not a failure.

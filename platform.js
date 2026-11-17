@@ -3,7 +3,7 @@ import { addMissingColumns } from './db.js';
 //
 // Contacts are people; responses are what they reported, each attributed to a
 // creator, a section and a session. Events are what happened on a creator's
-// page. Communications log every follow-up the collective sends. The audit log
+// page. Communications log every follow-up the network sends. The audit log
 // records sensitive changes. Everything here reads env.DB directly; the
 // Supabase adapter in db.js still serves the original tables, and the
 // matching Postgres DDL lives in supabase/schema.sql for when that move
@@ -25,7 +25,7 @@ export const EVENT_TYPES = new Set([
   'page_view', 'section_open', 'media_click', 'outbound_click',
   'form_open', 'form_submit', 'followup_return',
 ]);
-export const CONSENT_VERSION = '2026-09-01';
+export const CONSENT_VERSION = '2026-11-16';
 
 // A calendar date like 2026-09-01 that actually exists (not 2026-02-30).
 export function isRealDate(d) {
@@ -37,8 +37,8 @@ export function isRealDate(d) {
 export const dateParam = (v) => (v && isRealDate(v) ? v : null);
 // A record id from a URL: a positive whole number the database can hold.
 export const recordId = (v) => { const n = Number(v); return Number.isSafeInteger(n) && n > 0 ? n : null; };
-export const TERMS_VERSION = '0.1';
-export const FAITH_VERSION = '1.0';
+export const TERMS_VERSION = '0.2';
+export const FAITH_VERSION = '1.1';
 
 let ready = null;
 
@@ -628,7 +628,7 @@ export async function sendEmail(env, { to, subject, html, text, tags }) {
 }
 
 // Network-owned templates with creator tokens. Creators customise greeting,
-// message and the button; the collective owns structure, sender and unsubscribe.
+// message and the button; the network owns structure, sender and unsubscribe.
 export const DEFAULT_TEMPLATES = {
   reported_commitment: {
     subject: 'Your next step with {{creator_name}}',
@@ -647,7 +647,7 @@ export const DEFAULT_TEMPLATES = {
   church_connection: {
     subject: 'Finding a church near you',
     greeting: 'Hi {{first_name}},',
-    message: 'You asked for help getting connected to a healthy local church. Someone from the Digital Collective team will be in touch, and this link will point you to churches near you.',
+    message: 'You asked for help getting connected to a healthy local church. Someone from Jesus People Network team will be in touch, and this link will point you to churches near you.',
     cta_label: 'Find a church near you',
     cta_url: '{{gather_url}}',
   },

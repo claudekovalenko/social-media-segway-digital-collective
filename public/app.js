@@ -21,7 +21,7 @@ const DEFAULT_CONTENT = {
   grow_video_url: '',        // discipleship intro video
   grow_course_url: '',       // discipleship course
   find_church_video_url: '', // "how to find a church" training
-  gather_url: '',            // set under "Collective defaults" in the database
+  gather_url: '',            // set under "Network defaults" in the database
   gather_label: '',
 };
 
@@ -113,7 +113,7 @@ async function loadCreator() {
     if (res.ok) {
       creator = { defaults: DEFAULT_CONTENT, ...(await res.json()) };
     } else {
-      // Unknown slug: the page still needs the collective's own defaults.
+      // Unknown slug: the page still needs the network's own defaults.
       const fallbackRes = await fetch(`${API_BASE}/api/defaults`);
       if (fallbackRes.ok) creator.defaults = (await fallbackRes.json()).defaults;
     }
@@ -133,7 +133,7 @@ async function loadCreator() {
   embed('video-grow_with_god', creator.grow_video_url || fallback.grow_video_url, t('vid2'));
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
   // Buttons under the videos: each points where the creator (or the
-  // collective) says the next step is.
+  // network) says the next step is.
   // Steps 1 and 2: the button opens a short form; the creator's own link is
   // offered once the person has sent it (see afterSubmit).
   nextLinks.know_god = creator.know_god_next_url || fallback.know_god_next_url || '';
@@ -298,7 +298,7 @@ applyLanguage();
 
 // ---- the Get Connected link --------------------------------------------
 // One outbound link for finding a church. A creator can point this anywhere;
-// otherwise everyone gets the collective's default partner.
+// otherwise everyone gets the network's default partner.
 // Every video gets a button. With a destination set it opens there in a new
 // tab; without one it moves the person on to the next step on this page.
 // Note when each step is first opened, however it opened (a tap, a button,

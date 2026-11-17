@@ -298,9 +298,9 @@ async function child(backend, out) {
     const { DatabaseSync } = await import('node:sqlite');
     const db = new DatabaseSync(file);
     if (!db.prepare(`select 1 from sqlite_master where name='creators'`).get()) throw new Error('server.js did not create the base tables');
-    // Seed parity: schema.sql names the default creator 'Digital Collective';
+    // Seed parity: schema.sql names the default creator 'Jesus People Network';
     // server.js names it 'Default Funnel'. Same row, same name for the test.
-    db.prepare(`UPDATE creators SET name = 'Digital Collective' WHERE slug = 'default'`).run();
+    db.prepare(`UPDATE creators SET name = 'Jesus People Network' WHERE slug = 'default'`).run();
     DB = sqliteD1(db);
     peek = async (sql, ...a) => db.prepare(sql).get(...a) ?? null;
     counts = async () => {

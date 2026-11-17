@@ -25,7 +25,7 @@ const VALID_LEAD_STATUS = new Set([
 // An admin may edit a specific creator's links by naming the slug.
 const b_slug = (b) => (b && typeof b.slug === 'string' ? b.slug : null);
 
-// Fallbacks in code. Anything an admin saves under "Collective defaults" in
+// Fallbacks in code. Anything an admin saves under "Network defaults" in
 // the database view wins over these, so the links can be filled in later
 // without a deploy.
 const DEFAULT_LINKS = {
@@ -68,7 +68,7 @@ function isChannelUrl(url) {
 async function readChannelAvatar(url) {
   try {
     const res = await fetch(url, {
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; DigitalCollective/1.0)', 'accept-language': 'en' },
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; JesusPeopleNetwork/1.0)', 'accept-language': 'en' },
     });
     if (!res.ok) return null;
     const m = (await res.text()).match(/property="og:image" content="([^"]+)"/);
@@ -668,7 +668,7 @@ async function handle(req, env, ctx) {
       }
 
       // ---- one door for everyone ------------------------------------------
-      // Join the collective: an application plus a pending account, so the
+      // Join the network: an application plus a pending account, so the
       // person can sign in and watch for the decision.
       if (p === '/api/auth/signup' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
@@ -868,7 +868,7 @@ async function handle(req, env, ctx) {
         const target = url.searchParams.get('url') || '';
         const out = { target, resolved: null, status: null, bytes: 0, og: null, error: null };
         try {
-          const res = await fetch(target, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; DigitalCollective/1.0)', 'accept-language': 'en' }, redirect: 'follow' });
+          const res = await fetch(target, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; JesusPeopleNetwork/1.0)', 'accept-language': 'en' }, redirect: 'follow' });
           out.status = res.status; out.final_url = res.url;
           const html = await res.text();
           out.bytes = html.length;
@@ -1205,7 +1205,7 @@ async function handle(req, env, ctx) {
         if (!name || !/.+@.+\..+/.test(email)) return json({ error: 'name and a valid email are required' }, 400);
         const interested = b.interested_in_group ? 1 : 0;
         // A link to a creator who doesn't exist (a typo, or one removed) still
-        // keeps the person's answer: it goes to the collective instead.
+        // keeps the person's answer: it goes to the network instead.
         let creatorSlug = String(b.creator_slug || 'default').slice(0, 40);
         if (creatorSlug !== 'default' && !(await db.creatorBySlug(creatorSlug).catch(() => null))) {
           creatorSlug = 'default';
@@ -1228,7 +1228,7 @@ async function handle(req, env, ctx) {
           await db.insertGroupSignup({ lead_id: leadId, creator_slug: creatorSlug, slot: null });
         }
         // The platform record: one contact per person, one response per
-        // submission, then the collective's follow-up in the creator's name.
+        // submission, then the network's follow-up in the creator's name.
         let recorded = null;
         let emailed = false;
         try {
