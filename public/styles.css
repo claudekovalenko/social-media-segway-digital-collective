@@ -3712,3 +3712,6 @@ body.jpn .pp-legal a { color: var(--terracotta); }
 @media (min-width: 900px) {
   body.jpn.wide .pp-steps3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 }
+
+/* The wordmark in the top bar. */
+.brand .brand-logo { display: block; height: 34px; width: auto; }

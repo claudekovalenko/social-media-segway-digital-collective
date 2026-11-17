@@ -356,3 +356,7 @@ body.v2 .v2-root .v2-faq{align-items:start}
 body.v2 .v2-root summary{transition:color .2s ease}
 body.v2 .v2-root summary:hover{color:var(--terracotta)}
 @media (max-width:640px){ body.v2 .v2-root .v2-answer{padding:0 18px 16px} body.v2 .v2-root .v2-answer p{margin-top:0;padding:0} body.v2 .v2-root .v2-answer p + p{margin-top:8px} }
+
+/* The wordmark in the top bar. */
+body.v2 .v2-root .v2-brand .brand-logo{display:block;height:40px;width:auto}
+@media (max-width:640px){body.v2 .v2-root .v2-brand .brand-logo{height:34px}}
