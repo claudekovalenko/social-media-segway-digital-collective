@@ -119,7 +119,7 @@ jobs:
             source=$(jq -c --argjson keys "$COPY_KEYS" '. as $c | reduce $keys[] as $k ({};
               if ($c[$k] | type) == "string" and ($c[$k] | test("^https?://")) then .[$k] = $c[$k] else . end)' <<<"$source")
             echo "Copied from /c/$VIDEOS_FROM:"
-            jq -r --argjson keys "$COPY_KEYS" '. as $c | $keys[] | "  \(.): \($c[.] // "(none: uses the collective default)")"' <<<"$source"
+            jq -r --argjson keys "$COPY_KEYS" '. as $c | $keys[] | "  \(.): \($c[.] // "(none: uses the network default)")"' <<<"$source"
             echo
           fi
 

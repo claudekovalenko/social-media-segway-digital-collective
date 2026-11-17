@@ -174,7 +174,7 @@ a state worth keeping.
 ## Accounts, tiers, and the CRM
 
 Everyone — you and every creator — signs in at **`/login.html`**. One page, two
-tabs: **Sign in** and **Join the collective**. The account's `role` decides
+tabs: **Sign in** and **Join the network**. The account's `role` decides
 what opens next:
 
 Every account reaches the database — the tier decides how much of it:
@@ -263,7 +263,7 @@ data, `/c/` link, short link, directory entry and photo. It only reads.
 
 ### What the network does and doesn't endorse
 
-The statement of faith carries a clause saying plainly that Digital Collective
+The statement of faith carries a clause saying plainly that Jesus People Network
 is a hub, not a broadcaster: creators sign the statement, but their content is
 not vetted, and listing someone is not an endorsement of their teaching. It
 encourages people to be Bereans (Acts 17:11), to test everything against
@@ -302,7 +302,7 @@ Get Connected sends people. Anything left blank falls back to the network
 defaults in `DEFAULT_LINKS` at the top of `worker.js` — change the URLs there
 and every creator who hasn't overridden them follows.
 
-The defaults themselves are editable from **Collective defaults** at the top of
+The defaults themselves are editable from **Network defaults** at the top of
 the database view — no deploy needed. Until the Get Connected link is filled
 in, the step explains what happens next instead of showing a dead button; the
 moment an admin saves a URL, the button appears on every creator's page at
@@ -417,7 +417,7 @@ once) and *needs admin approval*. `GET /api/slug/check` backs the live
 availability check; reserved names live in `RESERVED_PATHS` in `worker.js`.
 A verification email goes out on registration (`/api/verify?token=`).
 
-**Follow-up email.** On every submission the collective sends the template for
+**Follow-up email.** On every submission the network sends the template for
 that response type, with the creator's own greeting, message and button where
 they set them (dashboard → *Your follow-up email*). Admins edit the network
 templates on the admin page. Every send is logged in `communications`, and

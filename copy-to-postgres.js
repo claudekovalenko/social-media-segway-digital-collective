@@ -167,7 +167,7 @@ export async function resetSequences(pg) {
 // that unattributed leads need exists.
 export async function finish(pg) {
   await resetSequences(pg);
-  await pg.unsafe(`insert into creators (slug, name, mode) values ('default', 'Digital Collective', 'default')
+  await pg.unsafe(`insert into creators (slug, name, mode) values ('default', 'Jesus People Network', 'default')
     on conflict (slug) do nothing`);
 }
 
