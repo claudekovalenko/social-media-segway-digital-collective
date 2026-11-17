@@ -4,7 +4,7 @@ body.v2{
   color-scheme:light;
   --ink:#181817; --ink-2:#3a3935; --ink-3:#6b6962;
   --ivory:#F5F0E7; --ivory-2:#EDE6D9; --ivory-3:#FBF8F2; --line:#DCD3C3;
-  --terracotta:#A9533C; --gold:#B28B46; --sage:#69705E;
+  --terracotta:#C13E1E; --gold:#AD4C0C; --sage:#8F6200;
   --serif:var(--font); --sans:var(--font);
   --r:18px;
 }
@@ -60,7 +60,7 @@ body.v2 .v2-root .v2-step{display:flex;align-items:center;gap:12px;padding:14px;
 body.v2 .v2-root .v2-step .v2-ic{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:#fff;font:600 1rem var(--serif)}
 body.v2 .v2-root .v2-step b{display:block;font-size:.95rem}
 body.v2 .v2-root .v2-step span{font-size:.78rem;color:var(--ink-3)}
-body.v2 .v2-root .v2-step.v2-open{flex-wrap:wrap;border-color:var(--terracotta);box-shadow:0 10px 24px -14px rgba(169,83,60,.6)}
+body.v2 .v2-root .v2-step.v2-open{flex-wrap:wrap;border-color:var(--terracotta);box-shadow:0 10px 24px -14px rgba(193,62,30,.6)}
 body.v2 .v2-root .v2-vid{width:100%;aspect-ratio:16/9;border-radius:12px;margin-top:6px;background:linear-gradient(135deg,#3a3935,#181817);display:grid;place-items:center}
 body.v2 .v2-root .v2-vid i{width:0;height:0;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
 body.v2 .v2-root .v2-commit{width:100%;text-align:center;padding:11px;border-radius:12px;background:var(--ink);color:var(--ivory);font-weight:600;font-size:.85rem}
@@ -116,10 +116,10 @@ body.v2 .v2-root summary::after{content:"+";font:500 1.3rem/1 var(--sans);color:
 body.v2 .v2-root details[open] summary::after{content:"–"}
 body.v2 .v2-root details p{margin-top:10px;color:var(--ink-3)}
 body.v2 .v2-root .v2-final{margin:0 max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));border-radius:32px;background:var(--ink);color:var(--ivory);padding:88px 24px;text-align:center;position:relative;overflow:hidden}
-body.v2 .v2-root .v2-final::before{content:"";position:absolute;inset:auto -10% -60% -10%;height:120%;background:radial-gradient(50% 50% at 50% 50%,rgba(169,83,60,.55),transparent 70%)}
+body.v2 .v2-root .v2-final::before{content:"";position:absolute;inset:auto -10% -60% -10%;height:120%;background:radial-gradient(50% 50% at 50% 50%,rgba(193,62,30,.55),transparent 70%)}
 body.v2 .v2-root .v2-final>*{position:relative}
 body.v2 .v2-root .v2-final h2{color:var(--ivory);font-size:clamp(2.2rem,5vw,3.6rem)}
-body.v2 .v2-root .v2-final h2 em{color:#e7a48e}
+body.v2 .v2-root .v2-final h2 em{color:#F6AD1B}
 body.v2 .v2-root .v2-final p{color:#cfc8bb;margin:0 auto}
 body.v2 .v2-root .v2-final .v2-cta-row{justify-content:center}
 body.v2 .v2-root .v2-final .v2-pill.v2-light{background:transparent;color:var(--ivory);border-color:rgba(245,240,231,.3)}
@@ -360,3 +360,12 @@ body.v2 .v2-root summary:hover{color:var(--terracotta)}
 /* The wordmark in the top bar. */
 body.v2 .v2-root .v2-brand .brand-logo{display:block;height:40px;width:auto}
 @media (max-width:640px){body.v2 .v2-root .v2-brand .brand-logo{height:34px}}
+
+/* Logo theme: Fraunces headings, bigger type, the three-stripe band. */
+body.v2 { --terracotta: #C13E1E; --gold: #AD4C0C; --sage: #8F6200; --serif: var(--display); }
+body.v2 .v2-root h1 { font-weight: 800; font-size: clamp(2.9rem, 7.4vw, 5.4rem); line-height: .98; letter-spacing: -.02em; font-variation-settings: "SOFT" 100, "WONK" 0, "opsz" 144; }
+body.v2 .v2-root h2 { font-family: var(--display); font-weight: 800; letter-spacing: -.015em; font-variation-settings: "SOFT" 100, "WONK" 0, "opsz" 96; }
+body.v2 .v2-root h1 em, body.v2 .v2-root h2 em { font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; }
+body.v2 .v2-root nav { border-top: 0; box-shadow: none; }
+body.v2 .v2-root > nav::after { content: ""; position: absolute; left: 0; right: 0; bottom: -16px; height: 16px; background: var(--stripes); pointer-events: none; }
+body.v2.v2-inner .hero h1, body.v2.v2-inner h1, body.v2.v2-inner h2 { font-family: var(--display); font-weight: 800; letter-spacing: -.015em; font-variation-settings: "SOFT" 100, "WONK" 0, "opsz" 96; }
