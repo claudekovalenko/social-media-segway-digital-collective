@@ -3953,3 +3953,6 @@ body.jpn.wc .wc-back { margin: 0; font-size: 0.9rem; } body.jpn.wc .wc-back a { 
   body.jpn.wc .wc-n { width: 28px; height: 28px; font-size: 0.82rem; }
   body.jpn.wc .wc-btn { display: block; text-align: center; }
 }
+
+/* The wordmark in the top bar. */
+.brand .brand-logo { display: block; height: 34px; width: auto; }

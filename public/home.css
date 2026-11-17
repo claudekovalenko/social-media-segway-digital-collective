@@ -403,3 +403,7 @@ body.v2.v2-inner footer nav{position:static}
   body.v2 .v2-root .v2-final h2{font-size:2rem}
   body.v2 .v2-root footer{padding:18px 0 28px}
 }
+
+/* The wordmark in the top bar. */
+body.v2 .v2-root .v2-brand .brand-logo{display:block;height:40px;width:auto}
+@media (max-width:640px){body.v2 .v2-root .v2-brand .brand-logo{height:34px}}
