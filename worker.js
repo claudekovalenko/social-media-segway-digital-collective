@@ -1299,7 +1299,7 @@ async function handle(req, env, ctx) {
         return Response.redirect(new URL(`/journey.html?creator=${encodeURIComponent(slug)}`, url).toString(), 302);
       }
 
-      // Vanity creator URLs: digitalcollective.com/craigbrown serves the
+      // Vanity creator URLs: jesuspeoplenetwork.com/craigbrown serves the
       // journey page for that creator without changing the address bar, so
       // deep links like /craigbrown#grow keep working. Only a single lowercase
       // segment that isn't a known page or asset qualifies.
