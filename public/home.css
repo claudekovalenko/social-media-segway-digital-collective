@@ -10,7 +10,7 @@ body.v2{
 }
 :where(body.v2 .v2-root, body.v2 .v2-root *){box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth}
-body.v2 .v2-root section{scroll-margin-top:calc(80px + env(safe-area-inset-top,0px))}
+body.v2 .v2-root section{scroll-margin-top:calc(96px + env(safe-area-inset-top,0px))}
 body.v2 .v2-root .v2-nav-links a.v2-on:not(.v2-pill){color:var(--terracotta)}
 body.v2 .v2-root .v2-hero .v2-wrap>*, body.v2 .v2-root .v2-split>*{min-width:0}
 body.v2 .v2-root :focus-visible{outline:2px solid var(--terracotta);outline-offset:3px}
@@ -139,7 +139,7 @@ body.v2 .v2-root .v2-nav-links{order:3;width:100%;margin-top:12px;gap:18px;font-
 body.v2 .v2-root .v2-nav-links a:not(.v2-pill){white-space:nowrap;padding-block:4px}
 body.v2 .v2-root .v2-nav-links .v2-pill{position:absolute;top:10px;right:max(24px,env(safe-area-inset-right,0px));padding:8px 14px}
 body.v2 .v2-root nav .v2-wrap{position:relative}
-body.v2 .v2-root section{scroll-margin-top:calc(104px + env(safe-area-inset-top,0px))}
+body.v2 .v2-root section{scroll-margin-top:calc(132px + env(safe-area-inset-top,0px))}
 body.v2 .v2-root section{padding:64px 0}
 body.v2 .v2-root .v2-float{right:0}
 body.v2 .v2-root .v2-stats{gap:24px}
@@ -180,7 +180,7 @@ body.v2 .v2-root .v2-demo .bs-stats{gap:10px}
   body.v2 .v2-root .v2-nav-links{order:0;width:auto;margin:0;gap:0;overflow:visible}
   body.v2 .v2-root .v2-nav-links a:not(.v2-pill){display:none}
   body.v2 .v2-root .v2-nav-links .v2-pill{position:static;padding:8px 16px;font-size:.88rem}
-  body.v2 .v2-root section{scroll-margin-top:calc(68px + env(safe-area-inset-top,0px))}
+  body.v2 .v2-root section{scroll-margin-top:calc(84px + env(safe-area-inset-top,0px))}
 
   /* hero */
   body.v2 .v2-root .v2-hero{padding:24px 0 52px}
