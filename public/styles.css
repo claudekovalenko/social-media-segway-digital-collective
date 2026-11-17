@@ -2312,14 +2312,14 @@ body.ig .phone-frame .bs-link { font-size: 10px; margin-top: 5px; }
    strong 01/02/03 hierarchy, and calm creator pages.
    ================================================================== */
 :root {
-  --ink:#181817; --ivory:#F5F0E7; --terracotta:#A9533C; --gold:#B28B46; --sage:#69705E;
+  --ink:#181817; --ivory:#F5F0E7; --terracotta:#C13E1E; --gold:#AD4C0C; --sage:#8F6200;
   --ivory-2:#EDE6D9; --ivory-3:#FBF8F2; --ink-2:#3a3935; --ink-3:#6b6962; --line:#DCD3C3;
 }
 body.jpn {
   background: var(--ivory); color: var(--ink);
   background-image:
-    radial-gradient(ellipse 70% 30% at 20% 0%, rgba(169,83,60,0.10), transparent 70%),
-    radial-gradient(ellipse 60% 26% at 85% 4%, rgba(178,139,70,0.12), transparent 70%);
+    radial-gradient(ellipse 70% 30% at 20% 0%, rgba(193,62,30,0.10), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 85% 4%, rgba(236,108,35,0.12), transparent 70%);
   background-repeat: no-repeat; background-size: 100% 800px;
   font-family: var(--font); line-height: 1.6;
 }
@@ -2425,12 +2425,12 @@ body.jpn .phone-frame .bio-sample { background: #000; color: #f5f5f5; border: 0;
 body.jpn .phone-frame .bio-sample p, body.jpn .phone-frame .bs-name { color: #f5f5f5; }
 body.jpn .phone-frame .bs-bio { color: #bdbdbd; }
 body.jpn .phone-tag { background: var(--terracotta); color: #fff; border: 0; }
-body.jpn .bs-link { background: rgba(169,83,60,0.22); border-color: rgba(169,83,60,0.6); color: #ffd9cf; }
+body.jpn .bs-link { background: rgba(193,62,30,0.22); border-color: rgba(193,62,30,0.6); color: #ffd9cf; }
 body.jpn .bs-actions span { background: #262626; color: #f5f5f5; }
 body.jpn .bs-avatar { background: linear-gradient(#111,#111) padding-box, linear-gradient(135deg, var(--terracotta), var(--gold)) border-box; border: 2.5px solid transparent; color: #fff; }
 
 /* Steps page on ivory */
-body.jpn.journey { background-image: radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.12), transparent 70%); }
+body.jpn.journey { background-image: radial-gradient(ellipse 80% 28% at 20% 0%, rgba(193,62,30,0.12), transparent 70%); }
 body.jpn.journey .hero h1 { text-shadow: none; }
 body.jpn.journey .step-card { padding: 2px 16px; }
 body.jpn.journey .step-card.open { border-color: var(--ink); box-shadow: 0 18px 44px rgba(24,24,23,0.12); background: #fff; }
@@ -2887,17 +2887,17 @@ body.ig.network .ig-lede em {
 
 /* ==================================================================
    THE PROPOSAL'S PALETTE, as an overlay on the Instagram structure.
-   Ink #181817, ivory #F5F0E7, terracotta #A9533C, gold #B28B46,
-   sage #69705E. The tokens the dark theme reads are redefined here,
+   Ink #181817, ivory #F5F0E7, terracotta #C13E1E, gold #AD4C0C,
+   sage #8F6200. The tokens the dark theme reads are redefined here,
    so layout and motion stay; only the colour changes. Hard-coded
    dark surfaces from the umami passes are re-pointed below.
    ================================================================== */
 body.ig.jpn {
   --ig-bg: #F5F0E7; --ig-surface: #FFFFFF; --ig-surface-2: #EDE6D9; --ig-line: #DCD3C3;
-  --ig-text: #181817; --ig-dim: #6b6962; --ig-blue: #A9533C;
-  --ig-grad: linear-gradient(135deg, #A9533C, #B28B46);
+  --ig-text: #181817; --ig-dim: #6b6962; --ig-blue: #C13E1E;
+  --ig-grad: linear-gradient(135deg, #C13E1E, #AD4C0C);
   --bg: #F5F0E7; --surface: #FFFFFF; --surface-2: #EDE6D9; --edge: #DCD3C3; --edge-lit: #cfc6b4;
-  --text: #181817; --text-dim: #6b6962; --lime: #181817; --lime-ink: #F5F0E7; --ok: #69705E; --err: #A9533C;
+  --text: #181817; --text-dim: #6b6962; --lime: #181817; --lime-ink: #F5F0E7; --ok: #8F6200; --err: #C13E1E;
   background-color: var(--ig-bg); color: var(--ig-text);
   /* The first two layers fade the washes to plain ivory at the top and
      bottom of the painted area, the colour the phone paints around the
@@ -2907,11 +2907,11 @@ body.ig.jpn {
   background-image:
     linear-gradient(to bottom, var(--ig-bg) 0, rgba(245,240,231,0) 110px),
     linear-gradient(to top, var(--ig-bg) 0, rgba(245,240,231,0) 140px),
-    radial-gradient(ellipse 80% 30% at 15% 0%, rgba(169,83,60,0.16), transparent 70%),
-    radial-gradient(ellipse 60% 26% at 85% 6%, rgba(178,139,70,0.18), transparent 70%),
+    radial-gradient(ellipse 80% 30% at 15% 0%, rgba(193,62,30,0.16), transparent 70%),
+    radial-gradient(ellipse 60% 26% at 85% 6%, rgba(236,108,35,0.18), transparent 70%),
     radial-gradient(ellipse 70% 24% at 50% 100%, rgba(105,112,94,0.12), transparent 70%);
 }
-body.ig.jpn ::selection { background: #A9533C; color: #fff; }
+body.ig.jpn ::selection { background: #C13E1E; color: #fff; }
 body.ig.jpn h1, body.ig.jpn h2, body.ig.jpn .land-title, body.ig.jpn .ig-name, body.ig.jpn .step-head h2 { color: var(--ig-text); text-shadow: none; }
 body.ig.jpn .hero h1, body.ig.jpn header.hero h1 { text-shadow: none; }
 body.ig.jpn p, body.ig.jpn .land-copy, body.ig.jpn .hero-sub { color: #3a3935; }
@@ -2924,7 +2924,7 @@ body.ig.jpn .nav-login, body.ig.jpn .btn-ghost { background: #fff; color: var(--
 body.ig.jpn .btn-primary, body.ig.jpn button[type="submit"], body.ig.jpn .partner-link, body.ig.jpn .ig-btn-primary {
   background: #181817; color: #F5F0E7; box-shadow: 0 8px 22px rgba(24,24,23,0.18);
 }
-body.ig.jpn .btn-primary:hover, body.ig.jpn button[type="submit"]:hover:not(:disabled) { background: #A9533C; color: #fff; }
+body.ig.jpn .btn-primary:hover, body.ig.jpn button[type="submit"]:hover:not(:disabled) { background: #C13E1E; color: #fff; }
 body.ig.jpn .j-row, body.ig.jpn .coll-row, body.ig.jpn .phone-frame, body.ig.jpn .step-card, body.ig.jpn .step-card.static,
 body.ig.jpn .app-card, body.ig.jpn .table-scroll, body.ig.jpn .fold, body.ig.jpn .stat, body.ig.jpn .jpn-cta,
 body.ig.jpn .faq summary, body.ig.jpn .how-flow li, body.ig.jpn .directory-full .dir-row, body.ig.jpn .locale-panel,
@@ -2936,9 +2936,9 @@ body.ig.jpn .j-row:hover, body.ig.jpn .coll-row:hover { background: #fff; border
 body.ig.jpn .step-card.open { border-color: #181817; }
 body.ig.jpn .j-meta span, body.ig.jpn .coll-meta span, body.ig.jpn .faq p, body.ig.jpn .how-list span { color: var(--ig-dim); }
 body.ig.jpn .faq summary { color: var(--ig-text); }
-body.ig.jpn .faq summary::after { color: #A9533C; }
+body.ig.jpn .faq summary::after { color: #C13E1E; }
 body.ig.jpn .commit-list { color: #3a3935; }
-body.ig.jpn .commit-list li::marker { color: #A9533C; }
+body.ig.jpn .commit-list li::marker { color: #C13E1E; }
 body.ig.jpn .hero-url { background: #fff; border: 1.5px solid transparent; background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; color: var(--ig-dim); box-shadow: none; }
 body.ig.jpn .hero-url b { color: var(--ig-text); }
 
@@ -2946,21 +2946,21 @@ body.ig.jpn .hero-url b { color: var(--ig-text); }
 body.ig.jpn .ig-ring, body.ig.jpn .step-icon, body.ig.jpn .bubble b, body.ig.jpn .dir-av, body.ig.jpn .bs-avatar,
 body.ig.jpn .ig-avatar, body.ig.jpn .coll-ring, body.ig.jpn .auth-mark, body.ig.jpn .j-ring, body.ig.jpn .how-ring {
   background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; color: var(--ig-text);
-  box-shadow: 0 6px 18px rgba(169,83,60,0.22);
+  box-shadow: 0 6px 18px rgba(193,62,30,0.22);
 }
-body.ig.jpn .how-row li:nth-child(n) .how-ring, body.ig.jpn .j-row:nth-child(n) .j-ring { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
+body.ig.jpn .how-row li:nth-child(n) .how-ring, body.ig.jpn .j-row:nth-child(n) .j-ring { box-shadow: 0 6px 18px rgba(193,62,30,0.22); }
 body.ig.jpn .phone-frame { background: #181817; background-color: #181817; border-color: #181817; box-shadow: 0 30px 60px rgba(24,24,23,0.28); }
 body.ig.jpn .phone-frame .bio-sample { background: #000; border: 0; color: #f5f5f5; }
 body.ig.jpn .phone-frame .bio-sample p, body.ig.jpn .phone-frame .bs-name { color: #f5f5f5; }
 body.ig.jpn .phone-frame .bs-bio { color: #bdbdbd; }
-body.ig.jpn .phone-tag { background: #A9533C; color: #fff; border: 0; }
-body.ig.jpn .bs-link { background: rgba(169,83,60,0.22); border-color: rgba(169,83,60,0.6); color: #ffd9cf; }
+body.ig.jpn .phone-tag { background: #C13E1E; color: #fff; border: 0; }
+body.ig.jpn .bs-link { background: rgba(193,62,30,0.22); border-color: rgba(193,62,30,0.6); color: #ffd9cf; }
 body.ig.jpn .bs-actions span { background: #262626; color: #f5f5f5; }
 body.ig.jpn .bs-avatar { background: linear-gradient(#111,#111) padding-box, var(--ig-grad) border-box; color: #fff; }
 body.ig.jpn .jpn-cta { background: #181817; background-color: #181817; border-color: #181817; color: #F5F0E7; box-shadow: 0 30px 70px rgba(24,24,23,0.28); }
 body.ig.jpn .jpn-cta .land-title, body.ig.jpn .jpn-cta .land-copy { color: #F5F0E7; }
 body.ig.jpn .jpn-cta::after, body.ig.jpn .jpn-cta::before { display: none; }
-body.ig.jpn .jpn-cta .btn-primary { background: #A9533C; color: #fff; }
+body.ig.jpn .jpn-cta .btn-primary { background: #C13E1E; color: #fff; }
 body.ig.jpn .jpn-cta .btn-ghost { background: transparent; color: #F5F0E7; border-color: rgba(245,240,231,0.35); }
 body.ig.jpn .ig-lede em { background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; }
 body.ig.jpn .ig-stats b { color: var(--ig-text); }
@@ -2969,25 +2969,25 @@ body.ig.jpn .ig-stats span { color: var(--ig-dim); }
 /* Forms and the steps page. */
 body.ig.jpn input, body.ig.jpn select, body.ig.jpn textarea { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
 body.ig.jpn input::placeholder, body.ig.jpn textarea::placeholder { color: #9a958a; }
-body.ig.jpn input:focus, body.ig.jpn select:focus, body.ig.jpn textarea:focus { border-color: #A9533C; }
-body.ig.jpn .check input, body.ig.jpn input[type="checkbox"] { accent-color: #A9533C; }
+body.ig.jpn input:focus, body.ig.jpn select:focus, body.ig.jpn textarea:focus { border-color: #C13E1E; }
+body.ig.jpn .check input, body.ig.jpn input[type="checkbox"] { accent-color: #C13E1E; }
 body.ig.jpn .check.fine, body.ig.jpn .check.fine a { color: var(--ig-dim); }
 body.ig.jpn.journey {
   /* Same plain-ivory edges as body.ig.jpn, so no line meets the phone's bars. */
   background-image:
     linear-gradient(to bottom, var(--ig-bg) 0, rgba(245,240,231,0) 110px),
     linear-gradient(to top, var(--ig-bg) 0, rgba(245,240,231,0) 140px),
-    radial-gradient(ellipse 80% 28% at 20% 0%, rgba(169,83,60,0.14), transparent 70%);
+    radial-gradient(ellipse 80% 28% at 20% 0%, rgba(193,62,30,0.14), transparent 70%);
 }
 body.ig.jpn.journey .step-card { background: #fff; background-color: #fff; box-shadow: 0 1px 2px rgba(24,24,23,0.04), 0 10px 30px rgba(24,24,23,0.07); }
 body.ig.jpn.journey .step-card.open { box-shadow: 0 18px 44px rgba(24,24,23,0.12); }
 body.ig.jpn .video-placeholder { background: #EDE6D9; border: 1px solid var(--ig-line); color: var(--ig-dim); box-shadow: none; }
 body.ig.jpn .play-mark { background: linear-gradient(#fff,#fff) padding-box, var(--ig-grad) border-box; box-shadow: none; }
-body.ig.jpn .play-mark::before { border-left-color: #A9533C; }
+body.ig.jpn .play-mark::before { border-left-color: #C13E1E; }
 body.ig.jpn .globe { background: #fff; border-color: var(--ig-line); color: #3a3935; }
 body.ig.jpn .locale-panel select { background: #fff; border-color: var(--ig-line); color: var(--ig-text); }
 body.ig.jpn .step-chevron { color: var(--ig-dim); }
-body.ig.jpn.journey .step-card.open .step-icon { background: linear-gradient(#A9533C,#A9533C) padding-box, var(--ig-grad) border-box; color: #fff; }
+body.ig.jpn.journey .step-card.open .step-icon { background: linear-gradient(#C13E1E,#C13E1E) padding-box, var(--ig-grad) border-box; color: #fff; }
 
 /* Sign in, back end, directory, prose. */
 body.ig.jpn .tab-row::before { background: #181817; box-shadow: none; }
@@ -2998,31 +2998,31 @@ body.ig.jpn .wrap-narrow::after { display: none; }
 body.ig.jpn .pick span { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
 body.ig.jpn .pick input:checked + span { background: #181817; color: #F5F0E7; border-color: #181817; }
 body.ig.jpn .section, body.ig.jpn .prose-body > h2 { color: var(--ig-text); }
-body.ig.jpn .section::before, body.ig.jpn .prose-body > h2::before { background: #A9533C; box-shadow: none; }
+body.ig.jpn .section::before, body.ig.jpn .prose-body > h2::before { background: #C13E1E; box-shadow: none; }
 body.ig.jpn .section::after, body.ig.jpn .prose-body > h2::after { background: linear-gradient(90deg, var(--ig-line), transparent); }
 body.ig.jpn .prose-body p, body.ig.jpn .prose-body li { color: #3a3935; }
 body.ig.jpn th { color: var(--ig-dim); border-color: var(--ig-line); } body.ig.jpn td { border-color: #EDE6D9; color: var(--ig-text); }
 body.ig.jpn .topic-chip { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }
 body.ig.jpn .topic-chip.on { background: #181817; color: #F5F0E7; border-color: #181817; }
 body.ig.jpn .dir-tag, body.ig.jpn .directory-full .dir-tag { background: #EDE6D9; border: 0; color: var(--ig-dim); }
-body.ig.jpn .land-copy a, body.ig.jpn .prose-body a, body.ig.jpn .aside-link a, body.ig.jpn .see-all a, body.ig.jpn .commit-list a, body.ig.jpn .faq a { color: #A9533C; }
+body.ig.jpn .land-copy a, body.ig.jpn .prose-body a, body.ig.jpn .aside-link a, body.ig.jpn .see-all a, body.ig.jpn .commit-list a, body.ig.jpn .faq a { color: #C13E1E; }
 body.ig.jpn .btn-small.go { background: #181817; color: #F5F0E7; border-color: #181817; }
-body.ig.jpn .crm-saved, body.ig.jpn .success { color: #69705E; }
-body.ig.jpn .error, body.ig.jpn .err { color: #A9533C; }
+body.ig.jpn .crm-saved, body.ig.jpn .success { color: #8F6200; }
+body.ig.jpn .error, body.ig.jpn .err { color: #C13E1E; }
 body.ig.jpn footer, body.ig.jpn footer a { color: var(--ig-dim); }
 body.ig.jpn .creator-badge { background: #fff; border: 1px solid var(--ig-line); color: #3a3935; }
 body.ig.jpn .fold h4, body.ig.jpn .app-meta { color: var(--ig-dim); }
 body.ig.jpn .dir-example { opacity: 0.6; }
-body.ig.jpn .auth-mark { box-shadow: 0 10px 30px rgba(169,83,60,0.25); }
-body.ig.jpn .wrap-narrow .step-card.static { box-shadow: 0 20px 50px rgba(169,83,60,0.14), 0 10px 30px rgba(24,24,23,0.08); }
+body.ig.jpn .auth-mark { box-shadow: 0 10px 30px rgba(193,62,30,0.25); }
+body.ig.jpn .wrap-narrow .step-card.static { box-shadow: 0 20px 50px rgba(193,62,30,0.14), 0 10px 30px rgba(24,24,23,0.08); }
 body.ig.jpn .ig-actions::after { display: none; }
 body.ig.jpn .phone-frame .bs-stats b { color: #f5f5f5; }
 body.ig.jpn .phone-frame .bs-stats span { color: #a8a8a8; }
 body.ig.jpn .phone-frame .bs-avatar { color: #fff; box-shadow: none; }
 body.ig.jpn.journey .step-card .step-icon, body.ig.jpn.journey .step-card:hover .step-icon,
-body.ig.jpn.journey .step-card.done .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
-body.ig.jpn.journey .step-card:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.22); }
-body.ig.jpn.journey .step-card.open:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(169,83,60,0.35); }
+body.ig.jpn.journey .step-card.done .step-icon { box-shadow: 0 6px 18px rgba(193,62,30,0.22); }
+body.ig.jpn.journey .step-card:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(193,62,30,0.22); }
+body.ig.jpn.journey .step-card.open:nth-of-type(n) .step-icon { box-shadow: 0 6px 18px rgba(193,62,30,0.35); }
 body.ig.jpn .j-row .j-icon { color: var(--ig-text); }
 .hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; }
 
@@ -3032,7 +3032,7 @@ body.ig.jpn .slug-wrap { background: #fff; border-color: var(--ig-line); }
 body.ig .slug-prefix { padding: 12px 0 12px 14px; font-size: 0.9rem; color: var(--ig-dim); white-space: nowrap; letter-spacing: 0; text-transform: none; font-weight: 400; }
 body.ig .slug-wrap input { border: 0 !important; background: transparent !important; padding-left: 2px !important; min-width: 0; flex: 1; }
 body.ig .slug-note { font-size: 0.78rem; letter-spacing: 0; text-transform: none; font-weight: 500; min-height: 1em; }
-body.ig .slug-note.ok { color: #69705E; } body.ig .slug-note.bad { color: #A9533C; }
+body.ig .slug-note.ok { color: #8F6200; } body.ig .slug-note.bad { color: #C13E1E; }
 body.ig:not(.jpn) .slug-note.ok { color: #7fd1c9; } body.ig:not(.jpn) .slug-note.bad { color: #ff7a7a; }
 
 /* ---- Insights (analytics on both dashboards) ---------------------------- */
@@ -3078,14 +3078,14 @@ body.journey.buttons .step-cta { display: block; margin-top: 12px; text-align: c
 body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
 
 /* Back-to-creator link on a creator's page. */
-.back-link { display: inline-block; margin-top: 10px; font-size: 0.92rem; font-weight: 600; color: #A9533C; text-decoration: none; }
+.back-link { display: inline-block; margin-top: 10px; font-size: 0.92rem; font-weight: 600; color: #C13E1E; text-decoration: none; }
 .back-link:hover { text-decoration: underline; }
 .back-link.foot { margin-top: 0; font-size: 0.95rem; }
 
 /* Directory row with a side link to the creator's own page. */
 .dir-wrap { display: flex; align-items: stretch; gap: 8px; }
 .dir-wrap .dir-row { flex: 1; min-width: 0; }
-.dir-ig { display: inline-flex; align-items: center; padding: 0 14px; border-radius: 14px; background: #fff; border: 1px solid var(--ig-line, #DCD3C3); color: #A9533C; font-size: 0.82rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.dir-ig { display: inline-flex; align-items: center; padding: 0 14px; border-radius: 14px; background: #fff; border: 1px solid var(--ig-line, #DCD3C3); color: #C13E1E; font-size: 0.82rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .dir-ig:hover { background: #F5F0E7; }
 
 /* Endorsements strip: quiet, slow, and easy to remove. */
@@ -3095,7 +3095,7 @@ body.journey.buttons .step-card.open .step-inner { padding-bottom: 16px; }
 .endorse-item { white-space: nowrap; font-size: 0.82rem; color: #6b675f; text-decoration: none; }
 .endorse-item em { font-style: normal; color: #9a948a; }
 .endorse-item b { color: #181817; font-weight: 600; }
-a.endorse-item:hover b { color: #A9533C; }
+a.endorse-item:hover b { color: #C13E1E; }
 @keyframes endorse-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .endorse-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; } }
 
@@ -3103,13 +3103,13 @@ a.endorse-item:hover b { color: #A9533C; }
    signature line, not a banner. */
 .creator-card { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 4px 12px 4px 4px; border-radius: 999px; background: rgba(255,255,255,0.7); border: 1px solid var(--ig-line, #DCD3C3); text-decoration: none; max-width: 100%; }
 .creator-card.is-link:hover { border-color: #C9A98C; background: #fff; }
-.cc-ring { position: relative; flex: none; width: 28px; height: 28px; border-radius: 50%; padding: 1.5px; background: linear-gradient(135deg, #B28B46, #A9533C); display: grid; place-items: center; }
+.cc-ring { position: relative; flex: none; width: 28px; height: 28px; border-radius: 50%; padding: 1.5px; background: linear-gradient(135deg, #AD4C0C, #C13E1E); display: grid; place-items: center; }
 .cc-photo, .cc-initial { width: 25px; height: 25px; border-radius: 50%; display: block; object-fit: cover; background: #F5F0E7; }
-.cc-initial { display: grid; place-items: center; font-weight: 600; font-size: 0.72rem; color: #A9533C; }
+.cc-initial { display: grid; place-items: center; font-weight: 600; font-size: 0.72rem; color: #C13E1E; }
 .cc-text { display: flex; align-items: baseline; gap: 6px; line-height: 1.2; min-width: 0; white-space: nowrap; }
 .cc-text b { font-size: 0.8rem; font-weight: 600; color: #181817; }
 .cc-text span { font-size: 0.74rem; color: #9a948a; }
-.creator-card.is-link:hover .cc-text b { color: #A9533C; }
+.creator-card.is-link:hover .cc-text b { color: #C13E1E; }
 body.journey footer { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 
 /* The same photo in a directory row, in place of the initial. */
@@ -3137,7 +3137,7 @@ body.ig .tab-row { margin-bottom: 14px; }
 .link-group .group-note { margin: 4px 0 10px; font-size: 0.78rem; color: #8b857b; }
 .link-group .pick-hint { font-weight: 400; font-size: 0.76rem; color: #9a948a; }
 .link-group label { display: block; margin-bottom: 10px; }
-.step-num { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #B28B46, #A9533C); color: #fff; font-size: 0.72rem; font-weight: 700; flex: none; }
+.step-num { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #AD4C0C, #C13E1E); color: #fff; font-size: 0.72rem; font-weight: 700; flex: none; }
 .endorse-logo { height: 16px; width: auto; max-width: 90px; vertical-align: -3px; margin-right: 6px; opacity: 0.9; }
 
 /* Dashboard profile bar: their photo, their address, and a way to see the
@@ -3148,7 +3148,7 @@ body.ig .tab-row { margin-bottom: 14px; }
 .profile-who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .profile-who b { font-size: 0.98rem; font-weight: 600; }
 .profile-who a { font-size: 0.8rem; color: #8b857b; text-decoration: none; word-break: break-all; }
-.profile-who a:hover { color: #A9533C; }
+.profile-who a:hover { color: #C13E1E; }
 .profile-actions { display: flex; align-items: center; gap: 12px; }
 .profile-actions a { font-size: 0.82rem; }
 @media (max-width: 420px) { .profile-actions { width: 100%; justify-content: space-between; } }
@@ -3169,7 +3169,7 @@ body.ig.jpn .site-nav {
 .vid-thumb { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; text-decoration: none; }
 .vid-thumb img { width: 96px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--ig-line, #DCD3C3); display: block; background: #EDE6D9; }
 .vid-thumb span { font-size: 0.74rem; color: #9a948a; }
-.vid-thumb:hover span { color: #A9533C; }
+.vid-thumb:hover span { color: #C13E1E; }
 
 /* Arrival without a blink. The headline fades in once the page marks itself
    ready (html.fonts-in); with the device font there is nothing to download,
@@ -3181,7 +3181,7 @@ html.js.fonts-in body.journey .hero h1 { animation: none; }
 /* The same small manners on every page: one focus ring, one hover tempo,
    one lift. It is what makes separate pages read as one place. */
 :where(a, button, input, select, textarea, summary):focus-visible {
-  outline: 2px solid #B28B46; outline-offset: 3px; border-radius: 6px;
+  outline: 2px solid #AD4C0C; outline-offset: 3px; border-radius: 6px;
 }
 body.ig.jpn :where(.btn-primary, .btn-ghost, .btn-small, .step-cta, .partner-link, .nav-login, .tab, .dir-ig) {
   transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
@@ -3220,18 +3220,18 @@ html.js body.journey .hero h1 { opacity: 1; transition: none; }
 
 /* The quieter option under the church finder. */
 .gather-alt { display: block; margin: 8px 0 2px; text-align: center; font-size: 0.82rem; color: #8b857b; text-decoration: none; }
-.gather-alt:hover { color: #A9533C; text-decoration: underline; }
+.gather-alt:hover { color: #C13E1E; text-decoration: underline; }
 
 /* ---- home: one story, read in one direction ----------------------------
    Each section says whose side it is on before its title, so the two runs of
    numbers on this page cannot be read as one sequence. */
 body.ig.jpn .sec-step {
   margin: 0 0 6px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: #A9533C;
+  text-transform: uppercase; color: #C13E1E;
 }
 body.ig.jpn .sec-step::after {
   content: ""; display: block; width: 22px; height: 2px; margin-top: 6px; border-radius: 2px;
-  background: linear-gradient(90deg, #B28B46, #A9533C);
+  background: linear-gradient(90deg, #AD4C0C, #C13E1E);
 }
 
 /* Step labels must never break mid-word: "Personalize" became "Personaliz e". */
@@ -3247,9 +3247,9 @@ body.ig .how-row li { overflow: hidden; }
 .yours-tag { position: absolute; top: -10px; right: 14px; }
 .y-row { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(24,24,23,0.06); }
 .y-row:last-child { border-bottom: 0; }
-.y-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #A9533C; box-shadow: 0 0 0 3px rgba(169,83,60,0.13); }
-.y-dot.y-2 { background: #B28B46; box-shadow: 0 0 0 3px rgba(178,139,70,0.15); }
-.y-dot.y-3 { background: #69705E; box-shadow: 0 0 0 3px rgba(105,112,94,0.15); }
+.y-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #C13E1E; box-shadow: 0 0 0 3px rgba(193,62,30,0.13); }
+.y-dot.y-2 { background: #AD4C0C; box-shadow: 0 0 0 3px rgba(236,108,35,0.15); }
+.y-dot.y-3 { background: #8F6200; box-shadow: 0 0 0 3px rgba(105,112,94,0.15); }
 .y-who { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.3; }
 .y-who b { font-size: 0.9rem; font-weight: 600; color: #181817; }
 .y-who span { font-size: 0.78rem; color: #8b857b; }
@@ -3257,7 +3257,7 @@ body.ig .how-row li { overflow: hidden; }
 .yours-note { margin-top: 10px; font-size: 0.82rem; }
 
 /* The hero's own address line is the promise; give it a little weight. */
-body.ig.jpn .hero-url b { color: #A9533C; }
+body.ig.jpn .hero-url b { color: #C13E1E; }
 /* On the narrowest phones still in use, the rings give up a little room so
    five labels can sit side by side without touching. */
 @media (max-width: 355px) {
@@ -3286,7 +3286,7 @@ body.ig .phone-frame[data-at="open"] .ps-journey { opacity: 1; transform: none; 
 
 /* The journey page, in miniature. */
 body.ig .pj-h { margin: 2px 0 0; font-family: var(--font); font-size: 17px; line-height: 1.15; color: #181817; font-weight: 600; }
-body.ig .pj-h em { font-style: italic; color: #A9533C; }
+body.ig .pj-h em { font-style: italic; color: #C13E1E; }
 body.ig .pj-sub { margin: 4px 0 10px; font-size: 9.5px; color: #8b857b; }
 body.ig .pj-card {
   display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
@@ -3296,7 +3296,7 @@ body.ig .pj-card {
 body.ig .pj-card b { flex: 1; font-size: 11.5px; font-weight: 600; color: #181817; }
 body.ig .pj-ring {
   flex: none; display: grid; place-items: center; width: 22px; height: 22px;
-  border-radius: 50%; border: 1.5px solid #B28B46; color: #A9533C;
+  border-radius: 50%; border: 1.5px solid #AD4C0C; color: #C13E1E;
 }
 body.ig .pj-chev {
   flex: none; width: 7px; height: 7px; border-right: 1.5px solid #b3ada2;
@@ -3343,7 +3343,7 @@ body.ig .phone-frame[data-at="tap"] .tap-dot { animation: tap-ripple .55s ease-o
   35% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(1.5); box-shadow: 0 0 0 16px rgba(255,255,255,0); }
 }
-body.ig .phone-frame[data-at="tap"] .bs-link { border-color: #A9533C; background: rgba(169,83,60,0.18); }
+body.ig .phone-frame[data-at="tap"] .bs-link { border-color: #C13E1E; background: rgba(193,62,30,0.18); }
 
 /* A line under the phone that names whichever moment is on screen. */
 body.ig .phone-caption {
@@ -3486,7 +3486,7 @@ body.jpn .pp-name { font-size: 1.02rem; overflow-wrap: anywhere; }
 body.jpn .pp-meta { font-size: 0.8rem; color: var(--ink-3); }
 body.jpn .pp-steps { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; flex-shrink: 0; max-width: 50%; }
 body.jpn .pp-step { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); white-space: nowrap; }
-body.jpn .pp-step.pp-know_god { background: rgba(169,83,60,0.12); color: var(--terracotta); }
+body.jpn .pp-step.pp-know_god { background: rgba(193,62,30,0.12); color: var(--terracotta); }
 body.jpn .pp-step.pp-grow_with_god { background: rgba(105,112,94,0.15); color: var(--sage); }
 body.jpn .pp-lines p { font-size: 0.86rem; color: var(--ink-2); margin: 0; overflow-wrap: anywhere; }
 body.jpn .pp-quote { font-style: italic; }
@@ -3509,7 +3509,7 @@ body.jpn .pp-chip {
   font: 600 0.8rem var(--font); cursor: pointer; box-shadow: none;
 }
 body.jpn .pp-chip:hover { border-color: var(--terracotta); color: var(--terracotta); }
-body.jpn .pp-chip.pp-go { background: rgba(169,83,60,0.1); border-color: rgba(169,83,60,0.35); color: var(--terracotta); }
+body.jpn .pp-chip.pp-go { background: rgba(193,62,30,0.1); border-color: rgba(193,62,30,0.35); color: var(--terracotta); }
 body.jpn .pp-state { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 body.jpn .pp-field { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; font-weight: 600; color: var(--ink-3); letter-spacing: 0.02em; min-width: 0; }
 body.jpn .pp-field select, body.jpn .pp-field input, body.jpn .pp-notes, body.jpn .pp-bar input, body.jpn .pp-bar select {
@@ -3551,7 +3551,7 @@ body.jpn .pp-row > summary::-webkit-details-marker { display: none; }
 body.jpn .pp-row-who { display: flex; flex-direction: column; min-width: 0; }
 body.jpn .pp-row-who b { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 body.jpn .pp-row-status { flex-shrink: 0; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); }
-body.jpn .pp-row-status.pp-s-new { background: rgba(169,83,60,0.12); color: var(--terracotta); }
+body.jpn .pp-row-status.pp-s-new { background: rgba(193,62,30,0.12); color: var(--terracotta); }
 body.jpn .pp-row-status.pp-s-connected, body.jpn .pp-row-status.pp-s-in_group { background: rgba(105,112,94,0.15); color: var(--sage); }
 body.jpn .pp-row[open] > summary { background: var(--ivory-3); }
 body.jpn .pp-row > .pp-card { border: 0; border-radius: 0; box-shadow: none; border-top: 1px solid var(--ivory-2); }
@@ -3610,7 +3610,7 @@ body.jpn .eng-step { display: grid; grid-template-columns: 74px 1fr auto; align-
 body.jpn .eng-step b { font: 700 1.35rem/1 var(--font); letter-spacing: -0.02em; color: var(--ink); }
 body.jpn .eng-step span { font-size: 0.9rem; font-weight: 600; color: var(--ink); }
 body.jpn .eng-step small { font-size: 0.78rem; color: var(--ink-3); white-space: nowrap; }
-body.jpn .eng-step.eng-last { border-color: var(--terracotta); box-shadow: 0 8px 20px -14px rgba(169,83,60,0.6); }
+body.jpn .eng-step.eng-last { border-color: var(--terracotta); box-shadow: 0 8px 20px -14px rgba(193,62,30,0.6); }
 body.jpn .eng-step.eng-last b { color: var(--terracotta); }
 body.jpn .eng-on { font-size: 0.74rem; color: var(--ink-3); padding-left: 24px; position: relative; line-height: 1.2; }
 body.jpn .eng-on::before { content: '↓'; position: absolute; left: 10px; color: var(--terracotta); }
@@ -3621,11 +3621,11 @@ body.jpn .eng-chart-head b { font: 700 1.15rem var(--font); color: var(--ink); }
 body.jpn .eng-plot { position: relative; height: 90px; outline: none; border-radius: 6px; cursor: crosshair; }
 body.jpn .eng-plot:focus-visible { box-shadow: 0 0 0 2px var(--line); }
 body.jpn .eng-svg { display: block; width: 100%; height: 100%; overflow: visible; }
-body.jpn .eng-line { fill: none; stroke: #A9533C; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-body.jpn .eng-area { fill: #A9533C; opacity: 0.1; }
+body.jpn .eng-line { fill: none; stroke: #C13E1E; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+body.jpn .eng-area { fill: #C13E1E; opacity: 0.1; }
 body.jpn .eng-base { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
 body.jpn .eng-cross { position: absolute; top: 0; bottom: 6px; width: 1px; background: var(--ink-3); opacity: 0.5; pointer-events: none; }
-body.jpn .eng-dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #A9533C; box-shadow: 0 0 0 2px #fff; pointer-events: none; }
+body.jpn .eng-dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #C13E1E; box-shadow: 0 0 0 2px #fff; pointer-events: none; }
 body.jpn .eng-axis { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-3); margin-top: 6px; }
 body.jpn .eng-sources { list-style: none; padding: 0; margin: 6px 0 0; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
 body.jpn .eng-sources li { display: grid; grid-template-columns: minmax(0, 1fr) auto 52px; gap: 12px; align-items: baseline; padding: 11px 14px; font-size: 0.9rem; }
@@ -3664,8 +3664,8 @@ body.jpn .cr-foot { display: flex; justify-content: space-between; align-items: 
 body.jpn .cr-go { font-size: 0.86rem; font-weight: 600; color: var(--ink); text-decoration: none; padding: 6px 0; }
 body.jpn .cr-go::after { content: ' →'; color: var(--terracotta); }
 body.jpn .cr-go:hover { color: var(--terracotta); }
-body.jpn .cr-ig { font-size: 0.8rem; font-weight: 600; color: var(--terracotta); text-decoration: none; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(169,83,60,0.3); }
-body.jpn .cr-ig:hover { background: rgba(169,83,60,0.08); }
+body.jpn .cr-ig { font-size: 0.8rem; font-weight: 600; color: var(--terracotta); text-decoration: none; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(193,62,30,0.3); }
+body.jpn .cr-ig:hover { background: rgba(193,62,30,0.08); }
 body.jpn .cr-example { opacity: 0.7; }
 @media (min-width: 720px) {
   body.jpn .wrap:has(#creatorList) { max-width: 880px; }
@@ -3956,3 +3956,25 @@ body.jpn.wc .wc-back { margin: 0; font-size: 0.9rem; } body.jpn.wc .wc-back a { 
 
 /* The wordmark in the top bar. */
 .brand .brand-logo { display: block; height: 34px; width: auto; }
+
+/* ==================================================================
+   LOGO THEME: the colours and type of the Jesus People Network logo.
+   Black, a red / orange / yellow three-stripe band, and a soft 70s
+   serif (Fraunces, self-hosted, OFL) for headings. The orange and
+   yellow are decoration only; text accents use the darker tones.
+   ================================================================== */
+@font-face { font-family: "Fraunces"; src: url("fonts/fraunces-latin-full-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("fonts/fraunces-latin-full-italic.woff2") format("woff2"); font-weight: 100 900; font-style: italic; font-display: swap; }
+:root {
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --stripe-1: #C13E1E; --stripe-2: #EC6C23; --stripe-3: #F6AD1B;
+  --stripes: linear-gradient(to bottom, var(--stripe-1) 0 4px, transparent 4px 6px, var(--stripe-2) 6px 10px, transparent 10px 12px, var(--stripe-3) 12px 16px, transparent 16px);
+}
+html body.jpn:not(.v2), html body.ig.jpn.journey { background-color: var(--ivory); background-repeat: no-repeat; background-image: var(--stripes), radial-gradient(ellipse 70% 30% at 20% 0%, rgba(193,62,30,0.10), transparent 70%), radial-gradient(ellipse 60% 26% at 85% 4%, rgba(236,108,35,0.12), transparent 70%); background-size: 100% 16px, 100% 800px, 100% 800px; }
+body.jpn h1, body.jpn h2, body.jpn .land-title, body.jpn .hero h1, body.jpn header.hero h1, body.jpn .step-head h2, body.jpn .auth-hero h1, body.journey.ig.jpn .hero h1, body.journey.ig.jpn .step-head h2 {
+  font-family: var(--display); font-weight: 800; letter-spacing: -0.015em;
+  font-variation-settings: "SOFT" 100, "WONK" 0, "opsz" 72;
+}
+body.jpn h1 em, body.jpn h2 em, body.jpn .hero h1 em { font-style: italic; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 72; }
+body.jpn .hero h1 { font-size: clamp(2.4rem, 9vw, 3.4rem); line-height: 1.02; }
+body.ig .auth-hero h1 { font-size: 2.5rem; line-height: 1.02; }
