@@ -433,3 +433,13 @@ body.v2 .v2-root .v2-bio3{margin-top:8px;padding-left:1.3em;display:grid;gap:6px
 @media (max-width:860px){body.v2 .v2-root .v2-cards.v2-two{grid-template-columns:1fr}}
 body.v2 .v2-root .v2-bio3 li{display:list-item;list-style:decimal}
 body.v2 .v2-root .v2-bio3 li::before{content:none}
+
+/* Step colours follow the logo stripes (tokens in styles.css): Know God red,
+   Grow with God orange, Get Connected yellow; ink on orange and yellow. */
+body.v2 .v2-root .v2-c-t.v2-c-t{background:var(--step-1);color:#fff}
+body.v2 .v2-root .v2-c-g.v2-c-g{background:var(--step-2);color:#1A1A1A}
+body.v2 .v2-root .v2-c-s.v2-c-s{background:var(--step-3);color:#1A1A1A}
+body.v2 .v2-root .v2-t1{background:rgba(193,62,30,.12);color:var(--step-1-deep)}
+body.v2 .v2-root .v2-t2{background:rgba(236,108,35,.16);color:var(--step-2-deep)}
+body.v2 .v2-root .v2-t3{background:rgba(246,173,27,.22);color:var(--step-3-deep)}
+body.v2 .v2-root .v2-float .v2-dot{background:var(--step-1);box-shadow:0 0 0 4px rgba(193,62,30,.16)}
