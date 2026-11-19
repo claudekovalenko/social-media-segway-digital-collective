@@ -412,6 +412,7 @@ async function child(backend, out) {
   await call('creators/register: duplicate slug -> 409', 'POST', '/api/creators/register', { body: { slug: 'annaj', name: 'Other' } });
   await call('creators/register: missing name -> 400', 'POST', '/api/creators/register', { body: { slug: 'x-y-z' } });
   await call('creators/register: bad email -> 400', 'POST', '/api/creators/register', { body: { slug: 'x-y-z', name: 'X', email: 'nope' } });
+  await call('creators/register: reserved name -> 400', 'POST', '/api/creators/register', { body: { slug: 'admin', name: 'Not An Admin' } });
   await call('register (closed) -> 403', 'POST', '/api/register', { body: { email: 'r@example.org' } });
   await call('slug/check: taken', 'GET', '/api/slug/check?slug=craigbrown');
   await call('slug/check: free', 'GET', '/api/slug/check?slug=brand-new');
@@ -438,6 +439,7 @@ async function child(backend, out) {
   r = await call('applications: list', 'GET', '/api/admin/applications', { auth: 'A' });
   const apps = J(r).applications || [];
   const appId = (email) => (apps.find((a) => a.email === email) || {}).id ?? 999999;
+  await call("applications: approve onto another creator's link -> 409", 'POST', `/api/admin/applications/${appId('ap@example.org')}/approve`, { auth: 'A', body: { slug: 'annaj' } });
   await call('applications: approve joiner as creator', 'POST', `/api/admin/applications/${appId('joiner@example.org')}/approve`, { auth: 'A', body: { slug: 'jo-iner' } });
   await call('applications: approve acct.user as admin', 'POST', `/api/admin/applications/${appId('acct.user')}/approve`, { auth: 'A', body: { role: 'admin' } });
   await call('applications: decline applicant', 'POST', `/api/admin/applications/${appId('ap@example.org')}/decline`, { auth: 'A' });
@@ -628,6 +630,8 @@ async function child(backend, out) {
   await call('role: unknown tier -> 400', 'POST', '/api/admin/accounts/role', { auth: 'A', body: { email: 'waiting@example.org', role: 'king' } });
   await call('role: self demote -> 400', 'POST', '/api/admin/accounts/role', { auth: 'A', body: { email: 'boss@example.org', role: 'creator' } });
   await call('role: missing -> 404', 'POST', '/api/admin/accounts/role', { auth: 'A', body: { email: 'ghost@example.org', role: 'admin' } });
+  await call("role: pending -> creator on another creator's link -> 409", 'POST', '/api/admin/accounts/role', { auth: 'A', body: { email: 'waiting@example.org', role: 'creator', creator_slug: 'annaj' } });
+  await call('role: pending -> creator on a reserved name -> 400', 'POST', '/api/admin/accounts/role', { auth: 'A', body: { email: 'waiting@example.org', role: 'creator', creator_slug: 'admin' } });
   await call('role: pending -> creator (new slug)', 'POST', '/api/admin/accounts/role', { auth: 'A', body: { email: 'waiting@example.org', role: 'creator', creator_slug: 'waiter' } });
   await call('role: creator -> admin', 'POST', '/api/admin/accounts/role', { auth: 'A', body: { email: 'mia.lopez@example.org', role: 'admin' } });
   await call('me: promoted pending', 'GET', '/api/auth/me', { auth: 'W' });
