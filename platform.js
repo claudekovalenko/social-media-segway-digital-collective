@@ -325,8 +325,9 @@ export function platform(DB) {
       if (status) { where.push('r.status = ?'); args.push(status); }
       if (q) { where.push('(c.name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?)'); args.push(`%${q}%`, `%${q}%`, `%${q}%`); }
       const sql = `SELECT r.*, c.name, c.email, c.phone, c.city, c.country, c.language, c.unsubscribed_at,
-          c.score, c.score_reasons, c.email_status, c.dup_of
+          c.score, c.score_reasons, c.email_status, c.dup_of, l.decision
         FROM responses r JOIN contacts c ON c.id = r.contact_id
+        LEFT JOIN leads l ON l.id = r.lead_id
         ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY r.created_at DESC LIMIT ?`;
       return (await DB.prepare(sql).bind(...args, Math.min(limit, 5000)).all()).results || [];
     },
@@ -598,7 +599,9 @@ export function platform(DB) {
       const rows = await this.responses({ creator_slug, from, to, limit: 5000 });
       return rows.map((r) => ({
         response_id: r.id, created_at: r.created_at, creator: r.creator_slug, section: r.section,
-        response_type: r.response_type, status: r.status, name: r.name, email: r.email, phone: r.phone,
+        response_type: r.response_type,
+        commitment: r.decision === 'first_time' ? 'First-time' : r.decision === 'recommitment' ? 'Recommitment' : '',
+        status: r.status, name: r.name, email: r.email, phone: r.phone,
         city: r.city, country: r.country, language: r.language, campaign: r.campaign,
         next_follow_up: r.next_follow_up, last_contacted_at: r.last_contacted_at,
         unsubscribed: r.unsubscribed_at ? 'yes' : '', notes: r.notes,

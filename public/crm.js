@@ -173,6 +173,7 @@ export function attachVideoPreview(input) {
 // keeps their own follow-up. The newest row is the one a card reads and saves;
 // older rows are history, shown on the card and never overwritten from it.
 export const STEP_NAMES = { know_god: 'Know God', grow_with_god: 'Grow with God', find_church: 'Get Connected' };
+const DECISION_NAMES = { first_time: 'First-time', recommitment: 'Recommitment' };
 const PATH_NAMES = {
   join_church: 'wants to join a church', start_gathering: 'wants to start a gathering',
   both: 'wants to join or start a gathering', not_sure: 'not sure yet about church',
@@ -197,6 +198,7 @@ export function groupPeople(leads) {
       key, rows, id: latest.id,
       name: latest.name, email: latest.email,
       phone: pick('phone'), city: pick('city'), country: pick('country'), path: pick('path'),
+      decision: pick('decision'),
       // When they ticked the box agreeing to be contacted (the earliest response).
       consent_at: rows.map((r) => r.consent_at).filter(Boolean).sort()[0] || null,
       message: pick('message'), creator_slug: latest.creator_slug,
@@ -388,6 +390,7 @@ export function personCard(person, opts) {
   card.append(head);
 
   const lines = el('div', 'pp-lines');
+  if (DECISION_NAMES[person.decision]) lines.append(el('p', null, 'Commitment: ' + DECISION_NAMES[person.decision]));
   if (person.path) lines.append(el('p', null, 'Church: ' + (PATH_NAMES[person.path] || person.path)));
   if (person.message) lines.append(el('p', 'pp-quote', '“' + person.message + '”'));
   if (person.closed_before) lines.append(el('p', 'pp-warn', 'An earlier response was marked Closed. Check your notes before reaching out again.'));
