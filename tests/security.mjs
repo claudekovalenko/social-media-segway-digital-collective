@@ -40,5 +40,25 @@ check(row.startsWith(`"'=HYPERLINK(`), 'csv: a formula in a name becomes plain t
 check(row.includes(`,'@SUM(A1),`) && row.includes(`,'+cmd|x,`) && row.includes(`,'\tx,`) && row.includes(`,'-2+3`), 'csv: @, +, tab and - formulas are neutralised', row);
 check(row.includes(',+1 555 0100,-3,Ann Lee,"Lee, Ann",'), 'csv: phone numbers, numbers and ordinary text are unchanged', row);
 
+// ---- creator link names ------------------------------------------------------
+{
+  const { checkSlug, RESERVED_PATHS } = await import('../worker.js');
+  const { readdirSync } = await import('node:fs');
+  const pages = readdirSync(new URL('../public/', import.meta.url)).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5));
+  const unreserved = pages.filter((p) => !RESERVED_PATHS.has(p));
+  check(unreserved.length === 0, 'link names: every page in public/ is reserved', unreserved.join(', '));
+  for (const bad of ['ab', 'a', '-', '--x--', 'é-x', 'why', 'Videos', ' admin ', 'default']) {
+    check(Boolean(checkSlug(bad).error), `link names: "${bad}" is refused`, JSON.stringify(checkSlug(bad)));
+  }
+  for (const [raw, want] of [['AnnaJ', 'annaj'], ['@craigbrown', 'craigbrown'], ['-abc-', 'abc'], ['faith with sarah', 'faith-with-sarah']]) {
+    check(checkSlug(raw).slug === want, `link names: "${raw}" becomes ${want}`, JSON.stringify(checkSlug(raw)));
+  }
+  const vanity = /^([a-z0-9][a-z0-9._-]{2,39})$/;
+  for (const raw of ['abc', 'x'.repeat(60), 'a-b-c', '@zz9', 'x'.repeat(39) + '-y']) {
+    const r = checkSlug(raw);
+    check(Boolean(r.error) || vanity.test(r.slug), `link names: accepted "${raw.slice(0, 12)}" opens as /${r.slug}`);
+  }
+}
+
 console.log(failures ? `\n${failures} check(s) failed` : '\nall security checks passed');
 process.exit(failures ? 1 : 0);

@@ -195,12 +195,25 @@ const SESSION_HOURS = 12;
 // Deliberately low so simple accounts can be set up quickly; anything holding
 // real people's contact details deserves far more than the minimum.
 // Paths a vanity creator URL must never shadow, plus names nobody may claim.
-const RESERVED_PATHS = new Set([
+export const RESERVED_PATHS = new Set([
   'index','journey','creators','login','dashboard','admin','creator','beliefs','privacy','terms',
   'api','c','icons','manifest','sw','styles','app','i18n','crm','reveal','assets','static',
   'about','join','signin','signup','register','help','support','contact','faq','blog','network',
   'jesus','god','church','official','staff','team','root','www','mail','info','null','undefined',
+  // Every page in public/ (tests/security.mjs checks this list stays complete) and other static names.
+  'why','videos','welcome','onboarding','approved-email','unavailable','404','home','logo','fonts',
+  'favicon','robots','sitemap','privacy-policy','default',
 ]);
+
+// A link name that works as /<name>: 3-40 lowercase letters, digits or hyphens,
+// no hyphen at either end, and not a page or reserved name. Returns { slug } or { error }.
+export function checkSlug(raw) {
+  const slug = String(raw || '').toLowerCase().trim().replace(/^@/, '')
+    .replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').slice(0, 40).replace(/-+$/, '');
+  if (slug.replace(/-/g, '').length < 3) return { error: 'Give the creator a link name of at least 3 letters or numbers.' };
+  if (RESERVED_PATHS.has(slug)) return { error: 'That link name is reserved.' };
+  return { slug };
+}
 
 const MIN_PASSWORD = 4;
 
@@ -527,15 +540,16 @@ async function handle(req, env, ctx) {
 
       if (p === '/api/creators/register' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
-        const slug = String(b.slug || '').toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+        const checked = checkSlug(b.slug);
+        const slug = checked.slug;
         const name = String(b.name || '').trim().slice(0, 100);
         const mode = b.mode === 'custom' ? 'custom' : 'default';
         const handle = String(b.handle || '').trim().slice(0, 60) || null;
         const topic = String(b.topic || '').trim().slice(0, 60) || null;
         const email = String(b.email || '').trim().toLowerCase().slice(0, 200) || null;
-        if (!slug || !name) return json({ error: 'slug and name are required' }, 400);
-        // A page name like /admin or /login would shadow a site page.
-        if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
+        if (!name) return json({ error: 'slug and name are required' }, 400);
+        // A page name like /admin or /why would shadow a site page; a short one would not open as /<name>.
+        if (checked.error) return json({ error: checked.error }, 400);
         if (rateLimited(`register:${clientIp(req)}`, 5, 10 * 60_000)) {
           return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
         }
@@ -839,10 +853,10 @@ async function handle(req, env, ctx) {
           return json({ ok: true, status: 'approved', role: 'admin' });
         }
 
-        const slug = String(b.slug || application.handle || application.email || '')
-          .split('@')[0].toLowerCase().trim().replace(/^@/, '')
-          .replace(/[^a-z0-9-]/g, '-').slice(0, 40);
-        if (!slug) return json({ error: 'Give the creator a link name.' }, 400);
+        const checked = checkSlug(String(b.slug || application.handle || application.email || '')
+          .trim().replace(/^@/, '').split('@')[0]);
+        if (checked.error) return json({ error: checked.error }, 400);
+        const slug = checked.slug;
         const taken = await slugClaimError(db, slug, application.email);
         if (taken) return taken;
         let accessKey = null;
@@ -981,9 +995,9 @@ async function handle(req, env, ctx) {
 
         let slug = account.creator_slug || null;
         if (role === 'creator') {
-          slug = String(b.creator_slug || slug || email.split('@')[0] || '')
-            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
-          if (!slug) return json({ error: 'Give them a link name.' }, 400);
+          const checked = checkSlug(b.creator_slug || slug || email.split('@')[0] || '');
+          if (checked.error) return json({ error: checked.error }, 400);
+          slug = checked.slug;
           const taken = await slugClaimError(db, slug, email, account.creator_slug);
           if (taken) return taken;
           if (!(await db.creatorBySlug(slug))) {
