@@ -428,9 +428,9 @@ function creatorInsertError(err) {
 // the creator it belongs to (or an account already on it) may take it.
 // Returns an error response, or null when the name may be used.
 async function slugClaimError(db, slug, email, currentSlug = null) {
+  if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
   // An account keeps the name of the creator it is already on.
   if (currentSlug && slug === currentSlug && await db.creatorBySlug(slug)) return null;
-  if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
   // A name already used as a short alias would take that alias over.
   if (await isAlias(db, slug)) return json({ error: ALIAS_TAKEN }, 409);
   if (!(await db.creatorBySlug(slug))) return null;
@@ -699,7 +699,6 @@ async function handle(req, env, ctx) {
           const checked = checkSlug(b.creator_slug || email.split('@')[0] || '');
           if (checked.error) return json({ error: checked.error }, 400);
           creatorSlug = checked.slug;
-          if (await isAlias(db, creatorSlug)) return json({ error: ALIAS_TAKEN }, 409);
           const already = await db.creatorBySlug(creatorSlug);
           // An existing link can only be joined by the creator it belongs to;
           // anyone else would be handed that creator's leads.
@@ -708,6 +707,8 @@ async function handle(req, env, ctx) {
             if (!owner || owner.slug !== creatorSlug) {
               return json({ error: 'That link name belongs to another creator.' }, 409);
             }
+          } else if (await isAlias(db, creatorSlug)) {
+            return json({ error: ALIAS_TAKEN }, 409);
           }
           if (!already) {
             accessKey = newAccessKey();
@@ -996,6 +997,14 @@ async function handle(req, env, ctx) {
             delete aliases[alias];
           }
           await db.setSetting('creator_aliases', JSON.stringify(aliases));
+          // A sign-up for the same name may have landed in the meantime; that
+          // creator's own link wins, so the alias is taken back out.
+          if (b.slug && await db.creatorBySlug(alias).catch(() => null)) {
+            const now = await creatorAliases(db);
+            delete now[alias];
+            await db.setSetting('creator_aliases', JSON.stringify(now));
+            return json({ error: 'A creator already has that link.' }, 409);
+          }
         }
         return json({ ok: true, aliases });
       }
@@ -1035,7 +1044,8 @@ async function handle(req, env, ctx) {
         let slug = account.creator_slug || null;
         // An existing creator keeps its link name even if it predates today's
         // rules; a stored name with no creator behind it is checked like a new one.
-        const keepsSlug = slug && (!b.creator_slug || b.creator_slug === slug) && Boolean(await db.creatorBySlug(slug));
+        const keepsSlug = slug && slug !== 'default' && !RESERVED_PATHS.has(slug)
+          && (!b.creator_slug || b.creator_slug === slug) && Boolean(await db.creatorBySlug(slug));
         if (role === 'creator' && !keepsSlug) {
           const checked = checkSlug(b.creator_slug || slug || email.split('@')[0] || '');
           if (checked.error) return json({ error: checked.error }, 400);
