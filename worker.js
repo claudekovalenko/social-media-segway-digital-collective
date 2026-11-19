@@ -1239,7 +1239,8 @@ async function handle(req, env, ctx) {
         if (!VALID_STEPS.has(step)) return json({ error: 'invalid step' }, 400);
         if (!name || !/.+@.+\..+/.test(email)) return json({ error: 'name and a valid email are required' }, 400);
         // Know God asks whether this is a first commitment or a recommitment.
-        const decision = String(b.decision || '').trim().slice(0, 40) || null;
+        // Only Know God asks it, and only a plain text answer counts.
+        const decision = step === 'know_god' && typeof b.decision === 'string' ? b.decision.trim().slice(0, 40) || null : null;
         if (step === 'know_god' && !KNOW_GOD_DECISIONS.has(decision)) {
           return json({ error: 'Choose first-time commitment or recommitment.' }, 400);
         }
