@@ -194,7 +194,8 @@ async function run(base) {
     expect(await page.locator('#grow').evaluate((el) => el.classList.contains('open')), 'did not go straight to Grow with God');
     expect(!(await page.locator('#know').evaluate((el) => el.classList.contains('open'))), 'Know God still open');
     expect((await page.locator('#grow .carry-note').textContent()).includes('test@example.org'), 'no welcome carried into Grow with God');
-    expect(await form.locator('.after-actions a').count() === 0, 'a link was still offered after sending (Planning Center)');
+    expect(await form.locator('.after-actions a[href^="http"], .after-actions a[target]').count() === 0, 'a link was still offered after sending (Planning Center)');
+    expect((await form.locator('.after-actions a').allTextContents()).join('|') === 'Next: Grow with God', 'the way back to Grow with God is missing');
     await page.locator('#cta-grow_with_god').click();
     await page.waitForTimeout(400);
     expect(await page.locator('form[data-step="grow_with_god"] input[name="email"]').inputValue() === 'test@example.org', 'second form not filled in');

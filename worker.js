@@ -131,6 +131,16 @@ async function creatorAliases(db) {
   catch { return {}; }
 }
 
+// The creator a link name opens. A creator's own link name always wins; a
+// short alias (/craig for /craigbrown) only answers for names no creator has,
+// so a creator's printed link can never send their leads to someone else.
+async function creatorForName(db, name) {
+  const own = await db.creatorBySlug(name);
+  if (own) return own;
+  const aliases = await creatorAliases(db);
+  return Object.hasOwn(aliases, name) && typeof aliases[name] === 'string' ? db.creatorBySlug(aliases[name]) : null;
+}
+
 async function defaultLinks(db) {
   const saved = await db.settings().catch(() => ({}));
   const out = { ...DEFAULT_LINKS };
@@ -208,6 +218,22 @@ export const RESERVED_PATHS = new Set([
 
 // A link name that works as /<name>: 3-40 lowercase letters, digits or hyphens,
 // no hyphen at either end, and not a page or reserved name. Returns { slug } or { error }.
+// A link name to suggest from what an applicant gave as their profile: the
+// @name or last part of a profile address (youtube.com/@pastorjoe gives
+// pastorjoe, instagram.com/sam.rivera gives sam.rivera), the handle itself,
+// or the part of an email before the @. Never the site's own domain.
+// public/admin.html has the same rule for its suggestion.
+export function nameFromHandle(raw) {
+  let h = String(raw || '').trim();
+  if (/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+\//i.test(h)) {
+    try {
+      const parts = new URL(/^https?:\/\//i.test(h) ? h : 'https://' + h).pathname.split('/').filter(Boolean).map(decodeURIComponent);
+      h = parts.find((x) => x.startsWith('@')) || parts[parts.length - 1] || '';
+    } catch { h = ''; }
+  }
+  return h.replace(/^@/, '').split('@')[0];
+}
+
 export function checkSlug(raw) {
   const slug = String(raw || '').toLowerCase().trim().replace(/^@/, '')
     .replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').slice(0, 40).replace(/-+$/, '');
@@ -392,6 +418,8 @@ function creatorInsertError(err) {
 async function slugClaimError(db, slug, email, currentSlug = null) {
   if (currentSlug && slug === currentSlug) return null;
   if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
+  // A name already used as a short alias would take that alias over.
+  if (Object.hasOwn(await creatorAliases(db), slug)) return json({ error: 'That link name is already a short link for another creator.' }, 409);
   if (!(await db.creatorBySlug(slug))) return null;
   const owner = await db.creatorByEmail(email).catch(() => null);
   if (!owner || owner.slug !== slug) return json({ error: 'That link name belongs to another creator.' }, 409);
@@ -849,8 +877,8 @@ async function handle(req, env, ctx) {
           return json({ ok: true, status: 'approved', role: 'admin' });
         }
 
-        const checked = checkSlug(String(b.slug || application.handle || application.email || '')
-          .trim().replace(/^@/, '').split('@')[0]);
+        const checked = checkSlug(b.slug ? String(b.slug).trim().replace(/^@/, '')
+          : nameFromHandle(application.handle) || nameFromHandle(application.email));
         if (checked.error) return json({ error: checked.error }, 400);
         const slug = checked.slug;
         const taken = await slugClaimError(db, slug, application.email);
@@ -990,10 +1018,13 @@ async function handle(req, env, ctx) {
         if (!account) return json({ error: 'not found' }, 404);
 
         let slug = account.creator_slug || null;
-        if (role === 'creator') {
-          const checked = checkSlug(b.creator_slug || slug || email.split('@')[0] || '');
+        const keepsSlug = slug && (!b.creator_slug || b.creator_slug === slug);
+        if (role === 'creator' && !keepsSlug) {
+          const checked = checkSlug(b.creator_slug || email.split('@')[0] || '');
           if (checked.error) return json({ error: checked.error }, 400);
           slug = checked.slug;
+        }
+        if (role === 'creator') {
           const taken = await slugClaimError(db, slug, email, account.creator_slug);
           if (taken) return taken;
           if (!(await db.creatorBySlug(slug))) {
@@ -1212,8 +1243,7 @@ async function handle(req, env, ctx) {
 
       if (p.startsWith('/api/creators/') && req.method === 'GET') {
         const asked = p.split('/')[3];
-        const aliases = await creatorAliases(db);
-        const row = await db.creatorBySlug(aliases[asked] || asked);
+        const row = await creatorForName(db, asked);
         if (!row || row.status === 'suspended') return json({ error: 'creator not found' }, 404);
         // Never the key hash or private contact details on the public config.
         const { key_hash, email, phone, socials, follow_up_greeting, follow_up_message, follow_up_cta_label, follow_up_cta_url, ...pub } = row;
@@ -1345,10 +1375,8 @@ async function handle(req, env, ctx) {
       if (vanity && req.method === 'GET' && !RESERVED_PATHS.has(vanity[1]) && !vanity[1].includes('.')) {
         // Short aliases (/craig for /craigbrown) live in settings; every
         // response is still attributed to the real creator.
-        const aliases = await creatorAliases(db);
-        const slug = aliases[vanity[1]] || vanity[1];
         // A database failure answers 503 (via serverError), not "no such creator".
-        const owner = await db.creatorBySlug(slug);
+        const owner = await creatorForName(db, vanity[1]);
         if (!owner || owner.status === 'suspended') {
           // Unknown or disabled creator: a real page, not the default funnel.
           const res404 = await env.ASSETS.fetch(new Request(new URL('/unavailable', url), req));
@@ -1360,7 +1388,7 @@ async function handle(req, env, ctx) {
         if (res.ok) {
           const html = (await res.text()).replace(
             '<head>',
-            `<head><script>window.CREATOR_SLUG=${JSON.stringify(slug)};</script>`,
+            `<head><script>window.CREATOR_SLUG=${JSON.stringify(owner.slug)};</script>`,
           );
           return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } });
         }
