@@ -40,9 +40,12 @@ jobs:
       # Masking has to happen in a step before the one whose env header
       # would print the values.
       - name: Mask secrets
+        env:
+          PASSWORD: ${{ inputs.password }}
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
         run: |
-          echo "::add-mask::${{ inputs.password }}"
-          echo "::add-mask::${{ inputs.admin_password }}"
+          echo "::add-mask::$PASSWORD"
+          echo "::add-mask::$ADMIN_PASSWORD"
       - name: Create or reset
         env:
           SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
