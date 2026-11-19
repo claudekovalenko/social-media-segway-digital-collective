@@ -562,7 +562,7 @@ async function handle(req, env, ctx) {
         } catch {
           return json({ error: 'that link name or email is already taken' }, 409);
         }
-        return json({ ok: true, slug, link: `/c/${slug}`, access_key: accessKey }, 201);
+        return json({ ok: true, slug, link: `/${slug}`, access_key: accessKey }, 201);
       }
 
       // Public directory: creators who set a handle, with their topic tag.
@@ -683,7 +683,7 @@ async function handle(req, env, ctx) {
         return json({
           token, email, role,
           creator_slug: creatorSlug,
-          link: creatorSlug ? `/c/${creatorSlug}` : null,
+          link: creatorSlug ? `/${creatorSlug}` : null,
           access_key: accessKey,
         }, 201);
       }
@@ -863,7 +863,7 @@ async function handle(req, env, ctx) {
         await db.reviewApplication(application.id, 'approved', who.email);
         return json({
           ok: true, status: 'approved', role: 'creator', slug,
-          link: `/c/${slug}`, access_key: accessKey,
+          link: `/${slug}`, access_key: accessKey,
         });
       }
 

@@ -519,7 +519,7 @@
             said.textContent = action !== 'approve' ? 'Declined'
               : (out.role === 'admin'
                 ? 'Approved as an admin — full database access'
-                : `Approved as a creator · link /c/${out.slug}`
+                : `Approved as a creator · link /${out.slug}`
                   + (out.access_key ? ` · access key ${out.access_key}` : ''));
             card.classList.add('done');
           } catch (err) {
