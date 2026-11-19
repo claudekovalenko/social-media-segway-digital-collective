@@ -372,6 +372,18 @@ function creatorInsertError(err) {
   return json({ error: 'Could not create the creator: ' + msg }, 500);
 }
 
+// Whoever is given an existing link name gets that creator's leads, so only
+// the creator it belongs to (or an account already on it) may take it.
+// Returns an error response, or null when the name may be used.
+async function slugClaimError(db, slug, email, currentSlug = null) {
+  if (currentSlug && slug === currentSlug) return null;
+  if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
+  if (!(await db.creatorBySlug(slug))) return null;
+  const owner = await db.creatorByEmail(email).catch(() => null);
+  if (!owner || owner.slug !== slug) return json({ error: 'That link name belongs to another creator.' }, 409);
+  return null;
+}
+
 // With a Postgres connection configured (HYPERDRIVE or DATABASE_URL), each
 // request gets its own client: Workers can't share a socket between requests,
 // so it is opened lazily and closed once the response and any waitUntil work
@@ -825,6 +837,8 @@ async function handle(req, env, ctx) {
           .split('@')[0].toLowerCase().trim().replace(/^@/, '')
           .replace(/[^a-z0-9-]/g, '-').slice(0, 40);
         if (!slug) return json({ error: 'Give the creator a link name.' }, 400);
+        const taken = await slugClaimError(db, slug, application.email);
+        if (taken) return taken;
         let accessKey = null;
         if (!(await db.creatorBySlug(slug))) {
           accessKey = newAccessKey();
@@ -964,6 +978,8 @@ async function handle(req, env, ctx) {
           slug = String(b.creator_slug || slug || email.split('@')[0] || '')
             .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').slice(0, 40);
           if (!slug) return json({ error: 'Give them a link name.' }, 400);
+          const taken = await slugClaimError(db, slug, email, account.creator_slug);
+          if (taken) return taken;
           if (!(await db.creatorBySlug(slug))) {
             try {
               await db.createCreator({
