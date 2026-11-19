@@ -654,14 +654,9 @@ async function handle(req, env, ctx) {
         let accessKey = null;
 
         if (role === 'creator') {
-          creatorSlug = String(b.creator_slug || email.split('@')[0] || '')
-            .toLowerCase().trim().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
-          if (creatorSlug.replace(/-/g, '').length < 3) {
-            return json({ error: 'Give the creator a link name of at least 3 letters or numbers.' }, 400);
-          }
-          if (RESERVED_PATHS.has(creatorSlug) || creatorSlug === 'default') {
-            return json({ error: 'That link name is reserved.' }, 400);
-          }
+          const checked = checkSlug(b.creator_slug || email.split('@')[0] || '');
+          if (checked.error) return json({ error: checked.error }, 400);
+          creatorSlug = checked.slug;
           const already = await db.creatorBySlug(creatorSlug);
           // An existing link can only be joined by the creator it belongs to;
           // anyone else would be handed that creator's leads.

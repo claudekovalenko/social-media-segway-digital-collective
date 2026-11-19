@@ -11,7 +11,7 @@ name: Create creator accounts in bulk
 # Each line becomes a creator account on the live site:
 #   - sign-in:  firstlast@digitalcollective.com (lowercase, letters only)
 #   - password: their first name, lowercase
-#   - link:     /c/<handle>
+#   - link:     /<handle>
 #   - page:     the three videos and the next-step and course links copied
 #               from another creator (videos_from), and the card at the foot
 #               of the page opening their Instagram
@@ -118,7 +118,7 @@ jobs:
             source=$(read_page "$VIDEOS_FROM") || { echo "Could not read the creator page '$VIDEOS_FROM' to copy from."; exit 1; }
             source=$(jq -c --argjson keys "$COPY_KEYS" '. as $c | reduce $keys[] as $k ({};
               if ($c[$k] | type) == "string" and ($c[$k] | test("^https?://")) then .[$k] = $c[$k] else . end)' <<<"$source")
-            echo "Copied from /c/$VIDEOS_FROM:"
+            echo "Copied from /$VIDEOS_FROM:"
             jq -r --argjson keys "$COPY_KEYS" '. as $c | $keys[] | "  \(.): \($c[.] // "(none: uses the network default)")"' <<<"$source"
             echo
           fi
@@ -192,7 +192,7 @@ jobs:
             seen="$seen$email "
 
             if [ "$DRY_RUN" = "true" ]; then
-              echo "• $name → $email  link: /c/$slug  photo: ${photo:-none}"
+              echo "• $name → $email  link: /$slug  photo: ${photo:-none}"
               fill "$slug" "$handle" "$photo" existing; continue
             fi
 
@@ -202,7 +202,7 @@ jobs:
               -H "content-type: application/json" -H "$AUTH" --data "$body")
             case "$code" in
               200|201)
-                echo "✓ $name → $email  link: /c/$slug  photo: ${photo:-none}"; created=$((created+1))
+                echo "✓ $name → $email  link: /$slug  photo: ${photo:-none}"; created=$((created+1))
                 # A brand-new page comes with an access key. Without one, the
                 # sign-in was joined to a page that already existed (the same
                 # email had registered it), which is treated as existing.
