@@ -35,7 +35,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Mask
-        run: echo "::add-mask::${{ inputs.admin_password }}"
+        env:
+          ADMIN_PASSWORD: ${{ inputs.admin_password }}
+        run: echo "::add-mask::$ADMIN_PASSWORD"
       - name: Call
         env:
           SITE: https://faith-journey-funnel.faith-journey-funnel.workers.dev
