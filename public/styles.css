@@ -3744,3 +3744,44 @@ body.ig .auth-hero h1 { font-size: 2.5rem; line-height: 1.02; }
 .decision-opt { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; line-height: 1.4; cursor: pointer; }
 .decision-opt input { flex: none; }
 .carry-note { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: rgba(193,62,30,0.08); color: #1A1A1A; font-weight: 600; font-size: 0.92rem; line-height: 1.45; }
+
+/* ==================================================================
+   Step colours follow the logo stripes: Know God red, Grow with God
+   orange, Get Connected yellow. Fills, rings and dots use --step-N;
+   small text uses the darker --step-N-text; text or icons sitting on an
+   orange or yellow fill are ink, on red white.
+   ================================================================== */
+:root {
+  --step-1: #C13E1E; --step-2: #EC6C23; --step-3: #F6AD1B;
+  --step-1-text: #C13E1E; --step-2-text: #AD4C0C; --step-3-text: #8F6200;
+  --step-1-deep: #A3321A; --step-2-deep: #96420A; --step-3-deep: #7A5400;
+}
+/* Creator page: each step's icon ring, and the filled icon when open. */
+body.jpn.journey #know .step-icon { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(var(--step-1),var(--step-1)) border-box; color: var(--step-1-text); }
+body.jpn.journey #grow .step-icon { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(var(--step-2),var(--step-2)) border-box; color: var(--step-2-text); }
+body.jpn.journey #connect .step-icon { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(var(--step-3),var(--step-3)) border-box; color: var(--step-3-text); }
+body.jpn.journey #know.open .step-icon { background: linear-gradient(var(--step-1),var(--step-1)) padding-box, linear-gradient(var(--step-1),var(--step-1)) border-box; color: #fff; }
+body.jpn.journey #grow.open .step-icon { background: linear-gradient(var(--step-2),var(--step-2)) padding-box, linear-gradient(var(--step-2),var(--step-2)) border-box; color: #1A1A1A; }
+body.jpn.journey #connect.open .step-icon { background: linear-gradient(var(--step-3),var(--step-3)) padding-box, linear-gradient(var(--step-3),var(--step-3)) border-box; color: #1A1A1A; }
+/* Each step's video placeholder: its play button in the step's colour. */
+body.jpn.journey #know .play-mark { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(var(--step-1),var(--step-1)) border-box; }
+body.jpn.journey #grow .play-mark { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(var(--step-2),var(--step-2)) border-box; }
+body.jpn.journey #connect .play-mark { background: linear-gradient(#fff,#fff) padding-box, linear-gradient(var(--step-3),var(--step-3)) border-box; }
+body.jpn.journey #know .play-mark::before { border-left-color: var(--step-1); }
+body.jpn.journey #grow .play-mark::before { border-left-color: var(--step-2-text); }
+body.jpn.journey #connect .play-mark::before { border-left-color: var(--step-3-text); }
+/* Home phone demo: the three step rings. */
+body.ig .pj-1 .pj-ring { border-color: var(--step-1); color: var(--step-1-text); }
+body.ig .pj-2 .pj-ring { border-color: var(--step-2); color: var(--step-2-text); }
+body.ig .pj-3 .pj-ring { border-color: var(--step-3); color: var(--step-3-text); }
+/* "What comes back to you" rows. */
+.y-dot { background: var(--step-1); box-shadow: 0 0 0 3px rgba(193,62,30,0.13); }
+.y-dot.y-2 { background: var(--step-2); box-shadow: 0 0 0 3px rgba(236,108,35,0.18); }
+.y-dot.y-3 { background: var(--step-3); box-shadow: 0 0 0 3px rgba(246,173,27,0.25); }
+/* Dashboard and admin: step chips on each person, and the step cards. */
+body.jpn .pp-step.pp-know_god { background: rgba(193,62,30,0.12); color: var(--step-1-deep); }
+body.jpn .pp-step.pp-grow_with_god { background: rgba(236,108,35,0.16); color: var(--step-2-deep); }
+body.jpn .pp-step.pp-find_church { background: rgba(246,173,27,0.22); color: var(--step-3-deep); }
+body.jpn .pp-sc-know .pp-dot { background: var(--step-1); }
+body.jpn .pp-sc-grow .pp-dot { background: var(--step-2); }
+body.jpn .pp-sc-connect .pp-dot { background: var(--step-3); }
