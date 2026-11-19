@@ -13,7 +13,7 @@ When a creator registers at `/creator.html` they pick a mode:
 - **Default** — the funnel shows the platform-provided videos / gospel series.
 - **Custom** — the creator supplies their own video URLs for each step.
 
-Each creator gets a shareable link like `/c/their-name`. Every lead that comes through it is tagged with that creator, which powers phase 2: matching people who signed up through the same creator into small groups (the `group_signups` table already collects that waitlist — anyone who checks "connect me with a group" on any form lands there).
+Each creator gets a shareable link like `/their-name`. Every lead that comes through it is tagged with that creator, which powers phase 2: matching people who signed up through the same creator into small groups (the `group_signups` table already collects that waitlist — anyone who checks "connect me with a group" on any form lands there).
 
 ## It's a PWA
 
@@ -136,7 +136,7 @@ ADMIN_KEY=your-secret npm start
 # open http://localhost:3000
 ```
 
-- Funnel: `/` (or `/c/<creator-slug>` for an attributed link)
+- Funnel: `/` (or `/<creator-slug>` for an attributed link)
 - Creator signup: `/creator.html`
 - Database view: `/admin.html` (enter your `ADMIN_KEY`)
 
@@ -193,7 +193,7 @@ The very first visit to a fresh site creates the owner account (`admin`). After
 that the first tab does both jobs — **Sign in / Sign up** — and an admin adds
 accounts from **Who has access** in the database view, choosing the tier: another
 admin, or a creator with their own link name (which also creates the creator
-record and their `/c/<slug>` link).
+record and their `/<slug>` link).
 
 Accounts are identified by an email address *or* a plain username (letters,
 numbers, and `. _ -`). Passwords are PBKDF2-SHA256 with a per-account salt; the session token is
@@ -210,7 +210,7 @@ they see nothing until an admin approves them.
 An admin approves from **Waiting for approval** at the top of the database view
 and chooses the tier at that moment:
 
-- **as a creator** — gets their own `/c/<slug>` link and sees only its leads
+- **as a creator** — gets their own `/<slug>` link and sees only its leads
 - **as an admin** — gets the whole database
 
 Anyone signed in with their password can change it themselves under **Your
@@ -234,7 +234,7 @@ change anyone's tier.
 GitHub → **Actions → Create creator accounts in bulk → Run workflow**. Paste one
 person per line (or separate them with `;`) as `First Last @handle`. Each becomes
 a creator on the default videos, signing in as `firstlast@digitalcollective.com`
-with their first name in lowercase as the password, and linked at `/c/<handle>`.
+with their first name in lowercase as the password, and linked at `/<handle>`.
 Each new creator's photo is set to their Instagram profile
 (`https://www.instagram.com/<handle>/`), read the same way as a YouTube
 channel photo: the Worker reads the profile page's picture, keeps it, and
@@ -259,7 +259,7 @@ won't hand its picture to the site).
 
 After every deploy the live checker (`tests/smoke.mjs`, **Front-end checks**)
 signs in as each person in `accounts/people.txt` and checks their dashboard
-data, `/c/` link, short link, directory entry and photo. It only reads.
+data, `/<slug>` link, short link, directory entry and photo. It only reads.
 
 ### What the network does and doesn't endorse
 
@@ -285,7 +285,7 @@ the person gets a `pending` account immediately, so they can sign in and watch
 for the decision.
 
 Pending applications appear at the top of the database page. **Approve** creates
-the creator record and their `/c/<slug>` link, lifts their account to `creator`,
+the creator record and their `/<slug>` link, lifts their account to `creator`,
 and shows the access key once. **Decline** marks it declined.
 
 ### Who can see which leads
