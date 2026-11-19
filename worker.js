@@ -10,6 +10,7 @@ import { platform, rateLimited, uncount, clientIp, isRealDate, recordId } from '
 // Bindings: DB (D1 database), ADMIN_KEY (secret).
 
 const VALID_STEPS = new Set(['know_god', 'grow_with_god', 'find_church']);
+const KNOW_GOD_DECISIONS = new Set(['first_time', 'recommitment']);
 const VALID_PATHS = new Set(['join_church', 'start_gathering', 'both', 'not_sure']);
 // Where a person is in the follow-up pipeline.
 const VALID_LEAD_STATUS = new Set([
@@ -1242,6 +1243,11 @@ async function handle(req, env, ctx) {
         const email = String(b.email || '').trim().slice(0, 200);
         if (!VALID_STEPS.has(step)) return json({ error: 'invalid step' }, 400);
         if (!name || !/.+@.+\..+/.test(email)) return json({ error: 'name and a valid email are required' }, 400);
+        // Know God asks whether this is a first commitment or a recommitment.
+        const decision = String(b.decision || '').trim().slice(0, 40) || null;
+        if (step === 'know_god' && !KNOW_GOD_DECISIONS.has(decision)) {
+          return json({ error: 'Choose first-time commitment or recommitment.' }, 400);
+        }
         const interested = b.interested_in_group ? 1 : 0;
         // A link to a creator who doesn't exist (a typo, or one removed) still
         // keeps the person's answer: it goes to the network instead.
@@ -1259,7 +1265,7 @@ async function handle(req, env, ctx) {
           phone: String(b.phone || '').slice(0, 40) || null,
           city: String(b.city || '').slice(0, 100) || null,
           message: String(b.message || '').slice(0, 2000) || null,
-          decision: String(b.decision || '').slice(0, 40) || null,
+          decision,
           interested_in_group: interested, group_slot: null, slot_note: null,
           path, country, language, creator_slug: creatorSlug,
         });

@@ -506,7 +506,7 @@ async function child(backend, out) {
   await call('events: garbage body', 'POST', '/api/events', { raw: 'not json', headers: { 'content-type': 'application/json' } });
 
   // ---- leads, every step ---------------------------------------------------------------
-  const lead = (x) => ({ consent: true, consent_text: 'I agree to be contacted.', consent_version: '2026-09-01', page_url: 'https://t.test/craigbrown', ...x });
+  const lead = (x) => ({ consent: true, consent_text: 'I agree to be contacted.', consent_version: '2026-09-01', page_url: 'https://t.test/craigbrown', ...(x.step === 'know_god' ? { decision: 'first_time' } : {}), ...x });
   await call('leads: know_god + creator + sms', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'know_god', name: 'Sam Seeker', email: 'Sam@Acme-Mail.example', phone: '(555) 123-4567', city: 'austin', decision: 'first_time', creator_slug: 'craigbrown', session_id: 'sess-1', utm_source: 'tiktok', utm_campaign: 'fall', sms_consent: true, sms_consent_text: 'Texts OK' }) });
   await call('leads: grow + group interest + slot', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'grow_with_god', name: 'Gina Grower', email: 'gina@gmial.com', city: 'Denver', creator_slug: 'annaj', interested_in_group: true, group_slot: 'tue-7pm', slot_note: 'evenings', country: 'US', language: 'en', session_id: 'sess-3' }) });
   await call('leads: find_church no creator + path + group', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'find_church', name: 'Fay Finder', email: 'fay@nomx-domain.example', path: 'join_church', interested_in_group: 1, country: 'GB', message: 'Looking in Leeds', session_id: 'sess-2' }) });
@@ -516,6 +516,9 @@ async function child(backend, out) {
   await call('leads: same name+city (soft dup)', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'know_god', name: 'SAM SEEKER', email: 'sam.other@example.net', city: 'AUSTIN', creator_slug: 'annaj' }) });
   await call('leads: phone only match', 'POST', '/api/leads', { ip: '10.1.0.1', body: lead({ step: 'know_god', name: 'Sam Phone', email: 'samphone@example.net', phone: '555-123-4567' }) });
   await call('leads: invalid step -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'nope', name: 'X', email: 'x@example.net' }) });
+  await call('leads: know_god without a commitment choice -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'know_god', name: 'X', email: 'x@example.net', decision: '' }) });
+  await call('leads: know_god with an unknown choice -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'know_god', name: 'X', email: 'x@example.net', decision: 'questions' }) });
+  await call('leads: know_god recommitment', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'know_god', name: 'Rita Return', email: 'rita@example.net', decision: 'recommitment' }) });
   await call('leads: no consent -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: { step: 'know_god', name: 'X', email: 'x@example.net' } });
   await call('leads: bad email -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'know_god', name: 'X', email: 'x' }) });
   await call('leads: too fast -> 400', 'POST', '/api/leads', { ip: '10.1.0.2', body: lead({ step: 'know_god', name: 'X', email: 'x@example.net', t0: Date.now() }) });

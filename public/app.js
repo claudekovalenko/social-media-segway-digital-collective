@@ -134,11 +134,9 @@ async function loadCreator() {
   embed('video-find_church', creator.find_church_video_url || fallback.find_church_video_url, t('vid3'));
   // Buttons under the videos: each points where the creator (or the
   // network) says the next step is.
-  // Steps 1 and 2: the button opens a short form; the creator's own link is
-  // offered once the person has sent it (see afterSubmit).
-  nextLinks.know_god = creator.know_god_next_url || fallback.know_god_next_url || '';
+  // Steps 1 and 2: the button opens a short form. Step 1 then moves straight
+  // on to step 2; step 2 offers the creator's course once it is sent.
   nextLinks.grow_with_god = creator.grow_course_url || fallback.grow_course_url || '';
-  nextLinks.creatorName = creator.slug !== 'default' ? (creator.display_name || creator.name || '') : '';
   showStepButton('cta-know_god', null, 'grow',
     creator.know_god_cta_label || fallback.know_god_cta_label || t('cta1'), 'know_god');
   showStepButton('cta-grow_with_god', null, 'connect',
@@ -311,7 +309,7 @@ new MutationObserver((changes) => {
 }).observe(document.querySelector('.steps') || document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 
 // Where steps 1 and 2 lead once their form is sent: the creator's own links.
-const nextLinks = { know_god: '', grow_with_god: '', creatorName: '' };
+const nextLinks = { grow_with_god: '' };
 
 // Opens a step's own short form in place of its button.
 function openStepForm(step, button) {
@@ -507,10 +505,19 @@ function afterSubmit(form, data, body) {
     return el;
   };
   const web = (link) => /^https?:\/\//i.test(link || '') ? link : '';
-  const who = nextLinks.creatorName ? t('continue_with', { name: nextLinks.creatorName.split(' ')[0] }) : t('continue');
   if (data.step === 'know_god') {
-    row.append(button(t('next_grow'), true, () => openStep('grow')));
-    if (web(nextLinks.know_god)) row.append(button(who, false, null, nextLinks.know_god));
+    // Straight on to Grow with God; the welcome goes with them so they know it worked.
+    const grow = document.getElementById('grow');
+    const inner = grow && grow.querySelector('.step-inner');
+    if (inner && !inner.querySelector('.carry-note')) {
+      const carry = document.createElement('p');
+      carry.className = 'carry-note';
+      carry.setAttribute('role', 'status');
+      carry.textContent = [t('ok1'), note.textContent].filter(Boolean).join(' ');
+      inner.prepend(carry);
+    }
+    setTimeout(() => openStep('grow'), 900);
+    return;
   } else if (data.step === 'grow_with_god') {
     if (web(nextLinks.grow_with_god)) row.append(button(t('go_course'), true, null, nextLinks.grow_with_god));
     row.append(button(t('next_connect'), !web(nextLinks.grow_with_god), () => openStep('connect')));

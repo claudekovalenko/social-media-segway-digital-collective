@@ -158,11 +158,15 @@ async function run(base) {
     expect(await visible(page.locator('#creatorCard')), 'creator card at the bottom missing');
   });
 
-  await check('creator page: "I made a commitment" opens a form, then offers the next steps', async (page) => {
+  await check('creator page: "I made a commitment" asks first-time or recommitment, then goes straight to Grow with God', async (page) => {
     // Never write a test lead into the live database: the form's send is
     // answered here, so only the real page and its buttons are tested.
-    await page.route('**/api/leads', (route) => (route.request().method() === 'POST'
-      ? route.fulfill({ status: 201, json: { ok: true, emailed: true } }) : route.continue()));
+    let sent = null;
+    await page.route('**/api/leads', (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      sent = route.request().postDataJSON();
+      return route.fulfill({ status: 201, json: { ok: true, emailed: true } });
+    });
     await go(page, `/journey.html?creator=${CREATOR}`);
     await page.waitForSelector('#know .step-head');
     await page.waitForTimeout(800);
@@ -175,16 +179,22 @@ async function run(base) {
     await page.waitForTimeout(500);
     expect(page.url() === before, `the button left the page (${page.url()})`);
     expect(await visible(form.locator('input[name="name"]')), 'button did not open the form');
+    const values = await form.locator('input[name="decision"]').evaluateAll((els) => els.map((e) => e.type + ':' + e.value + ':' + e.required));
+    expect(values.join() === 'radio:first_time:true,radio:recommitment:true', `commitment choice wrong: ${values.join()}`);
     await form.locator('input[name="name"]').fill('Test Person');
     await form.locator('input[name="email"]').fill('test@example.org');
     await form.locator('input[name="consent"]').check();
+    expect(!(await form.evaluate((f) => f.checkValidity())), 'form sends without a commitment choice');
+    await form.locator('input[name="decision"][value="recommitment"]').check();
+    expect(await form.evaluate((f) => f.checkValidity()), 'form still invalid after choosing');
     await page.waitForTimeout(1600);
     await form.locator('button[type="submit"]').click();
-    await page.waitForTimeout(600);
-    expect((await form.locator('.after-note').textContent()).includes('test@example.org'), 'no confirmation line');
-    await form.getByText('Next: Grow with God').click();
-    await page.waitForTimeout(700);
-    expect(await page.locator('#grow').evaluate((el) => el.classList.contains('open')), 'Grow with God did not open');
+    await page.waitForTimeout(1800);
+    expect(sent && sent.decision === 'recommitment', `decision not sent (${sent && sent.decision})`);
+    expect(await page.locator('#grow').evaluate((el) => el.classList.contains('open')), 'did not go straight to Grow with God');
+    expect(!(await page.locator('#know').evaluate((el) => el.classList.contains('open'))), 'Know God still open');
+    expect((await page.locator('#grow .carry-note').textContent()).includes('test@example.org'), 'no welcome carried into Grow with God');
+    expect(await form.locator('.after-actions a').count() === 0, 'a link was still offered after sending (Planning Center)');
     await page.locator('#cta-grow_with_god').click();
     await page.waitForTimeout(400);
     expect(await page.locator('form[data-step="grow_with_god"] input[name="email"]').inputValue() === 'test@example.org', 'second form not filled in');

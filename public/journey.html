@@ -77,6 +77,10 @@
               <input name="name" required maxlength="100" placeholder="Name" aria-label="Name" data-i18n-placeholder="f_name">
               <input name="email" type="email" required maxlength="200" placeholder="Email" aria-label="Email" data-i18n-placeholder="f_email">
               <input name="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Phone (optional)" aria-label="Phone (optional)" data-i18n-placeholder="f_phone">
+              <div class="decision" role="radiogroup" aria-label="Your commitment">
+                <label class="check decision-opt"><input type="radio" name="decision" value="first_time" required><span data-i18n="dec_first">This is my first time committing my life to Jesus</span></label>
+                <label class="check decision-opt"><input type="radio" name="decision" value="recommitment" required><span data-i18n="dec_re">I&rsquo;m recommitting my life to Jesus</span></label>
+              </div>
               <label class="check consent fine"><input type="checkbox" name="consent" required><span class="consent-text">I agree that Jesus People Network may email me about my next step, and I accept the <a href="privacy.html" target="_blank">Privacy &amp; Consent terms</a>.</span></label>
               <label class="check consent fine"><input type="checkbox" name="sms_consent"><span class="sms-consent-text">Optional: text me too. I agree to receive occasional text messages from Jesus People Network about my next step at the number I gave. Consent is not required to receive anything else here. Message and data rates may apply, message frequency varies, reply STOP to stop or HELP for help.</span></label>
               <button type="submit" data-i18n="btn1">I took this step</button>

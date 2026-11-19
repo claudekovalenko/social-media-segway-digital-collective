@@ -65,14 +65,15 @@ for (let n = 1; n <= count; n++) {
     const know = page.locator('form[data-step="know_god"]');
     await know.locator('input[name="name"]').fill(name);
     await know.locator('input[name="email"]').fill(email);
+    await know.locator('input[name="decision"][value="first_time"]').check();
     await know.locator('input[name="consent"]').check();
     await page.waitForTimeout(1700);  // the server refuses forms sent faster than a person could
     await know.locator('button[type="submit"]').click();
     const err1 = await sent(know);
     if (err1) throw new Error(`I made a commitment: ${err1}`);
 
-    await know.getByText('Next: Grow with God').click();
-    await page.waitForTimeout(700);
+    // Sending step 1 moves straight on to Grow with God.
+    await page.waitForFunction(() => document.getElementById('grow')?.classList.contains('open'), null, { timeout: 5000 });
     await page.locator('#cta-grow_with_god').click();
     const grow = page.locator('form[data-step="grow_with_god"]');
     await grow.locator('input[name="consent"]').check();
