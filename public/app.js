@@ -509,14 +509,27 @@ function afterSubmit(form, data, body) {
     // Straight on to Grow with God; the welcome goes with them so they know it worked.
     const grow = document.getElementById('grow');
     const inner = grow && grow.querySelector('.step-inner');
-    if (inner && !inner.querySelector('.carry-note')) {
-      const carry = document.createElement('p');
+    let carry = inner && inner.querySelector('.carry-note');
+    if (inner && !carry) {
+      carry = document.createElement('p');
       carry.className = 'carry-note';
       carry.setAttribute('role', 'status');
-      carry.textContent = [t('ok1'), note.textContent].filter(Boolean).join(' ');
+      carry.tabIndex = -1;
       inner.prepend(carry);
     }
-    setTimeout(() => openStep('grow'), 900);
+    // Any tap in the meantime (say, on another step) means they chose where
+    // to go, so the move is dropped.
+    const cancel = () => clearTimeout(moveOn);
+    document.addEventListener('click', cancel, { capture: true, once: true });
+    moveOn = setTimeout(() => {
+      document.removeEventListener('click', cancel, { capture: true });
+      openStep('grow');
+      if (!carry) return;
+      // Filled in once the step is open, so screen readers announce it, and
+      // focused so keyboard users carry on from here rather than the top.
+      carry.textContent = [t('ok1'), note.textContent].filter(Boolean).join(' ');
+      carry.focus({ preventScroll: true });
+    }, 900);
     return;
   } else if (data.step === 'grow_with_god') {
     if (web(nextLinks.grow_with_god)) row.append(button(t('go_course'), true, null, nextLinks.grow_with_god));
