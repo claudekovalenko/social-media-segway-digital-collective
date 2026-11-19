@@ -60,5 +60,15 @@ check(row.includes(',+1 555 0100,-3,Ann Lee,"Lee, Ann",'), 'csv: phone numbers, 
   }
 }
 
+// ---- link name suggested from a profile link ----------------------------------
+{
+  const { nameFromHandle } = await import('../worker.js');
+  for (const [raw, want] of [['https://www.youtube.com/@pastorjoe', 'pastorjoe'], ['https://www.tiktok.com/@tia', 'tia'], ['instagram.com/sam.rivera', 'sam.rivera'],
+    ['x.com/sam/status/123', 'sam'], ['https://youtube.com/c/PastorJoe', 'PastorJoe'], ['https://pastorjoe.com', 'pastorjoe'], ['sam.rivera', 'sam.rivera'],
+    ['@craigbrown', 'craigbrown'], ['joe@gmail.com', 'joe'], ['youtube.com/watch?v=abc', '']]) {
+    check(nameFromHandle(raw) === want, `suggested name: "${raw}" gives "${want}"`, JSON.stringify(nameFromHandle(raw)));
+  }
+}
+
 console.log(failures ? `\n${failures} check(s) failed` : '\nall security checks passed');
 process.exit(failures ? 1 : 0);
