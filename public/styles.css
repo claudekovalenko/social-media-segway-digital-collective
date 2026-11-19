@@ -4025,3 +4025,16 @@ body.jpn .pp-step.pp-find_church { background: rgba(246,173,27,0.22); color: var
 body.jpn .pp-sc-know .pp-dot { background: var(--step-1); }
 body.jpn .pp-sc-grow .pp-dot { background: var(--step-2); }
 body.jpn .pp-sc-connect .pp-dot { background: var(--step-3); }
+/* Preview pages: onboarding's three step screens and the videos page follow the same step colours. */
+body.jpn .ob-step[data-step="1"] .ob-h em { color: var(--step-1-text); }
+body.jpn .ob-step[data-step="2"] .ob-h em { color: var(--step-2-text); }
+body.jpn .ob-step[data-step="3"] .ob-h em { color: var(--step-3-text); }
+body.jpn .ob-step[data-step="1"] .ob-vid:has(input:checked) { border-color: var(--step-1); box-shadow: 0 0 0 1px var(--step-1); }
+body.jpn .ob-step[data-step="2"] .ob-vid:has(input:checked) { border-color: var(--step-2); box-shadow: 0 0 0 1px var(--step-2); }
+body.jpn .ob-step[data-step="3"] .ob-vid:has(input:checked) { border-color: var(--step-3); box-shadow: 0 0 0 1px var(--step-3); }
+body.jpn .ob-step[data-step="1"] .ob-vid input { accent-color: var(--step-1); }
+body.jpn .ob-step[data-step="2"] .ob-vid input { accent-color: var(--step-2-text); }
+body.jpn .ob-step[data-step="3"] .ob-vid input { accent-color: var(--step-3-text); }
+body.jpn .vl-know .vl-cap b { color: var(--step-1-text); }
+body.jpn .vl-grow .vl-cap b { color: var(--step-2-text); }
+body.jpn .vl-connect .vl-cap b { color: var(--step-3-text); }
