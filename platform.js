@@ -698,8 +698,12 @@ export function toCsv(rows) {
   if (!rows.length) return '';
   const cols = Object.keys(rows[0]);
   const cell = (v) => {
-    const s = v == null ? '' : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    let s = v == null ? '' : String(v);
+    // A typed-in name like =HYPERLINK(...) would run as a formula when the
+    // export is opened in a spreadsheet. A leading apostrophe makes it plain
+    // text. Plain numbers and phone numbers (+1 555 0100, -3) are left alone.
+    if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s) && !/^[+-]?[\d\s().,-]+$/.test(s)) s = `'${s}`;
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [cols.join(','), ...rows.map((r) => cols.map((c) => cell(r[c])).join(','))].join('\n');
 }
