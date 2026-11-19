@@ -113,7 +113,9 @@ try {
   };
 
   // The site's owner, as on a real deployment.
-  await api('/api/admin/accounts', { method: 'POST', body: { email: 'owner@digitalcollective.com', password: 'owner-password-1' } });
+  const noKey = await api('/api/admin/accounts', { method: 'POST', body: { email: 'intruder@example.org', password: 'intruder-pass-1' } });
+  check(noKey.status === 401, 'empty site: the first account without the admin key is refused', `got ${noKey.status}`);
+  await api('/api/admin/accounts', { method: 'POST', headers: { 'x-admin-key': env.ADMIN_KEY }, body: { email: 'owner@digitalcollective.com', password: 'owner-password-1' } });
 
   // ---- run the workflow's own script, twice ---------------------------------
   const yaml = fs.readFileSync(path.join(ROOT, '.github/workflows/accounts-bulk.yml'), 'utf8');
