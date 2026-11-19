@@ -506,31 +506,38 @@ function afterSubmit(form, data, body) {
   };
   const web = (link) => /^https?:\/\//i.test(link || '') ? link : '';
   if (data.step === 'know_god') {
-    // Straight on to Grow with God; the welcome goes with them so they know it worked.
-    const grow = document.getElementById('grow');
-    const inner = grow && grow.querySelector('.step-inner');
-    let carry = inner && inner.querySelector('.carry-note');
-    if (inner && !carry) {
-      carry = document.createElement('p');
-      carry.className = 'carry-note';
-      carry.setAttribute('role', 'status');
-      carry.tabIndex = -1;
-      inner.prepend(carry);
-    }
-    // Any tap in the meantime (say, on another step) means they chose where
-    // to go, so the move is dropped.
-    const cancel = () => clearTimeout(moveOn);
-    document.addEventListener('click', cancel, { capture: true, once: true });
-    moveOn = setTimeout(() => {
-      document.removeEventListener('click', cancel, { capture: true });
+    // Straight on to Grow with God; the welcome goes with them so they know it
+    // worked. A button stays here too, in case the move is cancelled.
+    const goGrow = () => {
+      clearTimeout(moveOn);
+      document.removeEventListener('click', cancel, true);
       openStep('grow');
-      if (!carry) return;
+      const inner = document.querySelector('#grow .step-inner');
+      if (!inner) return;
+      let carry = inner.querySelector('.carry-note');
+      if (!carry) {
+        carry = document.createElement('p');
+        carry.className = 'carry-note';
+        carry.setAttribute('role', 'status');
+        carry.tabIndex = -1;
+        inner.prepend(carry);
+      }
       // Filled in once the step is open, so screen readers announce it, and
       // focused so keyboard users carry on from here rather than the top.
       carry.textContent = [t('ok1'), note.textContent].filter(Boolean).join(' ');
       carry.focus({ preventScroll: true });
-    }, 900);
-    return;
+    };
+    // A tap elsewhere in the meantime (say, on another step) means they chose
+    // where to go, so the move is dropped. Taps on this form (a double tap on
+    // its button) don't count.
+    function cancel(e) {
+      if (form.contains(e.target)) return;
+      clearTimeout(moveOn);
+      document.removeEventListener('click', cancel, true);
+    }
+    row.append(button(t('next_grow'), true, goGrow));
+    document.addEventListener('click', cancel, true);
+    moveOn = setTimeout(goGrow, 900);
   } else if (data.step === 'grow_with_god') {
     if (web(nextLinks.grow_with_god)) row.append(button(t('go_course'), true, null, nextLinks.grow_with_god));
     row.append(button(t('next_connect'), !web(nextLinks.grow_with_god), () => openStep('connect')));

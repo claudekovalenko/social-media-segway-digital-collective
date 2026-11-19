@@ -504,10 +504,22 @@
         }
         const slug = document.createElement('input');
         slug.placeholder = 'link name, e.g. sam-rivera';
-        // Suggest a link name from their handle, or the local part of their
-        // email — never the domain, which reads as 'name-gmail-com'.
-        slug.value = String(a.handle || a.name || a.email || '')
-          .split('@')[0].toLowerCase().replace(/^@/, '').replace(/[^a-z0-9-]/g, '-');
+        // Suggest a link name from their handle (the @name or last part of a
+        // profile address), or the local part of their email — never a
+        // domain, which reads as 'name-gmail-com'. Same rule as the server's
+        // nameFromHandle in worker.js.
+        const nameFrom = (raw) => {
+          let h = String(raw || '').trim();
+          if (/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+\//i.test(h)) {
+            try {
+              const parts = new URL(/^https?:\/\//i.test(h) ? h : 'https://' + h).pathname.split('/').filter(Boolean).map(decodeURIComponent);
+              h = parts.find((x) => x.startsWith('@')) || parts[parts.length - 1] || '';
+            } catch { h = ''; }
+          }
+          return h.replace(/^@/, '').split('@')[0];
+        };
+        slug.value = (nameFrom(a.handle) || nameFrom(a.name) || nameFrom(a.email))
+          .toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').replace(/-+$/, '');
         asRole.addEventListener('change', () => { slug.hidden = asRole.value === 'admin'; });
         const approve = document.createElement('button');
         approve.className = 'btn-small go';

@@ -417,17 +417,28 @@
       const f = e.currentTarget;
       const form = new FormData(f);
       const data = Object.fromEntries(form.entries());
-      // The platform comes from the link, so nobody has to tick it.
-      const h = String(data.handle || '').toLowerCase();
-      const KNOWN = [['instagram.', 'Instagram'], ['tiktok.', 'TikTok'], ['youtube.', 'YouTube'], ['youtu.be', 'YouTube'], ['facebook.', 'Facebook'], ['fb.com', 'Facebook'], ['x.com', 'X'], ['twitter.', 'X'], ['threads.', 'Threads'], ['snapchat.', 'Snapchat'], ['pinterest.', 'Pinterest'], ['linkedin.', 'LinkedIn'], ['twitch.', 'Twitch'], ['rumble.', 'Rumble'], ['spotify.', 'Podcast'], ['podcasts.apple', 'Podcast'], ['substack.', 'Blog or newsletter']];
-      const found = KNOWN.find(([k]) => h.includes(k));
-      data.platform = found ? [found[1]] : (h.startsWith('@') ? [] : (h.includes('.') ? ['Website'] : []));
+      const error = f.querySelector('.error');
+      data.handle = String(data.handle || '').trim();
+      if (!data.handle) {
+        error.textContent = 'Add a link to your profile or page.';
+        error.style.display = 'block';
+        return;
+      }
+      // The platform comes from the link's site, so nobody has to tick it.
+      // Matched on the whole site name: dropbox.com is not x.com.
+      const h = data.handle.toLowerCase();
+      let host = '';
+      if (!h.startsWith('@')) {
+        try { host = new URL(/^[a-z]+:\/\//.test(h) ? h : 'https://' + h).hostname.replace(/^www\./, ''); } catch { host = ''; }
+      }
+      const KNOWN = [['instagram.com', 'Instagram'], ['tiktok.com', 'TikTok'], ['youtube.com', 'YouTube'], ['youtu.be', 'YouTube'], ['facebook.com', 'Facebook'], ['fb.com', 'Facebook'], ['x.com', 'X'], ['twitter.com', 'X'], ['threads.net', 'Threads'], ['threads.com', 'Threads'], ['snapchat.com', 'Snapchat'], ['pinterest.com', 'Pinterest'], ['linkedin.com', 'LinkedIn'], ['twitch.tv', 'Twitch'], ['rumble.com', 'Rumble'], ['spotify.com', 'Podcast'], ['podcasts.apple.com', 'Podcast'], ['substack.com', 'Blog or newsletter']];
+      const found = KNOWN.find(([d]) => host === d || host.endsWith('.' + d));
+      data.platform = found ? [found[1]] : (host.includes('.') ? ['Website'] : []);
       // Each commitment is its own box, and every one of them has to be
       // ticked before this counts as agreed.
       const AGREEMENTS = ['agree_faith', 'agree_terms'];
       data.agreed = AGREEMENTS.every((k) => form.get(k) === 'on');
       data.agreements = AGREEMENTS.filter((k) => form.get(k) === 'on');
-      const error = f.querySelector('.error');
       const btn = document.getElementById('joinBtn');
       error.style.display = 'none';
       btn.disabled = true;
