@@ -416,3 +416,20 @@ body.v2 .v2-root h1 em, body.v2 .v2-root h2 em { font-variation-settings: "SOFT"
 body.v2 .v2-root nav { border-top: 0; box-shadow: none; }
 body.v2 .v2-root > nav::after { content: ""; position: absolute; left: 0; right: 0; bottom: -16px; height: 16px; background: var(--stripes); pointer-events: none; }
 body.v2.v2-inner .hero h1, body.v2.v2-inner h1, body.v2.v2-inner h2 { font-family: var(--display); font-weight: 800; letter-spacing: -.015em; font-variation-settings: "SOFT" 100, "WONK" 0, "opsz" 96; }
+
+/* Jesus People Network vision and "who this is for" sections on the home page. */
+body.v2 .v2-root .v2-cards.v2-two{grid-template-columns:repeat(2,1fr)}
+body.v2 .v2-root .v2-cards.v2-two .v2-card:hover{transform:none;box-shadow:none}
+body.v2 .v2-root .v2-card .v2-card-tag{font-weight:700;color:var(--terracotta);margin:0 0 10px}
+body.v2 .v2-root .v2-card p + p{margin-top:10px}
+body.v2 .v2-root .v2-card .v2-checks{margin-top:16px}
+body.v2 .v2-root .v2-card .v2-checks li{color:var(--ink-2)}
+body.v2 .v2-root .v2-after{margin-top:28px;max-width:64ch}
+body.v2 .v2-root .v2-split.v2-top{align-items:start}
+body.v2 .v2-root .v2-list-h{font:600 1.35rem/1.2 var(--serif);letter-spacing:-.01em;margin:32px 0 0}
+body.v2 .v2-root .v2-split.v2-top > div > .v2-list-h:first-child{margin-top:0}
+body.v2 .v2-root .v2-not{margin-top:14px;padding-left:1.2em;display:grid;gap:8px;color:var(--ink-3)}
+body.v2 .v2-root .v2-bio3{margin-top:8px;padding-left:1.3em;display:grid;gap:6px;color:var(--ink-3)}
+@media (max-width:860px){body.v2 .v2-root .v2-cards.v2-two{grid-template-columns:1fr}}
+body.v2 .v2-root .v2-bio3 li{display:list-item;list-style:decimal}
+body.v2 .v2-root .v2-bio3 li::before{content:none}
