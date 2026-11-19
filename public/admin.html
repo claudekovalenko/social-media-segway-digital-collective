@@ -497,10 +497,14 @@
         // nameFromHandle in worker.js.
         const nameFrom = (raw) => {
           let h = String(raw || '').trim();
-          if (/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+\//i.test(h)) {
+          if (/^(https?:\/\/|www\.)[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/|$)|^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?\//i.test(h)) {
             try {
-              const parts = new URL(/^https?:\/\//i.test(h) ? h : 'https://' + h).pathname.split('/').filter(Boolean).map(decodeURIComponent);
-              h = parts.find((x) => x.startsWith('@')) || parts[parts.length - 1] || '';
+              const u = new URL(/^https?:\/\//i.test(h) ? h : 'https://' + h);
+              const parts = u.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+              // Path words that are never a name: youtube.com/c/Name, linkedin.com/in/name, x.com/name/status/1.
+              const GENERIC = new Set(['c', 'channel', 'user', 'in', 'pages', 'profile.php', 'watch', 'share', 'p', 'reel', 'reels', 'status', 'posts', 'videos', 'shorts', 'people', 'pub']);
+              h = parts.find((x) => x.startsWith('@')) || parts.find((x) => !GENERIC.has(x.toLowerCase()) && !/^\d+$/.test(x))
+                || (parts.length ? '' : u.hostname.replace(/^www\./i, '').split('.')[0]);
             } catch { h = ''; }
           }
           return h.replace(/^@/, '').split('@')[0];

@@ -131,6 +131,14 @@ async function creatorAliases(db) {
   catch { return {}; }
 }
 
+// A link name already used as a short alias can't become a creator's own
+// name: it would take the alias, and that creator's leads, over. Every route
+// that creates a link name checks this (register, add account, approve, tier).
+const ALIAS_TAKEN = 'That link name is already a short link for another creator.';
+async function isAlias(db, slug) {
+  return Object.hasOwn(await creatorAliases(db), slug);
+}
+
 // The creator a link name opens. A creator's own link name always wins; a
 // short alias (/craig for /craigbrown) only answers for names no creator has,
 // so a creator's printed link can never send their leads to someone else.
@@ -225,10 +233,14 @@ export const RESERVED_PATHS = new Set([
 // public/admin.html has the same rule for its suggestion.
 export function nameFromHandle(raw) {
   let h = String(raw || '').trim();
-  if (/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+\//i.test(h)) {
+  if (/^(https?:\/\/|www\.)[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/|$)|^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?\//i.test(h)) {
     try {
-      const parts = new URL(/^https?:\/\//i.test(h) ? h : 'https://' + h).pathname.split('/').filter(Boolean).map(decodeURIComponent);
-      h = parts.find((x) => x.startsWith('@')) || parts[parts.length - 1] || '';
+      const u = new URL(/^https?:\/\//i.test(h) ? h : 'https://' + h);
+      const parts = u.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+      // Path words that are never a name: youtube.com/c/Name, linkedin.com/in/name, x.com/name/status/1.
+      const GENERIC = new Set(['c', 'channel', 'user', 'in', 'pages', 'profile.php', 'watch', 'share', 'p', 'reel', 'reels', 'status', 'posts', 'videos', 'shorts', 'people', 'pub']);
+      h = parts.find((x) => x.startsWith('@')) || parts.find((x) => !GENERIC.has(x.toLowerCase()) && !/^\d+$/.test(x))
+        || (parts.length ? '' : u.hostname.replace(/^www\./i, '').split('.')[0]);
     } catch { h = ''; }
   }
   return h.replace(/^@/, '').split('@')[0];
@@ -416,10 +428,11 @@ function creatorInsertError(err) {
 // the creator it belongs to (or an account already on it) may take it.
 // Returns an error response, or null when the name may be used.
 async function slugClaimError(db, slug, email, currentSlug = null) {
-  if (currentSlug && slug === currentSlug) return null;
+  // An account keeps the name of the creator it is already on.
+  if (currentSlug && slug === currentSlug && await db.creatorBySlug(slug)) return null;
   if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
   // A name already used as a short alias would take that alias over.
-  if (Object.hasOwn(await creatorAliases(db), slug)) return json({ error: 'That link name is already a short link for another creator.' }, 409);
+  if (await isAlias(db, slug)) return json({ error: ALIAS_TAKEN }, 409);
   if (!(await db.creatorBySlug(slug))) return null;
   const owner = await db.creatorByEmail(email).catch(() => null);
   if (!owner || owner.slug !== slug) return json({ error: 'That link name belongs to another creator.' }, 409);
@@ -587,6 +600,7 @@ async function handle(req, env, ctx) {
         if (email && await db.creatorByEmail(email).catch(() => null)) {
           return json({ error: 'that link name or email is already taken' }, 409);
         }
+        if (await isAlias(db, slug)) return json({ error: ALIAS_TAKEN }, 409);
         // Links get the same check as the links route: web addresses only.
         for (const key of ['know_god_video_url', 'grow_course_url', 'find_church_video_url']) {
           const value = String(b[key] || '').trim();
@@ -685,6 +699,7 @@ async function handle(req, env, ctx) {
           const checked = checkSlug(b.creator_slug || email.split('@')[0] || '');
           if (checked.error) return json({ error: checked.error }, 400);
           creatorSlug = checked.slug;
+          if (await isAlias(db, creatorSlug)) return json({ error: ALIAS_TAKEN }, 409);
           const already = await db.creatorBySlug(creatorSlug);
           // An existing link can only be joined by the creator it belongs to;
           // anyone else would be handed that creator's leads.
@@ -878,7 +893,7 @@ async function handle(req, env, ctx) {
         }
 
         const checked = checkSlug(b.slug ? String(b.slug).trim().replace(/^@/, '')
-          : nameFromHandle(application.handle) || nameFromHandle(application.email));
+          : nameFromHandle(application.handle) || nameFromHandle(application.name) || nameFromHandle(application.email));
         if (checked.error) return json({ error: checked.error }, 400);
         const slug = checked.slug;
         const taken = await slugClaimError(db, slug, application.email);
@@ -1018,9 +1033,11 @@ async function handle(req, env, ctx) {
         if (!account) return json({ error: 'not found' }, 404);
 
         let slug = account.creator_slug || null;
-        const keepsSlug = slug && (!b.creator_slug || b.creator_slug === slug);
+        // An existing creator keeps its link name even if it predates today's
+        // rules; a stored name with no creator behind it is checked like a new one.
+        const keepsSlug = slug && (!b.creator_slug || b.creator_slug === slug) && Boolean(await db.creatorBySlug(slug));
         if (role === 'creator' && !keepsSlug) {
-          const checked = checkSlug(b.creator_slug || email.split('@')[0] || '');
+          const checked = checkSlug(b.creator_slug || slug || email.split('@')[0] || '');
           if (checked.error) return json({ error: checked.error }, 400);
           slug = checked.slug;
         }
