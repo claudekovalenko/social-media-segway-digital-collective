@@ -431,9 +431,10 @@ async function slugClaimError(db, slug, email, currentSlug = null) {
   if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
   // An account keeps the name of the creator it is already on.
   if (currentSlug && slug === currentSlug && await db.creatorBySlug(slug)) return null;
-  // A name already used as a short alias would take that alias over.
-  if (await isAlias(db, slug)) return json({ error: ALIAS_TAKEN }, 409);
-  if (!(await db.creatorBySlug(slug))) return null;
+  if (!(await db.creatorBySlug(slug))) {
+    // A name already used as a short alias would take that alias over.
+    return (await isAlias(db, slug)) ? json({ error: ALIAS_TAKEN }, 409) : null;
+  }
   const owner = await db.creatorByEmail(email).catch(() => null);
   if (!owner || owner.slug !== slug) return json({ error: 'That link name belongs to another creator.' }, 409);
   return null;
@@ -991,7 +992,8 @@ async function handle(req, env, ctx) {
           const alias = String(b.alias || '').toLowerCase().trim();
           if (!/^[a-z0-9][a-z0-9-]{1,39}$/.test(alias)) return json({ error: 'Alias must be letters, numbers, or dashes.' }, 400);
           if (RESERVED_PATHS.has(alias)) return json({ error: 'That name is reserved.' }, 400);
-          if (await db.creatorBySlug(alias).catch(() => null)) return json({ error: 'A creator already has that link.' }, 409);
+          // Removing an alias always works; adding one can't cover a creator's own link.
+          if (b.slug && await db.creatorBySlug(alias).catch(() => null)) return json({ error: 'A creator already has that link.' }, 409);
           if (b.slug) {
             const target = String(b.slug).toLowerCase().trim();
             if (!(await db.creatorBySlug(target).catch(() => null))) return json({ error: 'No creator with that link name.' }, 404);
