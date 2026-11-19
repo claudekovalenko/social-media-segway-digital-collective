@@ -534,6 +534,11 @@ async function handle(req, env, ctx) {
         const topic = String(b.topic || '').trim().slice(0, 60) || null;
         const email = String(b.email || '').trim().toLowerCase().slice(0, 200) || null;
         if (!slug || !name) return json({ error: 'slug and name are required' }, 400);
+        // A page name like /admin or /login would shadow a site page.
+        if (RESERVED_PATHS.has(slug) || slug === 'default') return json({ error: 'That link name is reserved.' }, 400);
+        if (rateLimited(`register:${clientIp(req)}`, 5, 10 * 60_000)) {
+          return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
+        }
         if (email && !/.+@.+\..+/.test(email)) return json({ error: 'that email looks wrong' }, 400);
         // One creator per email: sign-in finds a creator by email.
         if (email && await db.creatorByEmail(email).catch(() => null)) {
