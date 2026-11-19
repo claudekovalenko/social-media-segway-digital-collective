@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/smoke.mjs",
+    "test": "node tests/security.mjs && node tests/smoke.mjs",
     "test:live": "BASE_URL=https://faith-journey-funnel.faith-journey-funnel.workers.dev node tests/smoke.mjs",
     "test:postgres": "node tests/postgres.mjs",
     "test:accounts": "node tests/accounts.mjs"

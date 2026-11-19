@@ -28,8 +28,18 @@ async function hmacHex(secret, text) {
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
+// Unsubscribe links are signed with a server secret. There is deliberately no
+// built-in fallback: a value written in this public code would let anyone
+// forge a link and unsubscribe any contact. With no secret set, no link is
+// signed or accepted, and follow-ups are not sent (every email must carry one).
+function unsubscribeSecret(env) {
+  return env.ADMIN_KEY || env.SESSION_SALT || null;
+}
+
 export async function unsubscribeUrl(env, url, contactId) {
-  const sig = await hmacHex(env.ADMIN_KEY || env.SESSION_SALT || 'jesus-people', `unsub:${contactId}`);
+  const secret = unsubscribeSecret(env);
+  if (!secret) return null;
+  const sig = await hmacHex(secret, `unsub:${contactId}`);
   return `${siteUrl(env, url)}/api/unsubscribe?c=${contactId}&s=${sig}`;
 }
 
@@ -58,6 +68,11 @@ export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, 
   if (creator?.follow_up_cta_url) tpl.cta_url = creator.follow_up_cta_url;
   const base = siteUrl(env, url);
   const slug = creator?.slug || 'default';
+  const unsubscribe_url = await unsubscribeUrl(env, url, contact_id);
+  if (!unsubscribe_url) {
+    await pf.logCommunication({ contact_id, response_id, creator_slug: slug, template: type, to_address: email, status: 'skipped', error: 'no unsubscribe secret configured (ADMIN_KEY)' });
+    return 'skipped';
+  }
   const vars = {
     first_name: String(name || '').trim().split(/\s+/)[0] || 'friend',
     creator_name: creator?.display_name || creator?.name || 'Jesus People Network',
@@ -70,7 +85,7 @@ export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, 
     subject: fillTokens(tpl.subject, vars), greeting: fillTokens(tpl.greeting, vars),
     message: fillTokens(tpl.message, vars), cta_label: fillTokens(tpl.cta_label, vars),
     cta_url: fillTokens(tpl.cta_url, vars) + (String(tpl.cta_url).includes('{{') ? '' : ''),
-    unsubscribe_url: await unsubscribeUrl(env, url, contact_id), site_name: vars.site_name,
+    unsubscribe_url, site_name: vars.site_name,
   });
   // Return clicks from the email are attributed back to the creator.
   if (mail.html.includes(vars.journey_url) === false && /^https?:\/\//.test(fillTokens(tpl.cta_url, vars))) {
@@ -210,8 +225,9 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
   // ---- unsubscribe (signed link in every email) ---------------------------
   if (p === '/api/unsubscribe' && req.method === 'GET') {
     const id = Number(url.searchParams.get('c')); const sig = String(url.searchParams.get('s') || '');
-    const expect = await hmacHex(env.ADMIN_KEY || env.SESSION_SALT || 'jesus-people', `unsub:${id}`);
-    if (!id || sig !== expect) return new Response('That link is not valid.', { status: 400 });
+    const secret = unsubscribeSecret(env);
+    const expect = secret ? await hmacHex(secret, `unsub:${id}`) : null;
+    if (!id || !expect || sig !== expect) return new Response('That link is not valid.', { status: 400 });
     await pf.unsubscribe(id);
     await pf.audit('contact', 'contact.unsubscribed', String(id));
     return new Response('<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;padding:40px;max-width:480px;margin:auto"><h2>You’re unsubscribed.</h2><p>We won’t email you again. If you change your mind, respond on a creator’s page any time.</p>', { headers: { 'content-type': 'text/html; charset=utf-8' } });
