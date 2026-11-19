@@ -68,6 +68,9 @@
         <label>Confirm password
           <input name="confirm" type="password" required autocomplete="new-password" minlength="6">
         </label>
+        <label id="ownerKeyRow" hidden>Site admin key
+          <input name="owner_key" type="password" autocomplete="off">
+        </label>
         <button type="submit" id="createBtn">Create account</button>
         <p class="aside-link" id="createNote">At least 6 characters. This is the owner account for the database.</p>
         <p class="aside-link" id="approvalNote" hidden>New accounts are reviewed by an admin before they can see anything.</p>
@@ -322,7 +325,9 @@
           API_BASE + (hasAccounts ? '/api/auth/signup' : '/api/admin/accounts'),
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            // The owner account on an empty site needs the site's admin key.
+            headers: Object.assign({ 'Content-Type': 'application/json' },
+              hasAccounts ? {} : { 'x-admin-key': String(data.get('owner_key') || '') }),
             body: JSON.stringify({
               email: data.get('email').trim(),
               password: data.get('password'),
@@ -376,6 +381,8 @@
       if (wasHidden) fadeIn(shown);
       // The very first account owns the database; later ones need an invite.
       document.getElementById('createNote').hidden = hasAccounts;
+      document.getElementById('ownerKeyRow').hidden = hasAccounts;
+      document.querySelector('#createForm input[name=owner_key]').required = !hasAccounts;
       document.getElementById('approvalNote').hidden = true;
       document.getElementById('toSignIn').hidden = !hasAccounts;
       document.getElementById('authTitle').innerHTML = join

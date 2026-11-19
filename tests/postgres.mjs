@@ -372,7 +372,8 @@ async function child(backend, out) {
   await call('options preflight', 'OPTIONS', '/api/leads');
   await call('first admin: bad identifier', 'POST', '/api/admin/accounts', { body: { email: 'no spaces allowed', password: 'pass1234' } });
   await call('first admin: short password', 'POST', '/api/admin/accounts', { body: { email: 'boss@example.org', password: 'x' } });
-  let r = await call('first admin: create', 'POST', '/api/admin/accounts', { body: { email: 'Boss@Example.org', password: 'pass1234', name: 'The Boss' } });
+  await call('first admin: without the admin key -> 401', 'POST', '/api/admin/accounts', { body: { email: 'intruder@example.org', password: 'pass1234' } });
+  let r = await call('first admin: create', 'POST', '/api/admin/accounts', { auth: 'K', body: { email: 'Boss@Example.org', password: 'pass1234', name: 'The Boss' } });
   T.A = J(r).token;
   await call('status: has accounts', 'GET', '/api/admin/status');
   await call('accounts: second without auth -> 401', 'POST', '/api/admin/accounts', { body: { email: 'x@example.org', password: 'pass1234' } });

@@ -604,8 +604,10 @@ async function handle(req, env, ctx) {
         return json({ ...page, next_table: next, next_after: page.done ? 0 : page.after });
       }
 
-      // Create an admin account. The very first one is open, because a brand
-      // new site has no one to authorise it; after that you must be signed in.
+      // Create an admin account. The very first one needs the site's admin key
+      // (a brand new site has no one to sign in as); after that you must be
+      // signed in. An empty accounts table must never mean "anyone may become
+      // admin", e.g. during a database switch before accounts are copied.
       if (p === '/api/admin/accounts' && req.method === 'POST') {
         const b = await req.json().catch(() => ({}));
         const email = String(b.email || '').trim().toLowerCase();
@@ -620,6 +622,8 @@ async function handle(req, env, ctx) {
         if (existing > 0 || adminLogins(env).size > 0) {
           const who = await isAdmin(req, url, env, db);
           if (!who.ok) return json({ error: 'Sign in first to add an account.' }, 401);
+        } else if (!adminKeyMatches(req, url, env)) {
+          return json({ error: "The first account needs the site's admin key." }, 401);
         }
         if (await db.adminByEmail(email)) {
           return json({ error: 'That email or username already has an account.' }, 409);
