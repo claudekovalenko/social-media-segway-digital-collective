@@ -89,14 +89,24 @@ async function check(name, fn) {
   page.on('pageerror', (e) => errors.push(e.message));
   // Console errors count, except the browser's own note about a 404 response:
   // those are judged by the request list below, where expected ones are excused.
-  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  // Only the site's own errors count: an embedded player (YouTube) logs its own.
+  const ownOrigin = (u) => { try { return new URL(u).origin === new URL(base).origin; } catch { return true; } };
+  page.on('console', (m) => {
+    if (m.type() !== 'error' || /Failed to load resource/.test(m.text())) return;
+    const where = m.location() && m.location().url;
+    if (where && !ownOrigin(where)) return;
+    errors.push(m.text());
+  });
   page.on('response', (r) => { const u = r.url(); if (r.status() >= 400 && u.startsWith(page.url().split('/').slice(0, 3).join('/')) && !/\/api\/admin\//.test(u)) bad.push(`${r.status()} ${u}`); });
   if (!LIVE) await mockApi(page);
   try {
     await fn(page, { errors, bad });
     if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
     if (bad.length) throw new Error('failed requests: ' + bad.join(' | '));
-    // No page may scroll sideways on a phone.
+    // No page may scroll sideways on a phone. Measured once the page and its
+    // styles have loaded: a page without scripts reaches DOMContentLoaded
+    // before its stylesheet arrives, and an unstyled logo is 608px wide.
+    await page.waitForLoadState('load').catch(() => {});
     const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (over > 2) throw new Error(`horizontal overflow of ${over}px`);
     results.push({ name, ok: true, ms: Date.now() - t0 });
