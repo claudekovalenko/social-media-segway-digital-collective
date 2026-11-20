@@ -90,7 +90,8 @@ async function check(name, fn) {
   // Console errors count, except the browser's own note about a 404 response:
   // those are judged by the request list below, where expected ones are excused.
   // Only the site's own errors count: an embedded player (YouTube) logs its own.
-  const ownOrigin = (u) => { try { return new URL(u).origin === new URL(base).origin; } catch { return true; } };
+  // Judged against where the page actually is, so a redirect can't hide the site's own errors.
+  const ownOrigin = (u) => { try { return new URL(u).origin === new URL(page.url()).origin; } catch { return true; } };
   page.on('console', (m) => {
     if (m.type() !== 'error' || /Failed to load resource/.test(m.text())) return;
     const where = m.location() && m.location().url;
