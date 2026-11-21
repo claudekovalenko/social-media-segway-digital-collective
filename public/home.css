@@ -464,3 +464,9 @@ body.v2 .v2-root h1 em, body.v2 .v2-root h2 em, body.v2 .v2-root .v2-screen h3 e
   font-family:var(--display);font-style:italic;font-weight:700;letter-spacing:-.02em;
   font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
 body.v2 .v2-root .v2-card h3, body.v2 .v2-root .v2-screen h3{font-weight:800;letter-spacing:-.03em}
+
+/* Phones: Sign in sits over the header band, so it is solid rather than
+   glass; the lines pass behind it instead of showing through. */
+@media (max-width:640px){
+  body.v2 .v2-root nav .v2-pill.v2-light{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid var(--line)}
+}
