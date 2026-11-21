@@ -438,20 +438,19 @@ body.v2 .v2-root .v2-float .v2-dot{background:var(--step-1);box-shadow:0 0 0 4px
 }
 
 /* Phones: the logo sits on the three-line band instead of above it. The band
-   is drawn at the logo's own stripe size (the logo is 34px tall; its stripes
-   fill rows 115-156 of the 160px image) and runs through the header at that
-   height, so the page's lines flow straight into the logo's. The logo gets
-   an ivory patch behind its NETWORK badge, whose letters are cut out. */
+   is a one-pixel column cut from the logo itself (logo-stripes.png, rows
+   0-159, only the stripe rows painted), repeated across the header in the
+   logo's exact box: 34px tall, centred in the 60px bar. Same pixels, same
+   scaling, so the page's lines are the logo's lines. An ivory patch sits
+   behind the NETWORK badge, whose letters are cut out. */
 @media (max-width:640px){
   body.v2 .v2-root nav .v2-wrap{height:60px}
+  body.v2 .v2-root .v2-brand .brand-logo{height:34px}
   body.v2 .v2-root > nav::after{
-    top:calc(50% - 17px + 34px * 115 / 160);bottom:auto;height:calc(34px * 41 / 160);z-index:0;
-    background:linear-gradient(to bottom,
-      var(--stripe-1) 0 26.8%,transparent 26.8% 34.1%,
-      var(--stripe-2) 34.1% 61%,transparent 61% 70.7%,
-      var(--stripe-3) 70.7% 100%)}
+    top:calc(50% - 17px);bottom:auto;height:34px;z-index:0;
+    background:url("logo-stripes.png") repeat-x 0 0/1px 34px}
   body.v2 .v2-root .v2-brand{position:relative;z-index:1}
-  body.v2 .v2-root .v2-brand::before{content:"";position:absolute;z-index:-1;left:29.4%;width:41.2%;top:calc(50% + 34px * 40 / 160);height:calc(34px * 38 / 160);border-radius:999px;background:var(--ivory)}
+  body.v2 .v2-root .v2-brand::before{content:"";position:absolute;z-index:-1;left:29.4%;width:41.2%;top:calc(34px * 120 / 160);height:calc(34px * 38 / 160);border-radius:999px;background:var(--ivory)}
   body.v2 .v2-root .v2-nav-links{position:relative;z-index:1}
   body.v2 .v2-root nav{border-bottom:1px solid rgba(24,24,23,.06)}
 }
