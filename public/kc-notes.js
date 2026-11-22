@@ -264,6 +264,14 @@
     var t = el('input'); t.placeholder = 'Reply…'; c.appendChild(t);
     var row = el('div', 'kcn-row');
     var close = el('button', null, 'Close'); close.onclick = function () { closeCard(); if (pin) pin.classList.remove('focus'); };
+    var canDelete = (session.name && session.name.toLowerCase() === String(n.author).toLowerCase()) || hasNotesKey();
+    var del = el('button', null, 'Delete');
+    del.onclick = function () {
+      if (!confirm('Delete this note and its replies?')) return;
+      fetch(API + '/api/posts?id=' + encodeURIComponent(n.id), { method: 'DELETE', headers: headers() })
+        .then(function (r) { if (!r.ok) throw new Error(); closeCard(); load(); })
+        .catch(function () { del.textContent = 'Could not delete'; });
+    };
     var res = el('button', null, n.urgency === 'done' ? 'Reopen' : 'Resolve');
     res.onclick = function () {
       fetch(API + '/api/posts?id=' + encodeURIComponent(n.id), { method: 'PATCH', headers: headers(), body: JSON.stringify({ urgency: n.urgency === 'done' ? 'open' : 'done' }) })
@@ -277,6 +285,6 @@
         .then(function () { closeCard(); load(); }, function (err) { failed(send, err); });
     };
     t.onkeydown = function (e) { if (e.key === 'Enter') send.click(); };
-    row.appendChild(close); row.appendChild(res); row.appendChild(send); c.appendChild(row);
+    row.appendChild(close); if (canDelete) row.appendChild(del); row.appendChild(res); row.appendChild(send); c.appendChild(row);
   }
 })();
