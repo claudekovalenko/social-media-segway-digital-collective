@@ -9,6 +9,7 @@
   var codeParam = params.get('kcnotes');
   var focusId = (location.hash.match(/^#kcnote-(.+)$/) || [])[1];
   var session = null;
+  var root, pinsLayer, mode = false, notes = [];
   try { session = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
 
   if (codeParam === 'off') { try { localStorage.removeItem(KEY); } catch (e) {} return; }
@@ -49,7 +50,6 @@
     return parts.join(' > ');
   }
 
-  var root, pinsLayer, panel, mode = false, notes = [];
 
   function start() {
     var css = el('style');
