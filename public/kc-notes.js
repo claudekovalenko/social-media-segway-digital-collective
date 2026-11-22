@@ -8,6 +8,8 @@
   var params = new URLSearchParams(location.search);
   var codeParam = params.get('kcnotes');
   var focusId = (location.hash.match(/^#kcnote-(.+)$/) || [])[1];
+  var adminHash = (location.hash.match(/^#kcadmin=([0-9]+\.[0-9a-f]+)$/) || [])[1];
+  if (adminHash) history.replaceState(null, '', location.pathname + location.search);
   var session = null;
   var root, pinsLayer, mode = false, notes = [];
   try { session = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
@@ -19,6 +21,7 @@
       .then(function (p) {
         if (!p) return;
         session = { code: codeParam, projectId: p.id, name: session && session.name || '' };
+        if (adminHash) { try { sessionStorage.setItem('kc-notes-admin', adminHash); } catch (e) {} session.name = 'Ivan'; }
         save();
         start();
       })
@@ -26,6 +29,11 @@
     return;
   }
   if (session && session.projectId) start();
+
+  function hasNotesKey() {
+    try { var k = sessionStorage.getItem('kc-notes-admin'); return !!k && Number(k.split('.')[0]) > Date.now(); } catch (e) { return false; }
+  }
+  if (session && /^ivan$/i.test(session.name || '') && !adminHash && !hasNotesKey()) session.name = '';
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(session)); } catch (e) {} }
 
@@ -171,8 +179,14 @@
     (n || t).focus();
   }
 
+  function headers() {
+    var h = { 'Content-Type': 'application/json', 'X-Portal-Name': session.name || '' };
+    var tok = null; try { tok = sessionStorage.getItem('kc-notes-admin'); } catch (e) {}
+    if (tok && Number(tok.split('.')[0]) > Date.now()) h.Authorization = 'Bearer ' + tok;
+    return h;
+  }
   function post(data) {
-    return fetch(API + '/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Portal-Name': session.name || '' }, body: JSON.stringify(data) })
+    return fetch(API + '/api/posts', { method: 'POST', headers: headers(), body: JSON.stringify(data) })
       .then(function (r) { if (!r.ok) throw new Error('save failed'); return r; });
   }
   function failed(btn) { btn.disabled = false; btn.textContent = 'Could not save, try again'; }
@@ -241,7 +255,7 @@
     var close = el('button', null, 'Close'); close.onclick = function () { closeCard(); if (pin) pin.classList.remove('focus'); };
     var res = el('button', null, n.urgency === 'done' ? 'Reopen' : 'Resolve');
     res.onclick = function () {
-      fetch(API + '/api/posts?id=' + encodeURIComponent(n.id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urgency: n.urgency === 'done' ? 'open' : 'done' }) })
+      fetch(API + '/api/posts?id=' + encodeURIComponent(n.id), { method: 'PATCH', headers: headers(), body: JSON.stringify({ urgency: n.urgency === 'done' ? 'open' : 'done' }) })
         .then(function () { closeCard(); load(); }, function () {});
     };
     var send = el('button', 'primary', 'Reply');
