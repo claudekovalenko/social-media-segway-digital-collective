@@ -2994,6 +2994,14 @@ body.ig.jpn.journey .step-card.open .step-icon { background: linear-gradient(#C1
 body.ig.jpn .tab-row::before { background: #181817; box-shadow: none; }
 body.ig.jpn .tab-row .tab { color: var(--ig-dim); }
 body.ig.jpn .tab-row .tab.on { color: #F5F0E7; }
+/* The switch moves as one piece: the thumb and both labels change on the same
+   short, even curve with no delay, so neither label goes invisible mid-move
+   (before, the colours lagged the thumb and a label briefly vanished). */
+body.ig.jpn .tab-row::before { transition: transform .28s cubic-bezier(.4,0,.2,1); }
+body.ig.jpn .tab-row .tab { transition: color .28s cubic-bezier(.4,0,.2,1); -webkit-tap-highlight-color: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  body.ig.jpn .tab-row::before, body.ig.jpn .tab-row .tab { transition: none; }
+}
 body.ig.jpn .wrap-narrow label { color: var(--ig-dim); }
 body.ig.jpn .wrap-narrow::after { display: none; }
 body.ig.jpn .pick span { background: #fff; border: 1px solid var(--ig-line); color: var(--ig-text); }

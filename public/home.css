@@ -393,4 +393,94 @@ body.v2 .v2-root .v2-float .v2-dot{background:var(--step-1);box-shadow:0 0 0 4px
   body.home.v2 .v2-root .v2-lede{font-size:1.1rem}
   body.home.v2 .v2-root .v2-sub{font-size:1.02rem}
   body.home.v2 .v2-root .v2-checks li,body.home.v2 .v2-root .v2-steps5 li,body.home.v2 .v2-root summary{font-size:1rem}
+
+/* Phones: a calmer, tighter hero with frosted-glass surfaces. Comes last so
+   it wins over the logo-theme headline size above (which set a 2.9rem floor). */
+@media (max-width:640px){
+  body.v2 .v2-root .v2-hero{position:relative;overflow:hidden;padding:22px 0 60px}
+  /* a warm ivory instead of the pink cast: the page's red glow becomes a soft gold */
+  html body.ig.jpn.v2{background-image:
+    linear-gradient(to bottom,var(--ivory) 0,rgba(245,240,231,0) 110px),
+    linear-gradient(to top,var(--ivory) 0,rgba(245,240,231,0) 140px),
+    radial-gradient(ellipse 80% 30% at 15% 0%,rgba(246,173,27,.10),transparent 70%),
+    radial-gradient(ellipse 60% 26% at 85% 6%,rgba(236,108,35,.07),transparent 70%),
+    radial-gradient(ellipse 70% 24% at 50% 100%,rgba(143,98,0,.08),transparent 70%)}
+  body.v2 .v2-root .v2-stage::before{background:radial-gradient(120% 90% at 30% 20%,#efe4cf 0%,var(--ivory-2) 55%,transparent 75%)}
+  body.v2 .v2-root .v2-hero::before{content:"";position:absolute;inset:-40px -20% auto;height:640px;pointer-events:none;
+    background:radial-gradient(42% 30% at 88% 16%,rgba(246,173,27,.16),transparent 70%),
+               radial-gradient(40% 26% at 72% 88%,rgba(236,108,35,.08),transparent 70%)}
+  body.v2 .v2-root .v2-hero .v2-wrap{position:relative;gap:36px}
+
+  /* the glass: translucent white, blurred backdrop, a light top edge */
+  body.v2 .v2-root .v2-eyebrow,
+  body.v2 .v2-root .v2-hero .v2-pill.v2-light,
+  body.v2 .v2-root nav .v2-pill.v2-light,
+  body.v2 .v2-root .v2-glass,
+  body.v2 .v2-root .v2-float{
+    background:rgba(255,255,255,.58);
+    -webkit-backdrop-filter:blur(18px) saturate(115%);backdrop-filter:blur(18px) saturate(115%);
+    border:1px solid rgba(255,255,255,.75);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(24,24,23,.04),0 10px 28px -16px rgba(24,24,23,.22)}
+
+  body.v2 .v2-root .v2-eyebrow{font-size:.72rem;padding:4px 12px 4px 4px;gap:8px;letter-spacing:.01em}
+  body.v2 .v2-root .v2-eyebrow b{font-size:.6rem;padding:3px 8px;letter-spacing:.1em}
+
+  body.v2 .v2-root .v2-hero h1{font-size:2.05rem;line-height:1.06;letter-spacing:-.022em;margin:18px 0 12px}
+  body.v2 .v2-root .v2-lede{font-size:.98rem;line-height:1.55;max-width:34ch}
+
+  /* buttons: one row, regular height */
+  /* two columns only while both labels fit; sized in rem so larger text stacks them */
+  body.v2 .v2-root .v2-hero .v2-cta-row{grid-template-columns:repeat(auto-fit,minmax(min(100%,9.6rem),1fr));gap:8px;margin-top:22px}
+  body.v2 .v2-root .v2-hero .v2-pill.v2-big{padding:12px 10px;font-size:.88rem;min-height:46px;white-space:nowrap}
+  body.v2 .v2-root .v2-hero .v2-pill.v2-dark{box-shadow:0 8px 20px -10px rgba(24,24,23,.55)}
+  body.v2 .v2-root nav .v2-pill.v2-light{padding:7px 15px;font-size:.84rem}
+
+  /* link + stats share one glass panel */
+  body.v2 .v2-root .v2-glass{margin-top:22px;border-radius:20px;padding:14px}
+  body.v2 .v2-root .v2-glass .v2-url{margin:0;display:flex;flex-direction:column;align-items:stretch;gap:6px;font-size:.74rem;min-width:0}
+  body.v2 .v2-root .v2-glass .v2-url code{min-width:0;overflow-wrap:anywhere;font-size:.8rem;padding:7px 10px;border:1px solid rgba(24,24,23,.06);background:rgba(255,255,255,.7)}
+  body.v2 .v2-root .v2-glass .v2-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:12px;padding-top:12px;border-top:1px solid rgba(24,24,23,.08)}
+  body.v2 .v2-root .v2-glass .v2-stats div{text-align:center}
+  body.v2 .v2-root .v2-glass .v2-stats div+div{border-left:1px solid rgba(24,24,23,.08)}
+  body.v2 .v2-root .v2-glass .v2-stats div b{font-size:1.3rem}
+  body.v2 .v2-root .v2-glass .v2-stats div span{display:block;margin-top:3px;font-size:.7rem;letter-spacing:.01em}
+
+  body.v2 .v2-root .v2-float{border-radius:14px}
+}
+@media (max-width:360px){
+  body.v2 .v2-root .v2-hero h1{font-size:1.85rem}
+}
+
+/* Phones: the logo sits on the three-line band instead of above it. The band
+   is a one-pixel column cut from the logo itself (logo-stripes.png, rows
+   0-159, only the stripe rows painted), repeated across the header in the
+   logo's exact box: 34px tall, centred in the 60px bar. Same pixels, same
+   scaling, so the page's lines are the logo's lines. An ivory patch sits
+   behind the NETWORK badge, whose letters are cut out. */
+@media (max-width:640px){
+  body.v2 .v2-root nav .v2-wrap{height:60px}
+  body.v2 .v2-root .v2-brand .brand-logo{height:34px}
+  body.v2 .v2-root > nav::after{
+    top:calc(50% - 17px);bottom:auto;height:34px;z-index:0;
+    background:url("logo-stripes.png") repeat-x 0 0/1px 34px}
+  body.v2 .v2-root .v2-brand{position:relative;z-index:1}
+  body.v2 .v2-root .v2-brand::before{content:"";position:absolute;z-index:-1;left:29.4%;width:41.2%;top:calc(34px * 120 / 160);height:calc(34px * 38 / 160);border-radius:999px;background:var(--ivory)}
+  body.v2 .v2-root .v2-nav-links{position:relative;z-index:1}
+  body.v2 .v2-root nav{border-bottom:1px solid rgba(24,24,23,.06)}
+}
+
+/* Type that echoes the logo: headings in a heavy, tight sans like "People"
+   (the device font, so nothing new to download), and the coloured accent
+   phrases in Fraunces italic, like the swash of "Jesus". */
+body.v2 .v2-root{--serif:var(--sans)}
+body.v2 .v2-root h1, body.v2 .v2-root h2{font-family:var(--sans);font-weight:800;letter-spacing:-.035em;font-variation-settings:normal}
+body.v2 .v2-root h1 em, body.v2 .v2-root h2 em, body.v2 .v2-root .v2-screen h3 em{
+  font-family:var(--display);font-style:italic;font-weight:700;letter-spacing:-.02em;
+  font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
+body.v2 .v2-root .v2-card h3, body.v2 .v2-root .v2-screen h3{font-weight:800;letter-spacing:-.03em}
+
+/* Phones: Sign in sits over the header band, so it is solid rather than
+   glass; the lines pass behind it instead of showing through. */
+@media (max-width:640px){
+  body.v2 .v2-root nav .v2-pill.v2-light{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid var(--line)}
 }
