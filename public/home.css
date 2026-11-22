@@ -381,10 +381,10 @@ body.v2 .v2-root .v2-t3{background:rgba(246,173,27,.22);color:var(--step-3-deep)
 body.v2 .v2-root .v2-float .v2-dot{background:var(--step-1);box-shadow:0 0 0 4px rgba(193,62,30,.16)}
 
 /* Home text sizes on wider screens: headings and intro lines a step smaller than the logo
-   theme set them, so the copy reads at a calmer size. Phones keep their sizes; body text is
-   unchanged. */
+   theme set them, so the copy reads at a calmer size. Each starts at its phone size and grows
+   with the screen; phones and body text are unchanged. */
 @media (min-width:641px){
-  body.home.v2 .v2-root h1{font-size:clamp(2.9rem,5.2vw,4rem);line-height:1.02}
+  body.home.v2 .v2-root h1{font-size:clamp(2.05rem,5.2vw,4rem);line-height:1.02}
   body.home.v2 .v2-root h2{font-size:clamp(2rem,3.2vw,2.4rem);line-height:1.08}
   body.home.v2 .v2-root .v2-final h2{font-size:clamp(2.2rem,3.4vw,2.6rem)}
   body.home.v2 .v2-root .v2-card h3{font-size:1.25rem}
@@ -393,6 +393,7 @@ body.v2 .v2-root .v2-float .v2-dot{background:var(--step-1);box-shadow:0 0 0 4px
   body.home.v2 .v2-root .v2-lede{font-size:1.1rem}
   body.home.v2 .v2-root .v2-sub{font-size:1.02rem}
   body.home.v2 .v2-root .v2-checks li,body.home.v2 .v2-root .v2-steps5 li,body.home.v2 .v2-root summary{font-size:1rem}
+}
 
 /* Phones: a calmer, tighter hero with frosted-glass surfaces. Comes last so
    it wins over the logo-theme headline size above (which set a 2.9rem floor). */
