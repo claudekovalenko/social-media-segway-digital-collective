@@ -79,6 +79,7 @@
       '.kcn-meta{color:#8b949e;font-size:11px;margin-bottom:4px}',
       '.kcn-body{white-space:pre-wrap;word-break:break-word;margin-bottom:8px}',
       '.kcn-reply{border-top:1px solid #30363d;padding-top:6px;margin-top:6px}',
+      '.kcn-err{color:#f97316;font-size:12px;margin:0 0 8px}',
       '.kcn-picking, .kcn-picking *{cursor:crosshair!important}'
     ].join('');
     document.head.appendChild(css);
@@ -173,7 +174,7 @@
       post({
         plan_id: session.projectId, kind: 'sitenote', author_name: session.name, urgency: 'open',
         body: JSON.stringify({ text: text, url: location.origin + location.pathname, path: location.pathname, title: document.title, anchor: anchor })
-      }).then(function () { closeCard(); load(); }, function () { failed(ok); });
+      }).then(function () { closeCard(); load(); }, function (err) { failed(ok, err); });
     };
     row.appendChild(cancel); row.appendChild(ok); c.appendChild(row);
     (n || t).focus();
@@ -187,9 +188,19 @@
   }
   function post(data) {
     return fetch(API + '/api/posts', { method: 'POST', headers: headers(), body: JSON.stringify(data) })
-      .then(function (r) { if (!r.ok) throw new Error('save failed'); return r; });
+      .then(function (r) {
+        if (r.ok) return r;
+        return r.json().catch(function () { return {}; }).then(function (d) { throw new Error(d.error || 'save failed'); });
+      });
   }
-  function failed(btn) { btn.disabled = false; btn.textContent = 'Could not save, try again'; }
+  function failed(btn, err) {
+    btn.disabled = false; btn.textContent = 'Try again';
+    var msg = /Only Ivan/.test(err && err.message || '')
+      ? 'To post as Ivan, open the site from the Site notes tab in the portal while signed in as Ivan.'
+      : 'Could not save: ' + (err && err.message || 'network error');
+    var c = document.getElementById('kcn-card');
+    if (c) { var m = c.querySelector('.kcn-err') || el('div', 'kcn-err'); m.textContent = msg; c.insertBefore(m, c.lastChild); }
+  }
 
   function load() {
     Promise.all([
@@ -263,7 +274,7 @@
       if (nIn) { if (!nIn.value.trim()) { nIn.focus(); return; } session.name = nIn.value.trim(); save(); }
       if (!t.value.trim()) { t.focus(); return; }
       post({ plan_id: session.projectId, task_id: n.id, kind: 'message', author_name: session.name, body: t.value.trim(), urgency: 'normal' })
-        .then(function () { closeCard(); load(); }, function () { failed(send); });
+        .then(function () { closeCard(); load(); }, function (err) { failed(send, err); });
     };
     t.onkeydown = function (e) { if (e.key === 'Enter') send.click(); };
     row.appendChild(close); row.appendChild(res); row.appendChild(send); c.appendChild(row);
