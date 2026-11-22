@@ -3793,3 +3793,46 @@ body.jpn .pp-step.pp-find_church { background: rgba(246,173,27,0.22); color: var
 body.jpn .pp-sc-know .pp-dot { background: var(--step-1); }
 body.jpn .pp-sc-grow .pp-dot { background: var(--step-2); }
 body.jpn .pp-sc-connect .pp-dot { background: var(--step-3); }
+
+/* ---- Layout & style pass (Nov 2026): desktop pages use the width with an
+   editorial two-column layout; brand stripes and paper texture for warmth.
+   Appended last so it wins over the earlier layers. ---- */
+body.ig .hero h1::after{content:"";display:block;width:56px;height:12px;margin-top:16px;
+  background:linear-gradient(#C13E1E 0 3px,transparent 3px 4.5px,#EC6C23 4.5px 7.5px,transparent 7.5px 9px,#F6AD1B 9px 12px)}
+body.ig .hero.auth-hero h1::after{margin-left:auto;margin-right:auto}
+body.ig.wide .hero h1::after{display:none}
+
+@media (min-width:1024px){
+  /* Directory: wider, three across. */
+  body.jpn.landing .wrap:has(#creatorList){max-width:1200px}
+  body.jpn.landing #creatorList{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  body.landing.ig .hero h1{font-size:3.4rem}
+
+  /* Reading pages, journey and the creator form: title on the left, content on the right. */
+  body.prose.ig .wrap, body.journey.ig .wrap, body.ig:not(.landing):not(.wide):not(.prose):not(.journey) .wrap{
+    max-width:1160px;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);column-gap:80px;row-gap:0;align-items:start}
+  body.prose.ig .wrap>*, body.journey.ig .wrap>*, body.ig:not(.landing):not(.wide):not(.prose):not(.journey) .wrap>*{grid-column:2;min-width:0}
+  body.prose.ig .wrap>.site-nav, body.journey.ig .wrap>.topbar, body.ig:not(.landing):not(.wide):not(.prose):not(.journey) .wrap>.site-nav,
+  body.prose.ig .wrap>footer, body.journey.ig .wrap>footer, body.ig:not(.landing):not(.wide):not(.prose):not(.journey) .wrap>footer{grid-column:1/-1}
+  body.prose.ig .wrap>.hero, body.journey.ig .wrap>.hero, body.ig:not(.landing):not(.wide):not(.prose):not(.journey) .wrap>.hero{
+    grid-column:1;grid-row:2/span 6;position:sticky;top:40px;padding-top:56px}
+  body.prose.ig .wrap>.prose-body, body.journey.ig .wrap>.steps, body.ig:not(.landing):not(.wide):not(.prose):not(.journey) .wrap>.step-card{margin-top:56px}
+  body.prose.ig .hero h1, body.journey.ig .hero h1, body.ig:not(.landing):not(.wide):not(.prose):not(.journey) .hero h1{font-size:3.4rem;line-height:1.02}
+
+  /* Sign-in: a dark brand panel beside the form. */
+  body.landing.ig .wrap.wrap-narrow{max-width:1080px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);column-gap:56px;row-gap:0;align-items:start}
+  body.landing.ig .wrap.wrap-narrow>*{grid-column:2;min-width:0}
+  body.landing.ig .wrap.wrap-narrow>.site-nav, body.landing.ig .wrap.wrap-narrow>footer{grid-column:1/-1}
+  body.landing.ig .wrap.wrap-narrow>.tab-row{margin-top:40px}
+  body.landing.ig .wrap.wrap-narrow>.auth-hero{grid-column:1;grid-row:2/span 6;margin-top:40px;text-align:left;
+    position:relative;overflow:hidden;border-radius:28px;padding:48px 44px 72px;background:#181817;color:#F5F0E7;
+    box-shadow:0 30px 60px -30px rgba(24,24,23,.5)}
+  body.landing.ig .wrap.wrap-narrow>.auth-hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px;
+    background:linear-gradient(#C13E1E 0 5px,transparent 5px 6.5px,#EC6C23 6.5px 11.5px,transparent 11.5px 13px,#F6AD1B 13px 18px)}
+  body.landing.ig .auth-hero .auth-logo{display:block;margin:0 0 8px;background:#F5F0E7;border-radius:18px;padding:10px;width:76px;height:76px;box-sizing:border-box}
+  body.landing.ig .auth-hero h1{color:#F5F0E7;font-size:3rem;line-height:1.04}
+  body.landing.ig .auth-hero h1 em{color:#F6AD1B}
+  body.landing.ig .auth-hero h1::after{margin-left:0}
+  body.landing.ig .auth-hero .error{background:#FBF8F2;color:#A3321A;border-radius:14px;padding:12px 14px;margin-top:18px;text-align:left}
+  body.landing.ig .auth-hero .hero-sub{color:rgba(245,240,231,.78);font-size:1.1rem}
+}
