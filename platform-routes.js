@@ -238,10 +238,17 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     if (!id || !expect || sig !== expect) return new Response('That link is not valid.', { status: 400 });
     await pf.unsubscribe(id);
     await pf.audit('contact', 'contact.unsubscribed', String(id));
+    // Passed on to MailerLite and recorded either way, so a failed hand-off shows on the
+    // contact's history (and in the admin's email counts) instead of only in a server log.
     const who = await pf.contactById(id).catch(() => null);
-    if (who && who.email) {
+    if (env.MAILERLITE_API_KEY && who && who.email) {
       const ml = await unsubscribeInMailerLite(env, who.email);
-      if (ml.status === 'failed') console.error('MailerLite unsubscribe failed', ml.error);
+      await pf.logCommunication({ contact_id: id, creator_slug: who.creator_slug || 'default', template: 'unsubscribe', to_address: who.email,
+        provider: 'mailerlite', status: ml.status === 'unsubscribed' ? 'unsubscribed' : 'failed', error: ml.error || null }).catch(() => {});
+      if (ml.status !== 'unsubscribed') {
+        await pf.audit('system', 'mailerlite.unsubscribe_failed', String(id), ml.error || '').catch(() => {});
+        console.error('MailerLite unsubscribe failed', ml.error);
+      }
     }
     return new Response('<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;padding:40px;max-width:480px;margin:auto"><h2>You’re unsubscribed.</h2><p>We won’t email you again. If you change your mind, respond on a creator’s page any time.</p>', { headers: { 'content-type': 'text/html; charset=utf-8' } });
   }

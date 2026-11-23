@@ -686,7 +686,7 @@ export async function syncToMailerLite(env, { email, name, type }, fetchFn = fet
     }, fetchFn);
     let r = await send();
     // A refused send may be a group deleted in MailerLite since we cached its id: look it up again once.
-    if (!r.ok && r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 429) {
+    if (!r.ok && (r.status === 404 || r.status === 422) && /group/i.test(JSON.stringify(r.body || {}))) {
       mlGroupIds.delete(groupName);
       r = await send();
     }

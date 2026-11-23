@@ -443,7 +443,9 @@ while MailerLite is on.
   emails them.
 - *Sync:* one way, once per response, after our own consent check, so an
   unsubscribed or revoked contact is never handed over. Unsubscribing through
-  the site's link also unsubscribes them in MailerLite. Someone who unsubscribes
+  the site's link also unsubscribes them in MailerLite; that hand-off is
+  recorded on the contact's history, and a failure also shows under *Recent
+  changes* so an admin can unsubscribe them in MailerLite by hand. Someone who unsubscribes
   in MailerLite is never re-subscribed from here (no `resubscribe` flag is sent).
 - *Failure:* the handoff runs after the visitor's reply has gone out, with an
   8-second limit per MailerLite call, so a slow or failing MailerLite never
