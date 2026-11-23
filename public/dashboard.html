@@ -311,7 +311,8 @@
       if (q.get('welcome')) document.getElementById('welcome').hidden = false;
       // Email is off until a provider is connected. Until then the site says
       // nothing about it rather than promising a message it cannot send.
-      const emailOn = data.email_configured === true;
+      // With MailerLite the emails are written there, not per creator here.
+      const emailOn = data.email_configured === true && data.email_provider !== 'mailerlite';
       document.getElementById('followupFold').hidden = !emailOn;
       if (emailOn && data.email_verified === false) document.getElementById('verifyNote').hidden = false;
 

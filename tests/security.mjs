@@ -70,5 +70,47 @@ check(row.includes(',+1 555 0100,-3,Ann Lee,"Lee, Ann",'), 'csv: phone numbers, 
   }
 }
 
+// ---- MailerLite handoff -----------------------------------------------------------
+{
+  const { syncToMailerLite, unsubscribeInMailerLite, MAILERLITE_GROUPS } = await import('../platform.js');
+  const env = { MAILERLITE_API_KEY: 'ml-test-key' };
+  const calls = [];
+  let groups = [{ id: 11, name: 'Something else' }];
+  const fakeMl = async (u, init = {}) => {
+    const path = u.replace('https://connect.mailerlite.com/api', '');
+    const body = init.body ? JSON.parse(init.body) : null;
+    calls.push({ path, method: init.method || 'GET', body, auth: init.headers && init.headers.authorization });
+    const reply = (status, data) => new Response(JSON.stringify(data), { status });
+    if (path.startsWith('/groups') && (init.method || 'GET') === 'GET') return reply(200, { data: groups });
+    if (path === '/groups' && init.method === 'POST') { const g = { id: 42, name: body.name }; groups = [...groups, g]; return reply(201, { data: g }); }
+    if (path === '/subscribers' && init.method === 'POST') return body.email === 'bad@example.org' ? reply(422, { message: 'The email must be valid.' }) : reply(201, { data: { id: 777, status: 'active' } });
+    return reply(404, {});
+  };
+  let r = await syncToMailerLite(env, { email: 'ann@example.org', name: 'Ann  Marie Lee', type: 'reported_commitment' }, fakeMl);
+  const sub = calls.find((c) => c.path === '/subscribers');
+  check(r.status === 'synced' && r.provider_id === '777', 'mailerlite: a response is handed over as a subscriber', JSON.stringify(r));
+  check(calls.some((c) => c.path === '/groups' && c.method === 'POST' && c.body.name === MAILERLITE_GROUPS.reported_commitment), 'mailerlite: a missing step group is created once');
+  check(sub && sub.body.groups[0] === '42' && sub.body.fields.name === 'Ann' && sub.body.fields.last_name === 'Marie Lee', 'mailerlite: subscriber goes into the step group with first and last name', JSON.stringify(sub && sub.body));
+  check(sub && !('status' in sub.body) && !('resubscribe' in sub.body), 'mailerlite: never re-subscribes someone who unsubscribed there');
+  check(calls.every((c) => c.auth === 'Bearer ml-test-key'), 'mailerlite: every call carries the API key as a bearer token');
+  calls.length = 0;
+  await syncToMailerLite(env, { email: 'bob@example.org', name: 'Bob', type: 'reported_commitment' }, fakeMl);
+  check(!calls.some((c) => c.path.startsWith('/groups')), 'mailerlite: the group id is remembered after the first lookup');
+  r = await syncToMailerLite(env, { email: 'bad@example.org', name: 'X', type: 'reported_commitment' }, fakeMl);
+  check(r.status === 'failed' && /valid/.test(r.error), 'mailerlite: a refused subscriber is reported as failed with the reason', JSON.stringify(r));
+  r = await syncToMailerLite(env, { email: 'c@example.org', name: 'C', type: 'discipleship_start' }, async () => { throw new Error('network down'); });
+  check(r.status === 'failed' && r.error === 'network down', 'mailerlite: a network error never throws', JSON.stringify(r));
+  calls.length = 0;
+  const u = await unsubscribeInMailerLite(env, 'ann@example.org', fakeMl);
+  check(u.status === 'unsubscribed' && calls[0].body.status === 'unsubscribed' && calls[0].body.email === 'ann@example.org', 'mailerlite: unsubscribing here unsubscribes there');
+  check((await unsubscribeInMailerLite({}, 'ann@example.org', fakeMl)).status === 'skipped', 'mailerlite: without a key nothing is sent');
+
+  // The handoff sits behind the same consent check as every email.
+  const logged = [];
+  const pfBlocked = { mayContact: async () => ({ ok: false, reason: 'unsubscribed' }), logCommunication: async (row) => { logged.push(row); } };
+  const res = await sendFollowUp({ MAILERLITE_API_KEY: 'k' }, url, null, pfBlocked, { contact_id: 9, response_id: 1, creator: null, step: 'know_god', name: 'Ann', email: 'a@example.org', defaults: {}, settings: {} });
+  check(res === 'suppressed' && logged[0].status === 'suppressed', 'mailerlite: an unsubscribed contact is never handed over', JSON.stringify(logged));
+}
+
 console.log(failures ? `\n${failures} check(s) failed` : '\nall security checks passed');
 process.exit(failures ? 1 : 0);

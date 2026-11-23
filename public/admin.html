@@ -376,10 +376,14 @@
       const res = await fetch(API_BASE + '/api/admin/platform', { headers: credentials() || {} }).catch(() => null);
       if (!res || !res.ok) return;
       const d = await res.json();
-      document.getElementById('emailBlock').hidden = !d.email_configured;
-      document.getElementById('emailState').textContent = d.email_configured
-        ? 'Email is connected. Follow-ups and verification emails are being sent.'
-        : 'Email is not connected, so no messages are sent and nothing about follow-up email is shown to creators. To turn it on, add RESEND_API_KEY and EMAIL_FROM as repository secrets.';
+      // With MailerLite the follow-up emails are written there, so the templates here don't apply.
+      const viaMailerLite = d.email_provider === 'mailerlite';
+      document.getElementById('emailBlock').hidden = !d.email_configured || viaMailerLite;
+      document.getElementById('emailState').textContent = viaMailerLite
+        ? 'Follow-ups go through MailerLite. Everyone who sends a step and agrees to emails is added there to the group "JPN · Know God", "JPN · Grow with God" or "JPN · Get Connected". Write and schedule the emails in MailerLite\u2019s automations, one per group.'
+        : d.email_configured
+          ? 'Email is connected. Follow-ups and verification emails are being sent.'
+          : 'Email is not connected, so no messages are sent and nothing about follow-up email is shown to creators. To turn it on, add MAILERLITE_API_KEY (or RESEND_API_KEY and EMAIL_FROM) as repository secrets.';
       const form = document.getElementById('templates');
       form.replaceChildren();
       for (const [type, name] of Object.entries(TPL_NAMES)) {

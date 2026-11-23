@@ -612,6 +612,85 @@ export function platform(DB) {
 }
 
 // ---- email ------------------------------------------------------------------
+// ---- MailerLite ----------------------------------------------------------------
+// With MAILERLITE_API_KEY set, follow-ups are handed to MailerLite instead of
+// being sent from here: the person is added (or updated) as a subscriber in the
+// group for the step they took, and the owner's MailerLite automations send the
+// emails. Our database stays the record of leads and consent; MailerLite keeps
+// only what it needs to send (email, name, group). The handoff happens once per
+// response, after our own consent check; a failure is logged in communications.
+// Someone who unsubscribed in MailerLite is never re-subscribed from here.
+const ML_API = 'https://connect.mailerlite.com/api';
+export const MAILERLITE_GROUPS = {
+  reported_commitment: 'JPN · Know God',
+  discipleship_start: 'JPN · Grow with God',
+  church_connection: 'JPN · Get Connected',
+};
+const mlGroupIds = new Map(); // group name -> id, for this Worker instance
+
+async function mlFetch(env, path, init = {}, fetchFn = fetch) {
+  const res = await fetchFn(ML_API + path, {
+    ...init,
+    headers: { authorization: `Bearer ${env.MAILERLITE_API_KEY}`, 'content-type': 'application/json', accept: 'application/json' },
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, body };
+}
+
+async function findGroup(env, name, fetchFn) {
+  for (let page = 1; page <= 10; page++) {
+    const r = await mlFetch(env, `/groups?limit=100&page=${page}`, {}, fetchFn);
+    if (!r.ok) throw new Error(`MailerLite groups: HTTP ${r.status}`);
+    const list = Array.isArray(r.body.data) ? r.body.data : [];
+    const hit = list.find((g) => g && g.name === name);
+    if (hit) return String(hit.id);
+    if (list.length < 100) return null;
+  }
+  return null;
+}
+
+// The group for a step, created in MailerLite the first time it's needed.
+async function mlGroupId(env, name, fetchFn) {
+  if (mlGroupIds.has(name)) return mlGroupIds.get(name);
+  let id = await findGroup(env, name, fetchFn);
+  if (!id) {
+    const c = await mlFetch(env, '/groups', { method: 'POST', body: JSON.stringify({ name }) }, fetchFn);
+    id = c.ok && c.body.data && c.body.data.id != null ? String(c.body.data.id) : null;
+    // Two first sends at once can race to create it; the loser finds the winner's.
+    if (!id) id = await findGroup(env, name, fetchFn);
+    if (!id) throw new Error(`MailerLite group "${name}": HTTP ${c.status}`);
+  }
+  mlGroupIds.set(name, id);
+  return id;
+}
+
+export async function syncToMailerLite(env, { email, name, type }, fetchFn = fetch) {
+  try {
+    const groupName = MAILERLITE_GROUPS[type];
+    if (!groupName) return { status: 'skipped', provider: 'mailerlite', error: `no group for ${type}` };
+    const group = await mlGroupId(env, groupName, fetchFn);
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    const fields = { name: parts[0] || '' };
+    if (parts.length > 1) fields.last_name = parts.slice(1).join(' ');
+    const r = await mlFetch(env, '/subscribers', { method: 'POST', body: JSON.stringify({ email, fields, groups: [group] }) }, fetchFn);
+    if (!r.ok) return { status: 'failed', provider: 'mailerlite', error: (r.body && r.body.message) || `HTTP ${r.status}` };
+    return { status: 'synced', provider: 'mailerlite', provider_id: r.body.data && r.body.data.id != null ? String(r.body.data.id) : null };
+  } catch (err) {
+    return { status: 'failed', provider: 'mailerlite', error: err.message };
+  }
+}
+
+// Someone who unsubscribes through us is unsubscribed in MailerLite too.
+export async function unsubscribeInMailerLite(env, email, fetchFn = fetch) {
+  if (!env.MAILERLITE_API_KEY || !email) return { status: 'skipped' };
+  try {
+    const r = await mlFetch(env, '/subscribers', { method: 'POST', body: JSON.stringify({ email, status: 'unsubscribed' }) }, fetchFn);
+    return r.ok ? { status: 'unsubscribed' } : { status: 'failed', error: (r.body && r.body.message) || `HTTP ${r.status}` };
+  } catch (err) {
+    return { status: 'failed', error: err.message };
+  }
+}
+
 // Resend when RESEND_API_KEY and EMAIL_FROM are set; otherwise the send is
 // logged as skipped so the rest of the flow still works.
 export async function sendEmail(env, { to, subject, html, text, tags }) {

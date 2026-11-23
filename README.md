@@ -426,6 +426,38 @@ Sending needs two repository secrets: `RESEND_API_KEY` and `EMAIL_FROM`
 (a verified sender on your domain). `SITE_URL` sets the links inside emails.
 Without them every send is logged as `skipped` and nothing else breaks.
 
+**Follow-up email through MailerLite.** With the repository secret
+`MAILERLITE_API_KEY` set, the site stops sending follow-ups itself and hands
+each one to MailerLite instead. Someone who sends a step and agreed to emails is
+added (or updated) as a MailerLite subscriber, with their name, in the group for
+that step: `JPN · Know God`, `JPN · Grow with God` or `JPN · Get Connected`. The
+site creates the groups the first time it needs them. The emails themselves are
+written and scheduled in MailerLite: one automation per group, triggered when a
+subscriber joins it. That's where to build the welcome email and any follow-up
+sequence; the network templates and the creators' follow-up settings are hidden
+while MailerLite is on.
+
+- *Source of truth:* our database stays the record of leads and consent.
+  MailerLite holds a copy of only what it needs to send (email, name, group).
+- *Sync:* one way, once per response, after our own consent check, so an
+  unsubscribed or revoked contact is never handed over. Unsubscribing through
+  the site's link also unsubscribes them in MailerLite. Someone who unsubscribes
+  in MailerLite is never re-subscribed from here (no `resubscribe` flag is sent).
+- *Failure:* every handoff is logged in `communications` as `synced` or
+  `failed` with the reason; a failed handoff does not affect the response.
+
+Setup:
+1. Create a MailerLite account. Under *Integrations → API*, create a token and
+   save it as the repository secret `MAILERLITE_API_KEY`. The next deploy puts
+   it on the Worker.
+2. Under *Sites/Domains → Domains*, add `jesuspeoplenetwork.com`. MailerLite shows
+   a few DNS records (TXT/CNAME). Whoever manages the domain at GoDaddy adds
+   them once; nothing else about the domain or its mailbox changes.
+3. Set the sender to `hello@jesuspeoplenetwork.com`, display name
+   *Jesus People Network*. Replies go to that mailbox.
+4. Send one test response, then build an automation for each group in
+   MailerLite (trigger: *joins group*).
+
 **Analytics.** `GET /api/analytics` returns visitors, the funnel
 (visitors → Know God opened → form sent → reported commitment), responses by
 type, visitors by source and, for admins, totals by creator. The creator

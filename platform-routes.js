@@ -4,6 +4,7 @@
 
 import {
   platform, sendEmail, renderEmail, fillTokens, DEFAULT_TEMPLATES, RESPONSE_TYPES,
+  syncToMailerLite, unsubscribeInMailerLite,
   EVENT_TYPES, rateLimited, clientIp, toCsv, TERMS_VERSION, FAITH_VERSION, CONSENT_VERSION,
   isRealDate, dateParam, recordId,
 } from './platform.js';
@@ -57,6 +58,13 @@ export async function sendFollowUp(env, url, db, pf, { contact_id, response_id, 
   }
   const contact = await pf.contactById(contact_id).catch(() => null);
   if (!contact) return 'skipped';
+  // MailerLite sends the emails (and carries its own unsubscribe link) when it's set up.
+  if (env.MAILERLITE_API_KEY) {
+    const r = await syncToMailerLite(env, { email, name, type });
+    await pf.logCommunication({ contact_id, response_id, creator_slug: creator?.slug || 'default', template: type, to_address: email,
+      provider: r.provider, provider_id: r.provider_id, status: r.status, error: r.error });
+    return r.status;
+  }
   const tpl = { ...DEFAULT_TEMPLATES[type] };
   for (const k of Object.keys(tpl)) {
     const override = settings[`tpl_${type}_${k}`];
@@ -230,6 +238,11 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     if (!id || !expect || sig !== expect) return new Response('That link is not valid.', { status: 400 });
     await pf.unsubscribe(id);
     await pf.audit('contact', 'contact.unsubscribed', String(id));
+    const who = await pf.contactById(id).catch(() => null);
+    if (who && who.email) {
+      const ml = await unsubscribeInMailerLite(env, who.email);
+      if (ml.status === 'failed') console.error('MailerLite unsubscribe failed', ml.error);
+    }
     return new Response('<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;padding:40px;max-width:480px;margin:auto"><h2>You’re unsubscribed.</h2><p>We won’t email you again. If you change your mind, respond on a creator’s page any time.</p>', { headers: { 'content-type': 'text/html; charset=utf-8' } });
   }
 
@@ -373,7 +386,8 @@ export async function handlePlatform(req, url, env, db, whoami, hashPassword, si
     return json({
       registration_mode: settings.registration_mode === 'approval' ? 'approval' : 'open',
       templates, defaults: DEFAULT_TEMPLATES, audit: await pf.auditLog(60),
-      email_configured: Boolean(env.RESEND_API_KEY && env.EMAIL_FROM),
+      email_configured: Boolean(env.MAILERLITE_API_KEY || (env.RESEND_API_KEY && env.EMAIL_FROM)),
+      email_provider: env.MAILERLITE_API_KEY ? 'mailerlite' : (env.RESEND_API_KEY && env.EMAIL_FROM ? 'resend' : null),
       versions: { faith: FAITH_VERSION, terms: TERMS_VERSION, consent: CONSENT_VERSION },
     });
   }

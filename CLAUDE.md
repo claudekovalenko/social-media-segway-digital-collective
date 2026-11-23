@@ -460,6 +460,12 @@ something that works today.
      the bulk workflow then joins the sign-in to that page instead of making
      a new one.
 
+9. **A second service holds a copy of contacts: MailerLite** (owner's choice,
+   for email sequences the owner can edit). It keeps email, name and step group
+   only; our database stays authoritative for leads and consent. Sync is one
+   way, after our consent check; unsubscribes through the site are passed on.
+   See "Follow-up email through MailerLite" in README.md.
+
 # Assumptions awaiting the owner's confirmation
 
 Business-logic decisions made during the Postgres work. Each is small and

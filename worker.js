@@ -1227,7 +1227,8 @@ async function handle(req, env, ctx) {
         return json({
           creator: creatorPublic, leads, counts, role: me.role,
           link: `/${me.creator_slug}`, defaults: await defaultLinks(db),
-          email_configured: Boolean(env.RESEND_API_KEY && env.EMAIL_FROM),
+          email_configured: Boolean(env.MAILERLITE_API_KEY || (env.RESEND_API_KEY && env.EMAIL_FROM)),
+          email_provider: env.MAILERLITE_API_KEY ? 'mailerlite' : (env.RESEND_API_KEY && env.EMAIL_FROM ? 'resend' : null),
           email_verified: account ? Boolean(account.email_verified_at) : null,
         });
       }
