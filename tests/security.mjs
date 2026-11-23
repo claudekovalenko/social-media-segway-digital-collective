@@ -105,6 +105,40 @@ check(row.includes(',+1 555 0100,-3,Ann Lee,"Lee, Ann",'), 'csv: phone numbers, 
   check(u.status === 'unsubscribed' && calls[0].body.status === 'unsubscribed' && calls[0].body.email === 'ann@example.org', 'mailerlite: unsubscribing here unsubscribes there');
   check((await unsubscribeInMailerLite({}, 'ann@example.org', fakeMl)).status === 'skipped', 'mailerlite: without a key nothing is sent');
 
+  // A group deleted in MailerLite after we cached its id: one fresh lookup, then success.
+  {
+    const live = { 'JPN · Get Connected': 500 };
+    let posts = 0, creates = 0;
+    const ml2 = async (u, init = {}) => {
+      const path = u.replace('https://connect.mailerlite.com/api', '');
+      const body = init.body ? JSON.parse(init.body) : null;
+      const reply = (status, data) => new Response(JSON.stringify(data), { status });
+      if (path.startsWith('/groups') && (init.method || 'GET') === 'GET') return reply(200, { data: Object.entries(live).map(([name, id]) => ({ id, name })) });
+      if (path === '/groups' && init.method === 'POST') { creates++; await new Promise((r) => setTimeout(r, 20)); live[body.name] = 600 + creates; return reply(201, { data: { id: live[body.name], name: body.name } }); }
+      if (path === '/subscribers') {
+        posts++;
+        if (body.groups && !Object.values(live).map(String).includes(body.groups[0])) return reply(422, { message: 'The selected groups.0 is invalid.' });
+        return reply(200, { data: { id: 5, status: body.email.startsWith('gone') ? 'unsubscribed' : 'active' } });
+      }
+      return reply(404, {});
+    };
+    const e2 = { MAILERLITE_API_KEY: 'k2' };
+    check((await syncToMailerLite(e2, { email: 'a@example.org', name: 'A', type: 'church_connection' }, ml2)).status === 'synced', 'mailerlite: first handoff to an existing group');
+    live['JPN · Get Connected'] = 501; // deleted and recreated in MailerLite
+    posts = 0;
+    const again = await syncToMailerLite(e2, { email: 'b@example.org', name: 'B', type: 'church_connection' }, ml2);
+    check(again.status === 'synced' && posts === 2, 'mailerlite: a stale group id is looked up again instead of failing forever', JSON.stringify(again));
+    const results = await Promise.all([1, 2, 3, 4, 5, 6].map((n) => syncToMailerLite(e2, { email: `p${n}@example.org`, name: 'P', type: 'discipleship_start' }, ml2)));
+    check(creates === 1 && results.every((x) => x.status === 'synced'), 'mailerlite: simultaneous first handoffs create the group once', `creates=${creates}`);
+    const gone = await syncToMailerLite(e2, { email: 'gone@example.org', name: 'G', type: 'church_connection' }, ml2);
+    check(gone.status === 'suppressed' && /unsubscribed/.test(gone.error), 'mailerlite: someone unsubscribed there is logged as suppressed, not synced', JSON.stringify(gone));
+    const odd = await syncToMailerLite(e2, { email: 'x@example.org', name: 'X', type: 'church_connection' }, async () => new Response('<html>ok</html>', { status: 200 }));
+    check(odd.status === 'failed', 'mailerlite: an unexpected reply is not logged as synced', JSON.stringify(odd));
+    let sawSignal = false;
+    await syncToMailerLite(e2, { email: 'y@example.org', name: 'Y', type: 'church_connection' }, async (u, init) => { sawSignal = init.signal instanceof AbortSignal; return new Response('{}', { status: 500 }); });
+    check(sawSignal, 'mailerlite: every call has a time limit');
+  }
+
   // The handoff sits behind the same consent check as every email.
   const logged = [];
   const pfBlocked = { mayContact: async () => ({ ok: false, reason: 'unsubscribed' }), logCommunication: async (row) => { logged.push(row); } };

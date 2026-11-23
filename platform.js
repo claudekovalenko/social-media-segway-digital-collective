@@ -627,10 +627,13 @@ export const MAILERLITE_GROUPS = {
   church_connection: 'JPN · Get Connected',
 };
 const mlGroupIds = new Map(); // group name -> id, for this Worker instance
+const mlGroupLookups = new Map(); // group name -> lookup in progress, so simultaneous first sends share one
+const ML_TIMEOUT_MS = 8000;
 
 async function mlFetch(env, path, init = {}, fetchFn = fetch) {
   const res = await fetchFn(ML_API + path, {
     ...init,
+    signal: AbortSignal.timeout(ML_TIMEOUT_MS),
     headers: { authorization: `Bearer ${env.MAILERLITE_API_KEY}`, 'content-type': 'application/json', accept: 'application/json' },
   });
   const body = await res.json().catch(() => ({}));
@@ -652,6 +655,13 @@ async function findGroup(env, name, fetchFn) {
 // The group for a step, created in MailerLite the first time it's needed.
 async function mlGroupId(env, name, fetchFn) {
   if (mlGroupIds.has(name)) return mlGroupIds.get(name);
+  if (!mlGroupLookups.has(name)) {
+    mlGroupLookups.set(name, lookUpGroup(env, name, fetchFn).finally(() => mlGroupLookups.delete(name)));
+  }
+  return mlGroupLookups.get(name);
+}
+
+async function lookUpGroup(env, name, fetchFn) {
   let id = await findGroup(env, name, fetchFn);
   if (!id) {
     const c = await mlFetch(env, '/groups', { method: 'POST', body: JSON.stringify({ name }) }, fetchFn);
@@ -668,13 +678,26 @@ export async function syncToMailerLite(env, { email, name, type }, fetchFn = fet
   try {
     const groupName = MAILERLITE_GROUPS[type];
     if (!groupName) return { status: 'skipped', provider: 'mailerlite', error: `no group for ${type}` };
-    const group = await mlGroupId(env, groupName, fetchFn);
     const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
     const fields = { name: parts[0] || '' };
     if (parts.length > 1) fields.last_name = parts.slice(1).join(' ');
-    const r = await mlFetch(env, '/subscribers', { method: 'POST', body: JSON.stringify({ email, fields, groups: [group] }) }, fetchFn);
+    const send = async () => mlFetch(env, '/subscribers', {
+      method: 'POST', body: JSON.stringify({ email, fields, groups: [await mlGroupId(env, groupName, fetchFn)] }),
+    }, fetchFn);
+    let r = await send();
+    // A refused send may be a group deleted in MailerLite since we cached its id: look it up again once.
+    if (!r.ok && r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 429) {
+      mlGroupIds.delete(groupName);
+      r = await send();
+    }
     if (!r.ok) return { status: 'failed', provider: 'mailerlite', error: (r.body && r.body.message) || `HTTP ${r.status}` };
-    return { status: 'synced', provider: 'mailerlite', provider_id: r.body.data && r.body.data.id != null ? String(r.body.data.id) : null };
+    const data = r.body && r.body.data;
+    if (!data || data.id == null) return { status: 'failed', provider: 'mailerlite', error: `unexpected reply (HTTP ${r.status})` };
+    // MailerLite keeps someone who unsubscribed there unsubscribed; say so in our log.
+    if (['unsubscribed', 'bounced', 'junk'].includes(data.status)) {
+      return { status: 'suppressed', provider: 'mailerlite', provider_id: String(data.id), error: `${data.status} in MailerLite` };
+    }
+    return { status: 'synced', provider: 'mailerlite', provider_id: String(data.id) };
   } catch (err) {
     return { status: 'failed', provider: 'mailerlite', error: err.message };
   }

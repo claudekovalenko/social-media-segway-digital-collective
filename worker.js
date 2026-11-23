@@ -1361,10 +1361,13 @@ async function handle(req, env, ctx) {
           // Identify, clean, deduplicate, score: runs after the reply goes out.
           after(enrichContact(pf, recorded.contact_id, { env, fetchFn: fetch }).catch((e) => console.error('enrich failed', e.message)));
           const creator = creatorSlug !== 'default' ? await db.creatorBySlug(creatorSlug).catch(() => null) : null;
-          emailed = 'sent' === await sendFollowUp(env, url, db, pf, {
+          const followUp = async () => sendFollowUp(env, url, db, pf, {
             contact_id: recorded.contact_id, response_id: recorded.response_id, creator, step, name, email,
             defaults: await defaultLinks(db), settings: await db.settings().catch(() => ({})),
           });
+          // A MailerLite handoff sends nothing from here, so the visitor never waits on it.
+          if (env.MAILERLITE_API_KEY) after(followUp().catch((e) => console.error('follow-up handoff failed', e.message)));
+          else emailed = 'sent' === await followUp();
         } catch (err) {
           console.error('platform record failed', err.message);
         }

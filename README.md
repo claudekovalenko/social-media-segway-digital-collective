@@ -438,13 +438,22 @@ sequence; the network templates and the creators' follow-up settings are hidden
 while MailerLite is on.
 
 - *Source of truth:* our database stays the record of leads and consent.
-  MailerLite holds a copy of only what it needs to send (email, name, group).
+  MailerLite holds a copy of only what it needs to send (email, name, group),
+  plus the addresses of people who unsubscribed through the site, so it never
+  emails them.
 - *Sync:* one way, once per response, after our own consent check, so an
   unsubscribed or revoked contact is never handed over. Unsubscribing through
   the site's link also unsubscribes them in MailerLite. Someone who unsubscribes
   in MailerLite is never re-subscribed from here (no `resubscribe` flag is sent).
-- *Failure:* every handoff is logged in `communications` as `synced` or
-  `failed` with the reason; a failed handoff does not affect the response.
+- *Failure:* the handoff runs after the visitor's reply has gone out, with an
+  8-second limit per MailerLite call, so a slow or failing MailerLite never
+  holds up the form. Every handoff is logged in `communications` as `synced`,
+  `suppressed` (unsubscribed in MailerLite) or `failed` with the reason. A
+  failed handoff is not retried later; the lead itself is always saved. A group
+  deleted in MailerLite is looked up again on the next handoff.
+- *Turning it off:* delete the repository secret and also remove it from the
+  Worker (`npx wrangler secret delete MAILERLITE_API_KEY`), since the deploy
+  only adds secrets. The site then goes back to its own email (Resend), if set.
 
 Setup:
 1. Create a MailerLite account. Under *Integrations → API*, create a token and
