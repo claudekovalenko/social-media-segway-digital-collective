@@ -20,7 +20,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (p) {
         if (!p) return;
-        session = { code: codeParam, projectId: p.id, name: session && session.name || '' };
+        session = { code: codeParam, projectId: p.id, access: p.access, name: session && session.name || '' };
         if (adminHash) { try { sessionStorage.setItem('kc-notes-admin', adminHash); } catch (e) {} session.name = 'Ivan'; }
         save();
         start();
@@ -28,7 +28,13 @@
       .catch(function () {});
     return;
   }
-  if (session && session.projectId) start();
+  // Saved sessions without a current project pass get one with their saved code first.
+  if (session && session.projectId && session.code && (!session.access || Number(String(session.access).split('.')[0]) < Date.now())) {
+    fetch(API + '/api/projects?code=' + encodeURIComponent(session.code))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (p) { if (p) { session.access = p.access; save(); start(); } })
+      .catch(function () {});
+  } else if (session && session.projectId) start();
 
   function hasNotesKey() {
     try { var k = sessionStorage.getItem('kc-notes-admin'); return !!k && Number(k.split('.')[0]) > Date.now(); } catch (e) { return false; }
@@ -182,6 +188,7 @@
 
   function headers() {
     var h = { 'Content-Type': 'application/json', 'X-Portal-Name': session.name || '' };
+    if (session.access) h['X-Project-Access'] = session.access;
     var tok = null; try { tok = sessionStorage.getItem('kc-notes-admin'); } catch (e) {}
     if (tok && Number(tok.split('.')[0]) > Date.now()) h.Authorization = 'Bearer ' + tok;
     return h;
@@ -204,8 +211,8 @@
 
   function load() {
     Promise.all([
-      fetch(API + '/api/posts?plan_id=' + encodeURIComponent(session.projectId) + '&kind=sitenote').then(function (r) { return r.json(); }),
-      fetch(API + '/api/posts?plan_id=' + encodeURIComponent(session.projectId) + '&kind=message').then(function (r) { return r.json(); })
+      fetch(API + '/api/posts?plan_id=' + encodeURIComponent(session.projectId) + '&kind=sitenote', { headers: headers() }).then(function (r) { return r.json(); }),
+      fetch(API + '/api/posts?plan_id=' + encodeURIComponent(session.projectId) + '&kind=message', { headers: headers() }).then(function (r) { return r.json(); })
     ]).then(function (res) {
       var replies = {};
       res[1].forEach(function (m) { if (m.task_id) (replies[m.task_id] = replies[m.task_id] || []).push(m); });
