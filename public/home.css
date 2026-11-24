@@ -383,14 +383,17 @@ body.v2 .v2-root .v2-float .v2-dot{background:var(--step-1);box-shadow:0 0 0 4px
 /* Home text sizes on wider screens: headings and intro lines a step smaller than the logo
    theme set them, so the copy reads at a calmer size. Each starts at its phone size and grows
    with the screen; phones and body text are unchanged. */
-@media (min-width:641px){
+@media (min-width:641px) and (max-width:860px){
+  /* Above 860px the layout pass further down sets the headline, h2 and intro line. */
   body.home.v2 .v2-root h1{font-size:clamp(2.05rem,5.2vw,4rem);line-height:1.02}
   body.home.v2 .v2-root h2{font-size:clamp(2rem,3.2vw,2.4rem);line-height:1.08}
+  body.home.v2 .v2-root .v2-lede{font-size:1.1rem}
+}
+@media (min-width:641px){
   body.home.v2 .v2-root .v2-final h2{font-size:clamp(2.2rem,3.4vw,2.6rem)}
   body.home.v2 .v2-root .v2-card h3{font-size:1.25rem}
   body.home.v2 .v2-root .v2-screen h3{font-size:1.35rem}
   body.home.v2 .v2-root .v2-list-h{font-size:1.15rem}
-  body.home.v2 .v2-root .v2-lede{font-size:1.1rem}
   body.home.v2 .v2-root .v2-sub{font-size:1.02rem}
   body.home.v2 .v2-root .v2-checks li,body.home.v2 .v2-root .v2-steps5 li,body.home.v2 .v2-root summary{font-size:1rem}
 }
